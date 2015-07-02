@@ -24,5 +24,10 @@ test:
   database: test
 
 production:
-  <<: *default
-  database: production
+  adapter: postgresql
+  encoding: unicode
+  pool: 5
+  username: vbcleaemkxobpn
+  password: 1LIUnEpvpfZ908-nXAv4LzPa9F
+  host: localhost
+  database: dfjqipjpt50la5
