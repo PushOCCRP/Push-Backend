@@ -12,6 +12,8 @@ class ArticlesController < ApplicationController
     #For the moment all images are empty, so we'll just leave this here
     @response['results'].each do |result|
       result['image_urls'] = []
+      published_date = result['publish_date'].to_date
+      result['publish_date'] = published_date.to_formatted_s(:number)
     end
 
     logger.debug
