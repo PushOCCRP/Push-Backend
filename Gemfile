@@ -50,3 +50,4 @@ end
 
 gem 'le'
 gem 'rails_12factor'
+gem 'httparty'
