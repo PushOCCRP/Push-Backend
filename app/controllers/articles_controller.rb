@@ -6,8 +6,9 @@ class ArticlesController < ApplicationController
     uri = URI.parse("http://joomla-docker-129154.nitrousapp.com/index.php?option=com_push&format=json&view=articles")
 
     # Shortcut
-    @response = JSON.parse(Net::HTTP.get_response(uri).body)
-
+    @response_full = NET::HTTP.get_response(uri)
+    @response = JSON.parse(@response_full.body)
+    Rails.logger.info(@response_full)
     #@response = JSON.parse(http.request(request).body)
 
     #For the moment all images are empty, so we'll just leave this here
