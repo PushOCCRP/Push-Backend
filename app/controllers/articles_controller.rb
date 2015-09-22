@@ -1,3 +1,5 @@
+require 'net/http'
+
 class ArticlesController < ApplicationController
 
   def index
