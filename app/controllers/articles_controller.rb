@@ -4,7 +4,7 @@ class ArticlesController < ApplicationController
     #http = Net::HTTP.new("joomla-docker-129154.nitrousapp.com")
     #request = Net::HTTP::Get.new("/index.php?option=com_push&format=json&view=articles")
     #uri = URI.parse("http://joomla-docker-129154.nitrousapp.com/index.php?option=com_push&format=json&view=articles")
-    uri = URI.pars("http://www.google.com")
+    uri = URI.pars("https://www.google.com")
     # Shortcut
     @response_full = Net::HTTP.get_response(uri)
     #@response = JSON.parse(@response_full.body)
