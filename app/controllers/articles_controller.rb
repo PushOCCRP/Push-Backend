@@ -15,8 +15,11 @@ class ArticlesController < ApplicationController
       result['image_urls'] = []
     end
 
+    logger.debug
+
     respond_to do |format|
       format.json
+      format.html
     end
   end
 
