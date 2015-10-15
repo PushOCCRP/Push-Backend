@@ -12,7 +12,8 @@ class ArticlesController < ApplicationController
     body = response.body
 
     @response = JSON.parse(response.body)
-    @response.body = clean_up_response @response.body
+
+    @response['results'] = clean_up_response @response['results']
 
     respond_to do |format|
       format.json
@@ -21,23 +22,27 @@ class ArticlesController < ApplicationController
   end
 
   def search
-    #http = Net::HTTP.new("joomla-docker-129154.nitrousapp.com")
-    #request = Net::HTTP::Get.new("/index.php?option=com_push&format=json&view=articles")
-    #uri = URI.parse("http://joomla-docker-129154.nitrousapp.com/index.php?option=com_push&format=json&view=articles")
-    #url = "http://joomla-docker-129154.nitrousapp.com/index.php?option=com_push&format=json&view=search&query=#{params[:query]}"
-    url = "https://www.googleapis.com/customsearch/v1?key=AIzaSyCahDlxYxTgXsPUV85L91ytd7EV1_i72pc&cx=003136008787419213412:ran67-vhl3y&q=lectures"
-    # Shortcut
+    url = ENV['occrp_joomla_url']
+
+    query = params['q']
+    # Get the search results from Google
+    url = "https://www.googleapis.com/customsearch/v1?key=AIzaSyCahDlxYxTgXsPUV85L91ytd7EV1_i72pc&cx=003136008787419213412:ran67-vhl3y&q=#{query}"
     response = HTTParty.get(url)
-    #For the moment all images are empty, so we'll just leave this here
+
+    # Go through all the responses, and then make a call to the Joomla server to get all the correct responses
     url = "https://www.occrp.org/index.html?option=com_push&format=json&view=urllookup&u="
     @response = {items: []}
     links = []
     response['items'].each do |result|
-      url << result['link'] + ","
+      url << URI.encode(result['link'])
+      if result != response['items'].last
+        url << ","
+      end
     end
 
     response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
 
+    # Turn all the responses into something that looks nice and is expected
     @response = clean_up_response JSON.parse(response.body)
 
     respond_to do |format|
