@@ -28,7 +28,7 @@ class ArticlesController < ApplicationController
     # Get the search results from Google
     url = "https://www.googleapis.com/customsearch/v1?key=AIzaSyCahDlxYxTgXsPUV85L91ytd7EV1_i72pc&cx=003136008787419213412:ran67-vhl3y&q=#{query}"
     response = HTTParty.get(url)
-
+    logger.debug("Google search response: #{response['items']}")
     # Go through all the responses, and then make a call to the Joomla server to get all the correct responses
     url = "https://www.occrp.org/index.html?option=com_push&format=json&view=urllookup&u="
     @response = {items: []}
