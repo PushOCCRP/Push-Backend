@@ -162,6 +162,7 @@ DEPENDENCIES
   jquery-rails
   le
   mysql2
+  nokogiri
   pg
   rails (= 4.2.3)
   rails_12factor

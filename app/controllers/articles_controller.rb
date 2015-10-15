@@ -23,8 +23,28 @@ class ArticlesController < ApplicationController
     @response = JSON.parse(response.body)
     @response['results'].each do |result|
 
-      #For the moment all images are empty, so we'll just leave this here
+      # If there is no body (which is very prevalent in the OCCRP data for some reason)
+      # this takes the intro text and makes it the body text
+      if result['body'].nil? || result['body'].empty?
+        result['body'] = result['description']
+      end
+      # Limit description to number of characters since most have many paragraphs
+      result['description'] = ActionView::Base.full_sanitizer.sanitize(result['description']).squish
+      if result['description'].length > 140
+        result['description'] = result['description'].slice(0, 140) + "..."
+      end
+
+      # Extract all image urls in the article and put them into a single array.
       result['image_urls'] = []
+      elements = Nokogiri::HTML result['body']
+      elements.css('img').each do |image|
+        image_address = image.attributes['src'].value
+        if !image_address.starts_with?("http")
+          result['image_urls'] << "https://www.occrp.org/" + image.attributes['src'].value
+        else
+          result['image_urls'] << image_address
+        end
+      end
 
       # Just in case the dates are improperly formatted
       begin
