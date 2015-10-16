@@ -42,7 +42,14 @@ class ArticlesController < ApplicationController
     response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
 
     # Turn all the responses into something that looks nice and is expected
-    @response = clean_up_response JSON.parse(response.body)
+    search_results = clean_up_response JSON.parse(response.body)
+    @response = {query: query,
+                 start_date: "19700101",
+                 end_date: DateTime.now.strftime("%Y%m%d"),
+                 total_results: search_results.size,
+                 page: "1",
+                 results: search_results
+                }
 
     respond_to do |format|
       format.json
