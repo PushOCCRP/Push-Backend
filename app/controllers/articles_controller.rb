@@ -75,7 +75,9 @@ class ArticlesController < ApplicationController
 
   def clean_up_response articles
     articles.each do |article|
+
       if article['headline'].blank?
+        articles.delete article
         next
       end
 
