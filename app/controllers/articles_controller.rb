@@ -74,13 +74,8 @@ class ArticlesController < ApplicationController
   end
 
   def clean_up_response articles
+    articles.delete_if{|article| article['headline'].blank?}
     articles.each do |article|
-
-      if article['headline'].blank?
-        articles.delete article
-        next
-      end
-
       # If there is no body (which is very prevalent in the OCCRP data for some reason)
       # this takes the intro text and makes it the body text
       if article['body'].nil? || article['body'].empty?
@@ -111,10 +106,11 @@ class ArticlesController < ApplicationController
       rescue => error
         published_date = DateTime.new(1970,01,01)
       end
+
       # right now we only support dates on the mobile side, this will be time soon.
-      #published_date = result['publish_date'].to_date
       article['publish_date'] = published_date.strftime("%Y%m%d")
     end
+
     return articles
   end
 end
