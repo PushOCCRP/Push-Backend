@@ -90,7 +90,7 @@ class ArticlesController < ApplicationController
 
       # Extract all image urls in the article and put them into a single array.
       article['image_urls'] = []
-      elements = Nokogiri::HTML article['body']
+      elements = Nokogiri::HTML.fragment article['body']
       elements.css('img').each do |image|
         image_address = image.attributes['src'].value
         if !image_address.starts_with?("http")
@@ -98,7 +98,14 @@ class ArticlesController < ApplicationController
         else
           article['image_urls'] << image_address
         end
+        image.remove
       end
+      
+      # Remove target="_blank" from links
+      elements.css('a').each do |link|
+        link['target'] = nil
+      end
+      article['body'] = elements.to_html
 
       # Just in case the dates are improperly formatted
       begin
