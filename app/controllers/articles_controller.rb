@@ -101,6 +101,13 @@ class ArticlesController < ApplicationController
         image.remove
       end
       
+      # String out captions
+      article['captions'] = []
+      elements.css('.wf_caption').each do |caption|
+        article['captions'] << caption.content
+        caption.remove
+      end
+      
       # Remove target="_blank" from links
       elements.css('a').each do |link|
         link['target'] = nil
