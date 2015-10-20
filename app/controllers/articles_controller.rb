@@ -109,8 +109,12 @@ class ArticlesController < ApplicationController
       end
       
       # Remove target="_blank" from links
+      # Also, makes sure the links aren't relative
       elements.css('a').each do |link|
         link['target'] = nil
+        if(!link['href'].starts_with?("http://") && !link['href'].starts_with?("https://") )
+          link['href'] = 'https://www.occrp.org/' + link['href']
+        end
       end
       article['body'] = elements.to_html
 
