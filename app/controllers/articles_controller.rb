@@ -55,6 +55,28 @@ class ArticlesController < ApplicationController
       format.json
     end
   end
+  
+  def get_article
+    url = ENV['occrp_joomla_url']
+    article_id = params['id']
+
+    # Shortcut
+    # We need the request to look like this, so we have to get the correct key.
+    # At the moment it makes the call twice. We need to cache this.
+    # response = HTTParty.get(url, headers: {'Cookie' => '6e5451c5a544c9e9a591c2fe3b28408c[lang]=en;'})
+    url = "https://www.occrp.org/index.html?option=com_push&format=json&view=article&id=#{article_id}"
+    response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
+    body = response.body
+
+    @response = JSON.parse(response.body)
+
+    @response['results'] = clean_up_response @response['results']
+
+    respond_to do |format|
+      format.json
+    end
+
+  end
 
   private
 
