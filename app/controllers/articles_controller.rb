@@ -102,13 +102,19 @@ class ArticlesController < ApplicationController
       # this takes the intro text and makes it the body text
       if article['body'].nil? || article['body'].empty?
         article['body'] = article['description']
+      else
+        # Prepend the description to the article since it seems it's being taken off?
+        article['body'] = article['description'] + article['body']
       end
+      
       # Limit description to number of characters since most have many paragraphs
-
       article['description'] = ActionView::Base.full_sanitizer.sanitize(article['description']).squish
       if article['description'].length > 140
         article['description'] = article['description'].slice(0, 140) + "..."
       end
+      
+      
+      
 
       # Extract all image urls in the article and put them into a single array.
       article['image_urls'] = []
