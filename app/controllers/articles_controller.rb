@@ -24,7 +24,7 @@ class ArticlesController < ApplicationController
   def search
     url = ENV['occrp_joomla_url']
 
-    query = params['q']
+    query = URI.encode params['q']
     # Get the search results from Google
     url = "https://www.googleapis.com/customsearch/v1?key=AIzaSyCahDlxYxTgXsPUV85L91ytd7EV1_i72pc&cx=003136008787419213412:ran67-vhl3y&q=#{query}"
     response = HTTParty.get(url)
