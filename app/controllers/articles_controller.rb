@@ -32,10 +32,12 @@ class ArticlesController < ApplicationController
     url = "https://www.occrp.org/index.html?option=com_push&format=json&view=urllookup&u="
     @response = {items: []}
     links = []
-    response['items'].each do |result|
-      url << URI.encode(result['link'])
-      if result != response['items'].last
-        url << ","
+    if(!response['items'].nil? && response['items'].size > 0)
+      response['items'].each do |result|
+        url << URI.encode(result['link'])
+        if result != response['items'].last
+          url << ","
+        end
       end
     end
 
