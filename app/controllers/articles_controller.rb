@@ -1,27 +1,55 @@
 class ArticlesController < ApplicationController
 
+  before_action :check_for_valid_cms_mode
+
   def index
+    
+    @response = []
+    
+    case @cms_mode 
+      when :occrp_joomla
+        url = ENV['occrp_joomla_url']
+    
+        # Shortcut
+        # We need the request to look like this, so we have to get the correct key.
+        # At the moment it makes the call twice. We need to cache this.
+        response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
+        body = response.body
+    
+        @response = JSON.parse(response.body)
+    
+        @response['results'] = clean_up_response @response['results']
+      when :wordpress
+        url = ENV['wordpress_url'] 
 
-    url = ENV['occrp_joomla_url']
+        response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
+        body = response.body
 
-    # Shortcut
-    # We need the request to look like this, so we have to get the correct key.
-    # At the moment it makes the call twice. We need to cache this.
-    # response = HTTParty.get(url, headers: {'Cookie' => '6e5451c5a544c9e9a591c2fe3b28408c[lang]=en;'})
-    response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
-    body = response.body
-
-    @response = JSON.parse(response.body)
-
-    @response['results'] = clean_up_response @response['results']
-
+        @response = JSON.parse(response.body)
+    
+        #@response['results'] = clean_up_response @response['results']
+    end
+    
     respond_to do |format|
       format.json
     end
 
   end
-
+  
   def search
+    case @cms_mode
+      when :occrp_joomla
+        @response = search_occrp_joomla
+      when :wordpress
+        @response = search_wordpress
+    end 
+    
+    respond_to do |format|
+      format.json
+    end
+  end
+
+  def search_occrp_joomla
     url = ENV['occrp_joomla_url']
 
     query = params['q']
@@ -51,13 +79,35 @@ class ArticlesController < ApplicationController
                  results: search_results
                 }
 
-    respond_to do |format|
-      format.json
-    end
+    return @response
+  end
+  
+  def search_wordpress
+      @response = {query: query,
+                 start_date: "19700101",
+                 end_date: DateTime.now.strftime("%Y%m%d"),
+                 total_results: search_results.size,
+                 page: "1",
+                 results: search_results
+                }
+      return @response
   end
 
   private
-
+  
+  def check_for_valid_cms_mode
+    @cms_mode
+    cms_mode = ENV['cms_mode']
+    case cms_mode
+      when "occrp-joomla"
+        @cms_mode = :occrp_joomla
+      when "wordpress"
+        @cms_mode = :wordpress
+      else
+        raise "CMS type #{cms_type} not valid for this version of Push."
+    end
+  end
+  
   def get_cookie
     url = "https://www.occrp.org/index.html?option=com_push&format=json&view=urllookup&u="
     response = HTTParty.get(url)
