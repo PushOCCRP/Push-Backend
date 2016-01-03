@@ -5,6 +5,8 @@ case ENV['cms_mode']
   	Figaro.require_keys("occrp_joomla_url")
   when "wordpress"
     Figaro.require_keys("wordpress_url")
+  when "newscoop"
+    Figaro.require_keys("newscoop_url")
   else
   	raise "No valid cms mode, please fix the environment variable \"cms_mode\""
 end
