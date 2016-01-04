@@ -28,6 +28,13 @@ class ArticlesController < ApplicationController
         @response = JSON.parse(response.body)
     
         #@response['results'] = clean_up_response @response['results']
+      when :newscoop
+        url = ENV['newscoop_url']
+         
+        response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
+        body = response.body
+
+        @response = JSON.parse(response.body)
     end
     
     respond_to do |format|
