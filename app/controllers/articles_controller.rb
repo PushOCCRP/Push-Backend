@@ -42,12 +42,9 @@ class ArticlesController < ApplicationController
   
   def get_newscoop_articles
     access_token = get_newscoop_auth_token
-
-    client_id = ENV['newscoop_client_id']
-    client_secret = ENV['newscoop_client_secret']
     url = ENV['newscoop_url'] + '/api/articles.json'
     
-    options = {access_token: access_token}        
+    options = {access_token: access_token, 'sort[published]' => 'desc'}        
     response = HTTParty.get(url, query: options)
     body = JSON.parse response.body
     
@@ -202,7 +199,15 @@ class ArticlesController < ApplicationController
         formatted_article['headline'] = article['title']
         formatted_article['description'] = format_description_text article['fields']['deck']
         formatted_article['body'] = article['fields']['full_text']
-        
+        if(article['authors'].count > 0)
+          formatted_article['author'] = article['authors'][0]['name']
+        end
+      
+        formatted_article['publish_date'] = article['published'].to_time.to_formatted_s(:number_date)
+        # yes, they really call the id 'number'
+        formatted_article['id'] = article['number']
+        formatted_article['language'] = article['languageData']['RFC3066bis']
+      
         videos = []
         
         if(!article['fields']['youtube_shortcode'].blank?)
@@ -217,12 +222,13 @@ class ArticlesController < ApplicationController
         images = []
         
         if(article['renditions'].count > 0 && !article['renditions'][0]['details']['original'].blank?)
-            preview_image_url = URI.unescape(article['renditions'][0]['details']['original']['src'])
+            preview_image_url = "https://" + URI.unescape(article['renditions'][0]['details']['original']['src'])
+            passthrough_image_url = passthrough_url + "?url=" + URI.escape(preview_image_url)
             caption = article['renditions'][0]['details']['caption']
             width = article['renditions'][0]['details']['original']['width']
             height = article['renditions'][0]['details']['original']['height']
             byline = article['renditions'][0]['details']['photographer']
-            image = {url: preview_image_url, caption: caption, width: width, height: height, byline: byline}
+            image = {url: passthrough_image_url, caption: caption, width: width, height: height, byline: byline}
             images << image
         end
         
