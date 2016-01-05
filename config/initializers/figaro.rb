@@ -7,6 +7,8 @@ case ENV['cms_mode']
     Figaro.require_keys("wordpress_url")
   when "newscoop"
     Figaro.require_keys("newscoop_url")
+    Figaro.require_keys("newscoop_client_id")
+    Figaro.require_keys("newscoop_client_secret")
   else
   	raise "No valid cms mode, please fix the environment variable \"cms_mode\""
 end

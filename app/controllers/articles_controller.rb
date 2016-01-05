@@ -2,6 +2,8 @@ class ArticlesController < ApplicationController
 
   before_action :check_for_valid_cms_mode
 
+  @newscoop_access_token
+
   def index
     
     @response = []
@@ -29,18 +31,31 @@ class ArticlesController < ApplicationController
     
         #@response['results'] = clean_up_response @response['results']
       when :newscoop
-        url = ENV['newscoop_url']
-         
-        response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
-        body = response.body
-
-        @response = JSON.parse(response.body)
+        @response = get_newscoop_articles
     end
     
     respond_to do |format|
       format.json
     end
 
+  end
+  
+  def get_newscoop_articles
+    access_token = get_newscoop_auth_token
+
+    client_id = ENV['newscoop_client_id']
+    client_secret = ENV['newscoop_client_secret']
+    url = ENV['newscoop_url'] + '/api/articles.json'
+    
+    options = {access_token: access_token}        
+    response = HTTParty.get(url, query: options)
+    body = JSON.parse response.body
+    
+    @response = format_newscoop_response(body)
+  end
+  
+  def get_newscoop_auth_token
+    Newscoop.instance.access_token
   end
   
   def search
@@ -110,6 +125,8 @@ class ArticlesController < ApplicationController
         @cms_mode = :occrp_joomla
       when "wordpress"
         @cms_mode = :wordpress
+      when "newscoop"
+        @cms_mode = :newscoop
       else
         raise "CMS type #{cms_type} not valid for this version of Push."
     end
@@ -140,10 +157,7 @@ class ArticlesController < ApplicationController
       end
       # Limit description to number of characters since most have many paragraphs
 
-      article['description'] = ActionView::Base.full_sanitizer.sanitize(article['description']).squish
-      if article['description'].length > 140
-        article['description'] = article['description'].slice(0, 140) + "..."
-      end
+      article['description'] = format_description_text article['description']
 
       # Extract all image urls in the article and put them into a single array.
       article['image_urls'] = []
@@ -170,4 +184,74 @@ class ArticlesController < ApplicationController
 
     return articles
   end
+  
+  def format_newscoop_response body
+    response = {}
+    response['start_date'] = nil
+    response['end_date'] = nil
+    response['total_items'] = body['items'].count
+    response['page'] = 1
+    response['results'] = format_newscoop_articles(body['items'])
+    return response
+  end
+  
+  def format_newscoop_articles articles
+    formatted_articles = []
+    articles.each do |article|
+        formatted_article = {}
+        formatted_article['headline'] = article['title']
+        formatted_article['description'] = format_description_text article['fields']['deck']
+        formatted_article['body'] = article['fields']['full_text']
+        
+        videos = []
+        
+        if(!article['fields']['youtube_shortcode'].blank?)
+            youtube_shortcode = article['fields']['youtube_shortcode']
+            youtube_id = extractYouTubeIDFromShortcode(youtube_shortcode)
+            
+            videos << {youtube_id: youtube_id}
+        end
+        
+        formatted_article['videos'] = videos
+        
+        images = []
+        
+        if(article['renditions'].count > 0 && !article['renditions'][0]['details']['original'].blank?)
+            preview_image_url = URI.unescape(article['renditions'][0]['details']['original']['src'])
+            caption = article['renditions'][0]['details']['caption']
+            width = article['renditions'][0]['details']['original']['width']
+            height = article['renditions'][0]['details']['original']['height']
+            byline = article['renditions'][0]['details']['photographer']
+            image = {url: preview_image_url, caption: caption, width: width, height: height, byline: byline}
+            images << image
+        end
+        
+        formatted_article['images'] = images
+
+        formatted_articles << formatted_article
+    end
+    
+    return formatted_articles
+  end
+  
+  def extractYouTubeIDFromShortcode shortcode
+    if(shortcode.downcase.start_with?('http://youtu.be', 'https://youtu.be'))
+      shortcode.sub!('http://youtu.be/', '')
+      shortcode.sub!('https://youtu.be/', '')
+      
+      id = shortcode
+      return id      
+    end
+    
+    return nil
+  end
+  
+  def format_description_text text
+    text = ActionView::Base.full_sanitizer.sanitize(text).squish
+    if text.length > 140
+      text = text.slice(0, 140) + "..."
+    end
+    return text
+  end
+  
 end
