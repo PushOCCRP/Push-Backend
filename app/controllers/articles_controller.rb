@@ -43,8 +43,12 @@ class ArticlesController < ApplicationController
   def get_newscoop_articles
     access_token = get_newscoop_auth_token
     url = ENV['newscoop_url'] + '/api/articles.json'
+    language = params['language']
+    if(language.blank?)
+      language = "az"
+    end
     
-    options = {access_token: access_token, 'sort[published]' => 'desc'}        
+    options = {access_token: access_token, language: language, 'sort[published]' => 'desc'}        
     response = HTTParty.get(url, query: options)
     body = JSON.parse response.body
     
