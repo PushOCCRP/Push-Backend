@@ -5,6 +5,7 @@ class ApplicationController < ActionController::Base
   
   #This is just a passthrough for basic GET commands. Takes a URL, calls it, and returns the body.
   #This should conceivably cache responses at some point
+  #Should also require auth token
   def passthrough
     url = params['url']
     response = HTTParty.get(url)
