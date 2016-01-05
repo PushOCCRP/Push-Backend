@@ -1,6 +1,8 @@
 Rails.application.routes.draw do
   get 'articles' => 'articles#index'
   get 'search' => 'articles#search'
+  
+  get 'passthrough' => 'application#passthrough'
 
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
