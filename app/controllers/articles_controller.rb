@@ -65,6 +65,8 @@ class ArticlesController < ApplicationController
         @response = search_occrp_joomla
       when :wordpress
         @response = search_wordpress
+      when :newscoop
+        @response = search_newscoop
     end 
     
     respond_to do |format|
@@ -114,6 +116,23 @@ class ArticlesController < ApplicationController
                  results: search_results
                 }
       return @response
+  end
+  
+  def search_newscoop
+    query = params['q']
+
+    access_token = get_newscoop_auth_token
+    url = ENV['newscoop_url'] + '/api/search/articles.json'
+    language = params['language']
+    if(language.blank?)
+      language = "az"
+    end
+    
+    options = {access_token: access_token, language: language, query: query}        
+    response = HTTParty.get(url, query: options)
+    body = JSON.parse response.body
+    
+    @response = format_newscoop_response(body)
   end
 
   private
@@ -220,7 +239,7 @@ class ArticlesController < ApplicationController
             
             videos << {youtube_id: youtube_id}
         end
-        
+              
         formatted_article['videos'] = videos
         
         images = []
