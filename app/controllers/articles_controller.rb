@@ -1,27 +1,80 @@
 class ArticlesController < ApplicationController
 
+  before_action :check_for_valid_cms_mode
+
+  @newscoop_access_token
+
   def index
+    
+    @response = []
+    
+    case @cms_mode 
+      when :occrp_joomla
+        url = ENV['occrp_joomla_url']
+    
+        # Shortcut
+        # We need the request to look like this, so we have to get the correct key.
+        # At the moment it makes the call twice. We need to cache this.
+        response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
+        body = response.body
+    
+        @response = JSON.parse(response.body)
+    
+        @response['results'] = clean_up_response @response['results']
+      when :wordpress
+        url = ENV['wordpress_url'] 
 
-    url = ENV['occrp_joomla_url']
+        response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
+        body = response.body
 
-    # Shortcut
-    # We need the request to look like this, so we have to get the correct key.
-    # At the moment it makes the call twice. We need to cache this.
-    # response = HTTParty.get(url, headers: {'Cookie' => '6e5451c5a544c9e9a591c2fe3b28408c[lang]=en;'})
-    response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
-    body = response.body
-
-    @response = JSON.parse(response.body)
-
-    @response['results'] = clean_up_response @response['results']
-
+        @response = JSON.parse(response.body)
+    
+        #@response['results'] = clean_up_response @response['results']
+      when :newscoop
+        @response = get_newscoop_articles
+    end
+    
     respond_to do |format|
       format.json
     end
 
   end
-
+  
+  def get_newscoop_articles
+    access_token = get_newscoop_auth_token
+    url = ENV['newscoop_url'] + '/api/articles.json'
+    language = params['language']
+    if(language.blank?)
+      language = "az"
+    end
+    
+    options = {access_token: access_token, language: language, 'sort[published]' => 'desc'}        
+    response = HTTParty.get(url, query: options)
+    body = JSON.parse response.body
+    
+    @response = format_newscoop_response(body)
+  end
+  
+  def get_newscoop_auth_token
+    Newscoop.instance.access_token
+  end
+  
   def search
+    case @cms_mode
+      when :occrp_joomla
+        @response = search_occrp_joomla
+      when :wordpress
+        @response = search_wordpress
+      when :newscoop
+        @response = search_newscoop
+    end 
+    
+    respond_to do |format|
+      format.json
+    end
+  end
+
+  def search_occrp_joomla
     url = ENV['occrp_joomla_url']
 
     query = URI.encode params['q']
@@ -53,9 +106,35 @@ class ArticlesController < ApplicationController
                  results: search_results
                 }
 
-    respond_to do |format|
-      format.json
+    return @response
+  end
+  
+  def search_wordpress
+      @response = {query: query,
+                 start_date: "19700101",
+                 end_date: DateTime.now.strftime("%Y%m%d"),
+                 total_results: search_results.size,
+                 page: "1",
+                 results: search_results
+                }
+      return @response
+  end
+  
+  def search_newscoop
+    query = params['q']
+
+    access_token = get_newscoop_auth_token
+    url = ENV['newscoop_url'] + '/api/search/articles.json'
+    language = params['language']
+    if(language.blank?)
+      language = "az"
     end
+    
+    options = {access_token: access_token, language: language, query: query}        
+    response = HTTParty.get(url, query: options)
+    body = JSON.parse response.body
+    
+    @response = format_newscoop_response(body)
   end
   
   def get_article
@@ -81,7 +160,22 @@ class ArticlesController < ApplicationController
   end
 
   private
-
+  
+  def check_for_valid_cms_mode
+    @cms_mode
+    cms_mode = ENV['cms_mode']
+    case cms_mode
+      when "occrp-joomla"
+        @cms_mode = :occrp_joomla
+      when "wordpress"
+        @cms_mode = :wordpress
+      when "newscoop"
+        @cms_mode = :newscoop
+      else
+        raise "CMS type #{cms_type} not valid for this version of Push."
+    end
+  end
+  
   def get_cookie
     url = "https://www.occrp.org/index.html?option=com_push&format=json&view=urllookup&u="
     response = HTTParty.get(url)
@@ -110,6 +204,7 @@ class ArticlesController < ApplicationController
       end
       
       # Limit description to number of characters since most have many paragraphs
+<<<<<<< HEAD
       article['description'] = ActionView::Base.full_sanitizer.sanitize(article['description']).squish
       if article['description'].length > 140
         article['description'] = article['description'].slice(0, 140) + "..."
@@ -117,6 +212,10 @@ class ArticlesController < ApplicationController
       
       
       
+=======
+
+      article['description'] = format_description_text article['description']
+>>>>>>> wordpress
 
       # Extract all image urls in the article and put them into a single array.
       article['image_urls'] = []
@@ -161,4 +260,83 @@ class ArticlesController < ApplicationController
 
     return articles
   end
+  
+  def format_newscoop_response body
+    response = {}
+    response['start_date'] = nil
+    response['end_date'] = nil
+    response['total_items'] = body['items'].count
+    response['page'] = 1
+    response['results'] = format_newscoop_articles(body['items'])
+    return response
+  end
+  
+  def format_newscoop_articles articles
+    formatted_articles = []
+    articles.each do |article|
+        formatted_article = {}
+        formatted_article['headline'] = article['title']
+        formatted_article['description'] = format_description_text article['fields']['deck']
+        formatted_article['body'] = article['fields']['full_text']
+        if(article['authors'].count > 0)
+          formatted_article['author'] = article['authors'][0]['name']
+        end
+      
+        formatted_article['publish_date'] = article['published'].to_time.to_formatted_s(:number_date)
+        # yes, they really call the id 'number'
+        formatted_article['id'] = article['number']
+        formatted_article['language'] = article['languageData']['RFC3066bis']
+      
+        videos = []
+        
+        if(!article['fields']['youtube_shortcode'].blank?)
+            youtube_shortcode = article['fields']['youtube_shortcode']
+            youtube_id = extractYouTubeIDFromShortcode(youtube_shortcode)
+            
+            videos << {youtube_id: youtube_id}
+        end
+              
+        formatted_article['videos'] = videos
+        
+        images = []
+        
+        if(article['renditions'].count > 0 && !article['renditions'][0]['details']['original'].blank?)
+            preview_image_url = "https://" + URI.unescape(article['renditions'][0]['details']['original']['src'])
+            passthrough_image_url = passthrough_url + "?url=" + URI.escape(preview_image_url)
+            caption = article['renditions'][0]['details']['caption']
+            width = article['renditions'][0]['details']['original']['width']
+            height = article['renditions'][0]['details']['original']['height']
+            byline = article['renditions'][0]['details']['photographer']
+            image = {url: passthrough_image_url, caption: caption, width: width, height: height, byline: byline}
+            images << image
+        end
+        
+        formatted_article['images'] = images
+
+        formatted_articles << formatted_article
+    end
+    
+    return formatted_articles
+  end
+  
+  def extractYouTubeIDFromShortcode shortcode
+    if(shortcode.downcase.start_with?('http://youtu.be', 'https://youtu.be'))
+      shortcode.sub!('http://youtu.be/', '')
+      shortcode.sub!('https://youtu.be/', '')
+      
+      id = shortcode
+      return id      
+    end
+    
+    return nil
+  end
+  
+  def format_description_text text
+    text = ActionView::Base.full_sanitizer.sanitize(text).squish
+    if text.length > 140
+      text = text.slice(0, 140) + "..."
+    end
+    return text
+  end
+  
 end
