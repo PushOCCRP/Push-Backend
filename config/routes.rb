@@ -1,13 +1,9 @@
 Rails.application.routes.draw do
   get 'articles' => 'articles#index'
   get 'search' => 'articles#search'
-<<<<<<< HEAD
   get 'article' => 'articles#get_article'
-=======
-  
   get 'passthrough' => 'application#passthrough'
 
->>>>>>> wordpress
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 
