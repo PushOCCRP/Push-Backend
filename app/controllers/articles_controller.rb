@@ -204,18 +204,7 @@ class ArticlesController < ApplicationController
       end
       
       # Limit description to number of characters since most have many paragraphs
-<<<<<<< HEAD
-      article['description'] = ActionView::Base.full_sanitizer.sanitize(article['description']).squish
-      if article['description'].length > 140
-        article['description'] = article['description'].slice(0, 140) + "..."
-      end
-      
-      
-      
-=======
-
       article['description'] = format_description_text article['description']
->>>>>>> wordpress
 
       # Extract all image urls in the article and put them into a single array.
       article['image_urls'] = []
