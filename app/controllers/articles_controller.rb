@@ -7,7 +7,6 @@ class ArticlesController < ApplicationController
   def index
     
     @response = []
-    
     case @cms_mode 
       when :occrp_joomla
         url = ENV['occrp_joomla_url']
@@ -48,8 +47,12 @@ class ArticlesController < ApplicationController
       language = "az"
     end
     
-    options = {access_token: access_token, language: language, 'sort[published]' => 'desc'}        
+
+    options = {access_token: access_token, language: language, 'sort[published]' => 'desc'} 
+
     response = HTTParty.get(url, query: options)
+    
+
     body = JSON.parse response.body
     
     @response = format_newscoop_response(body)
