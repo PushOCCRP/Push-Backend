@@ -60,8 +60,9 @@ class Newscoop
     '0.0.1'
   end
   
+  private
   # false mean valid, true mean invalid
-  private def check_for_expiration
+  def check_for_expiration
     current_time = Time.now
     # Build in a 10 second grace period
     expire_time_to_compare = @@expire_time - 10
