@@ -45,13 +45,14 @@ class ArticlesController < ApplicationController
     url = ENV['newscoop_url'] + '/api/articles.json'
     language = params['language']
     if(language.blank?)
+      # Should be extracted
       language = "az"
     end
     
     options = {access_token: access_token, language: language, 'sort[published]' => 'desc'}        
     response = HTTParty.get(url, query: options)
     body = JSON.parse response.body
-    
+        
     @response = format_newscoop_response(body)
   end
   
@@ -185,6 +186,7 @@ class ArticlesController < ApplicationController
       elements.css('img').each do |image|
         image_address = image.attributes['src'].value
         if !image_address.starts_with?("http")
+          # Obviously needs to be fixed
           article['image_urls'] << "https://www.occrp.org/" + image.attributes['src'].value
         else
           article['image_urls'] << image_address
@@ -256,7 +258,7 @@ class ArticlesController < ApplicationController
         end
         
         formatted_article['images'] = images
-
+        formatted_article['url'] = article['url']
         formatted_articles << formatted_article
     end
     
