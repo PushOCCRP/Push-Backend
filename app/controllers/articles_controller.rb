@@ -224,7 +224,7 @@ class ArticlesController < ApplicationController
         formatted_article['headline'] = article['title']
         formatted_article['description'] = format_description_text article['fields']['deck']
         formatted_article['body'] = article['fields']['full_text']
-        if(article['authors'].count > 0)
+        if(article['authors'] && article['authors'].count > 0)
           formatted_article['author'] = article['authors'][0]['name']
         end
       
