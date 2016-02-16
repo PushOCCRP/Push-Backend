@@ -7,8 +7,19 @@ class ApplicationController < ActionController::Base
   #This should conceivably cache responses at some point
   #Should also require auth token
   def passthrough
+    # We only want this to be for Newscoop
+    if(ENV['newscoop_url'].blank?)
+      return
+    end
+
     url = params['url']
-    response = HTTParty.get(url)
-    render text: response, content_type: response.headers['content-type']
+    link_uri = URI(url)
+    base_uri = URI(ENV['newscoop_url'])
+    
+    if(link_uri.host == base_uri.host)
+      response = HTTParty.get(url)
+      render text: response, content_type: response.headers['content-type']
+    end
+    
   end
 end
