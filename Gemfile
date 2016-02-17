@@ -58,4 +58,4 @@ gem 'figaro'
 gem 'nokogiri'
 gem 'puma'
 gem 'dalli'
-
+gem 'memcachier'
