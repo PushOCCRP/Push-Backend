@@ -17,7 +17,9 @@ class ApplicationController < ActionController::Base
     base_uri = URI(ENV['newscoop_url'])
     
     if(link_uri.host == base_uri.host)
-      response = HTTParty.get(url)
+      Rails.cache.fetch("url", expires_in: 1.hour) do
+        response = HTTParty.get(url)
+      end
       render text: response, content_type: response.headers['content-type']
     end
     
