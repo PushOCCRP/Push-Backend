@@ -49,11 +49,15 @@ class ArticlesController < ApplicationController
       language = "az"
     end
     
-    options = {access_token: access_token, language: language, 'sort[published]' => 'desc'}        
-    response = HTTParty.get(url, query: options)
-    body = JSON.parse response.body
-        
-    @response = format_newscoop_response(body)
+    options = {access_token: access_token, language: language, 'sort[published]' => 'desc'}
+
+    @response = Rails.cache.fetch("newscoop_articles", expires_in: 1.hour) do
+      logger.info("aritcles are not cached, making call to newscoop server")
+      response = HTTParty.get(url, query: options)
+      body = JSON.parse response.body
+      format_newscoop_response(body)
+    end        
+    
   end
   
   def get_newscoop_auth_token
