@@ -16,11 +16,18 @@ class ApplicationController < ActionController::Base
     link_uri = URI(url)
     base_uri = URI(ENV['newscoop_url'])
     
+    #byebug
     if(link_uri.host == base_uri.host)
-      Rails.cache.fetch("url", expires_in: 1.hour) do
-        response = HTTParty.get(url)
+      image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
+        logger.info("URL requested not cached: #{url}")
+        logger.info("Fetching #{url}")
+        raw_response = HTTParty.get(url)
+        image_response = {body: raw_response.body, content_type: raw_response.headers['content-type']}
+        image_response
       end
-      render text: response, content_type: response.headers['content-type']
+      
+      send_data image_response[:body], type: image_response[:content_type], disposition: 'inline'
+#      render text: image_response[:body], content_type: image_response[:headers]['content-type']
     end
     
   end
