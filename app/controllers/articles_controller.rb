@@ -41,7 +41,7 @@ class ArticlesController < ApplicationController
       body = response.body
 
       body = JSON.parse(request_response.body)
-      clean_up_response body['results']
+      {results: clean_up_response(body['results'])}
     end
 
     return @response
