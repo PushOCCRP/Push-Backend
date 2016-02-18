@@ -14,7 +14,7 @@ class ArticlesController < ApplicationController
       when :wordpress
         url = ENV['wordpress_url'] 
 
-        response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
+        response['results'] = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
         body = response.body
 
         @response = JSON.parse(response.body)
@@ -36,12 +36,12 @@ class ArticlesController < ApplicationController
     # Shortcut
     # We need the request to look like this, so we have to get the correct key.
     # At the moment it makes the call twice. We need to cache this.
-    @response['results'] = Rails.cache.fetch("joomla_articles", expires_in: 1.hour) do
-      response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
+    @response = Rails.cache.fetch("joomla_articles", expires_in: 1.hour) do
+      request_response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
       body = response.body
 
-      @response = JSON.parse(response.body)
-      clean_up_response @response['results']
+      body = JSON.parse(request_response.body)
+      clean_up_response body['results']
     end
 
     return @response
