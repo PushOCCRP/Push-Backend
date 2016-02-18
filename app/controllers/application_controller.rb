@@ -27,7 +27,6 @@ class ApplicationController < ActionController::Base
       end
       
       send_data image_response[:body], type: image_response[:content_type], disposition: 'inline'
-#      render text: image_response[:body], content_type: image_response[:headers]['content-type']
     end
     
   end
