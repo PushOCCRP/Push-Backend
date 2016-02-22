@@ -323,10 +323,16 @@ class ArticlesController < ApplicationController
   end
   
   def format_description_text text
-    text = ActionView::Base.full_sanitizer.sanitize(text).squish
-    if text.length > 140
-      text = text.slice(0, 140) + "..."
+    text = ActionView::Base.full_sanitizer.sanitize(text)
+    
+    if(!text.nil?)
+      text.squish!
+    
+      if text.length > 140
+        text = text.slice(0, 140) + "..."
+      end
     end
+    
     return text
   end
   
