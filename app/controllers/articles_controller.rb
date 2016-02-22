@@ -332,7 +332,7 @@ class ArticlesController < ApplicationController
         text = text.slice(0, 140) + "..."
       end
     else
-      text = " "
+      text = "..."
     end
 
     return text
