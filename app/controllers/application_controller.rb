@@ -16,7 +16,6 @@ class ApplicationController < ActionController::Base
     link_uri = URI(url)
     base_uri = URI(ENV['newscoop_url'])
     
-    #byebug
     if(link_uri.host == base_uri.host)
       image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
         logger.info("URL requested not cached: #{url}")

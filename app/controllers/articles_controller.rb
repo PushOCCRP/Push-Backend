@@ -22,6 +22,8 @@ class ArticlesController < ApplicationController
         #@response['results'] = clean_up_response @response['results']
       when :newscoop
         @response = get_newscoop_articles
+      when :cins_codeigniter
+        @response = get_cins_codeigniter_articles
     end
     
     respond_to do |format|
@@ -47,6 +49,23 @@ class ArticlesController < ApplicationController
     return @response
   end
   
+  def get_cins_codeigniter_articles
+    url = ENV['cins_codeigniter_url']+'api/articles.json'
+    language = params['language']
+    if(language.blank?)
+      # Should be extracted
+      language = "rs"
+    end
+
+    @response = Rails.cache.fetch("cins_codeigniter_articles/#{language}", expires_in: 1.hour) do
+      logger.info("aritcles are not cached, making call to newscoop server")
+      response = HTTParty.get(url, query: options)
+      body = JSON.parse response.body
+      formate_cins_codeigniter_response(body)
+    end        
+
+  end
+
   def get_newscoop_articles
     access_token = get_newscoop_auth_token
     url = ENV['newscoop_url'] + '/api/articles.json'
@@ -234,7 +253,10 @@ class ArticlesController < ApplicationController
         formatted_article = {}
         formatted_article['headline'] = article['title']
         formatted_article['description'] = format_description_text article['fields']['deck']
+
         formatted_article['body'] = article['fields']['full_text']
+        formatted_article['body'] = scrubImageTagsFromHTMLString formatted_article['body']
+
         if(article['authors'] && article['authors'].count > 0)
           formatted_article['author'] = article['authors'][0]['name']
         end
@@ -274,6 +296,15 @@ class ArticlesController < ApplicationController
     end
     
     return formatted_articles
+  end
+
+  def scrubImageTagsFromHTMLString html_string
+    scrubber = Rails::Html::TargetScrubber.new
+    scrubber.tags = ['img', 'div']
+
+    html_fragment = Loofah.fragment(html_string)
+    html_fragment.scrub!(scrubber)
+    return html_fragment.to_s.squish
   end
   
   def extractYouTubeIDFromShortcode shortcode
