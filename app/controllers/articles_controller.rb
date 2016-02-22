@@ -331,8 +331,10 @@ class ArticlesController < ApplicationController
       if text.length > 140
         text = text.slice(0, 140) + "..."
       end
+    else
+      text = ""
     end
-    
+
     return text
   end
   
