@@ -304,7 +304,10 @@ class ArticlesController < ApplicationController
 
     html_fragment = Loofah.fragment(html_string)
     html_fragment.scrub!(scrubber)
-    return html_fragment.to_s.squish
+    scrubbed = html_fragment.to_s.squish.gsub(/<p[^>]*>([\s]*)<\/p>/, '')
+    scrubbed.gsub!('/p>', '/p><br />')
+    scrubbed.squish!
+    return scrubbed
   end
   
   def extractYouTubeIDFromShortcode shortcode
