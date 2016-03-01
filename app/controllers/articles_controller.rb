@@ -12,13 +12,7 @@ class ArticlesController < ApplicationController
       when :occrp_joomla
         @response = get_occrp_joomla_articles
       when :wordpress
-        url = ENV['wordpress_url'] 
-
-        response['results'] = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
-        body = response.body
-
-        @response = JSON.parse(response.body)
-    
+        @response = get_wordpress_articles
         #@response['results'] = clean_up_response @response['results']
       when :newscoop
         @response = get_newscoop_articles
@@ -63,7 +57,14 @@ class ArticlesController < ApplicationController
       body = JSON.parse response.body
       formate_cins_codeigniter_response(body)
     end        
+  end
 
+  def get_wordpress_articles
+    url = ENV['wordpress_url'] 
+    response = HTTParty.get("#{url}?push-occrp=true&type=articles")
+    response_json = JSON.parse(response.body)
+    response_json['results'] = clean_up_response(response_json['results'])
+    return response_json
   end
 
   def get_newscoop_articles
@@ -139,6 +140,14 @@ class ArticlesController < ApplicationController
   end
   
   def search_wordpress
+      query = params['q']
+      url = "#{ENV['wordpress_url']}?push-occrp=true&type=search&q=#{query}"
+      response = HTTParty.get(url)
+
+      body = JSON.parse response.body
+    
+      search_results = clean_up_response(body['results'])
+
       @response = {query: query,
                  start_date: "19700101",
                  end_date: DateTime.now.strftime("%Y%m%d"),
@@ -199,8 +208,10 @@ class ArticlesController < ApplicationController
   end
 
   def clean_up_response articles
+
     articles.delete_if{|article| article['headline'].blank?}
     articles.each do |article|
+
       # If there is no body (which is very prevalent in the OCCRP data for some reason)
       # this takes the intro text and makes it the body text
       if article['body'].nil? || article['body'].empty?
@@ -211,7 +222,7 @@ class ArticlesController < ApplicationController
       article['description'] = format_description_text article['description']
 
       # Extract all image urls in the article and put them into a single array.
-      article['image_urls'] = []
+      article['images'] = []
       elements = Nokogiri::HTML article['body']
       elements.css('img').each do |image|
         image_address = image.attributes['src'].value
@@ -219,16 +230,35 @@ class ArticlesController < ApplicationController
           # Obviously needs to be fixed
           article['image_urls'] << "https://www.occrp.org/" + image.attributes['src'].value
         else
-          article['image_urls'] << image_address
+          image_object = {url: image_address, caption: "", width: "", height: "", byline: ""}
+
+          article['images'] << image_object
         end
+
+        image.remove
       end
 
+      article['body'] = elements.to_html
+
       # Just in case the dates are improperly formatted
+      # Cycle through options
+      published_date = nil
       begin
         published_date = DateTime.strptime(article['publish_date'], '%F %T')
       rescue => error
+      end
+
+      if(published_date.nil?)
+        begin
+          published_date = DateTime.strptime(article['publish_date'], '%Y%m%d')
+        rescue => error
+        end
+      end
+
+      if(published_date.nil?)
         published_date = DateTime.new(1970,01,01)
       end
+
 
       # right now we only support dates on the mobile side, this will be time soon.
       article['publish_date'] = published_date.strftime("%Y%m%d")
