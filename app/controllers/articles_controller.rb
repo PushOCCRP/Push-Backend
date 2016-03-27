@@ -1,6 +1,7 @@
 class ArticlesController < ApplicationController
 
   before_action :check_for_valid_cms_mode
+  before_action :check_for_force_https
 
   @newscoop_access_token
 
@@ -191,6 +192,22 @@ class ArticlesController < ApplicationController
         raise "CMS type #{cms_type} not valid for this version of Push."
     end
   end
+
+  def check_for_force_https
+    @force_https
+    if(ENV['force_https'])
+      case ENV['force_https']
+        when 'false'
+          @force_https = false
+        when 'true'
+          @force_https = true
+        else
+          raise "Unacceptable value for 'force_https'"
+      end
+    else
+      @force_https = false
+    end
+  end
   
   def get_cookie
     url = "https://www.occrp.org/index.html?option=com_push&format=json&view=urllookup&u="
@@ -228,8 +245,14 @@ class ArticlesController < ApplicationController
         image_address = image.attributes['src'].value
         if !image_address.starts_with?("http")
           # Obviously needs to be fixed
-          article['image_urls'] << "https://www.occrp.org/" + image.attributes['src'].value
+          article['image_urls'] << ENV["wordpress_url"] + "/" + image.attributes['src'].value
         else
+          if(@force_https)
+            uri = URI(image_address)
+            uri.scheme = 'https'
+            image_address = uri.to_s
+          end
+
           image_object = {url: image_address, caption: "", width: "", height: "", byline: ""}
 
           article['images'] << image_object
