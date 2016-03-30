@@ -268,6 +268,7 @@ class ArticlesController < ApplicationController
         article ['body'] = scrubWordpressTagsFromHTMLString article['body']
         article ['body'] = scrubScriptTagsFromHTMLString article['body']
         article ['body'] = scrubJSCommentsFromHTMLString article['body']
+        article ['body'] = scrubSpecialCharactersFromSingleLinesInHTMLString article['body']
       end
 
       # Just in case the dates are improperly formatted
@@ -390,6 +391,11 @@ class ArticlesController < ApplicationController
   #\/\/.+
   def scrubJSCommentsFromHTMLString html_string
     scrubbed = html_string.gsub(/\s\/\/.+/, "")
+    return scrubbed
+  end
+
+  def scrubSpecialCharactersFromSingleLinesInHTMLString html_string
+    scrubbed = html_string.gsub(/^[^a-z0-9]+[.\s]+/, "")
     return scrubbed
   end
 
