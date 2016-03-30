@@ -389,7 +389,7 @@ class ArticlesController < ApplicationController
   end
   #\/\/.+
   def scrubJSCommentsFromHTMLString html_string
-    scrubbed = html_string.gsub(/\/\/.+/, "")
+    scrubbed = html_string.gsub(/\s\/\/.+/, "")
     return scrubbed
   end
 
