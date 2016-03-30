@@ -266,6 +266,7 @@ class ArticlesController < ApplicationController
 
       if(@cms_mode == :wordpress)
         article ['body'] = scrubWordpressTagsFromHTMLString article['body']
+        article ['body'] = scrubScriptTagsFromHTMLString article['body']
       end
 
       # Just in case the dates are improperly formatted
@@ -383,6 +384,18 @@ class ArticlesController < ApplicationController
   #\[[A-z\s\S]+\]
   def scrubWordpressTagsFromHTMLString html_string
     scrubbed = html_string.gsub(/\[[A-z\s\S]+\]/, "")
+    return scrubbed
+  end
+
+  def scrubScriptTagsFromHTMLString html_string
+    scrubber = Rails::Html::TargetScrubber.new
+    scrubber.tags = ['script']
+
+    html_fragment = Loofah.fragment(html_string)
+    html_fragment.scrub!(scrubber)
+    scrubbed = html_fragment.to_s.squish.gsub(/<p[^>]*>([\s]*)<\/p>/, '')
+    scrubbed.gsub!('/p>', '/p><br />')
+    scrubbed.squish!
     return scrubbed
   end
   
