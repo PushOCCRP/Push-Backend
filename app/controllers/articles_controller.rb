@@ -267,6 +267,7 @@ class ArticlesController < ApplicationController
       if(@cms_mode == :wordpress)
         article ['body'] = scrubWordpressTagsFromHTMLString article['body']
         article ['body'] = scrubScriptTagsFromHTMLString article['body']
+        article ['body'] = scrubJSCommentsFromHTMLString article['body']
       end
 
       # Just in case the dates are improperly formatted
@@ -384,6 +385,11 @@ class ArticlesController < ApplicationController
   #\[[A-z\s\S]+\]
   def scrubWordpressTagsFromHTMLString html_string
     scrubbed = html_string.gsub(/\[[A-z\s\S]+\]/, "")
+    return scrubbed
+  end
+  #\/\/.+
+  def scrubJSCommentsFromHTMLString html_string
+    scrubbed = html_string.gsub(/\/\/.+/, "")
     return scrubbed
   end
 
