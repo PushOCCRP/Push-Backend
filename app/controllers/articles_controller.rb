@@ -265,10 +265,11 @@ class ArticlesController < ApplicationController
       article['body'] = elements.to_html
 
       if(@cms_mode == :wordpress)
-        article ['body'] = scrubWordpressTagsFromHTMLString article['body']
-        article ['body'] = scrubScriptTagsFromHTMLString article['body']
-        article ['body'] = scrubJSCommentsFromHTMLString article['body']
-        article ['body'] = scrubSpecialCharactersFromSingleLinesInHTMLString article['body']
+        article['body'] = scrubWordpressTagsFromHTMLString article['body']
+        article['body'] = scrubScriptTagsFromHTMLString article['body']
+        article['body'] = scrubJSCommentsFromHTMLString article['body']
+        article['body'] = scrubSpecialCharactersFromSingleLinesInHTMLString article['body']
+        article['body'] = scrubHTMLSpecialCharactersInHTMLString article['body']
       end
 
       # Just in case the dates are improperly formatted
