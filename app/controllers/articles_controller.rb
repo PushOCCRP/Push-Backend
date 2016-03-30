@@ -399,6 +399,10 @@ class ArticlesController < ApplicationController
     return scrubbed
   end
 
+  def scrubHTMLSpecialCharactersInHTMLString html_string
+    scrubbed = html_string.gsub(/^&[a-z0-9]+;/, "")
+  end
+
   def scrubScriptTagsFromHTMLString html_string
     scrubber = Rails::Html::TargetScrubber.new
     scrubber.tags = ['script']
