@@ -65,6 +65,7 @@ class ArticlesController < ApplicationController
     response = HTTParty.get("#{url}?push-occrp=true&type=articles")
     response_json = JSON.parse(response.body)
     response_json['results'] = clean_up_response(response_json['results'])
+
     return response_json
   end
 
@@ -263,6 +264,10 @@ class ArticlesController < ApplicationController
 
       article['body'] = elements.to_html
 
+      if(@cms_mode == :wordpress)
+        article ['body'] = scrubWordpressTagsFromHTMLString article['body']
+      end
+
       # Just in case the dates are improperly formatted
       # Cycle through options
       published_date = nil
@@ -373,6 +378,12 @@ class ArticlesController < ApplicationController
     end
     
     return nil
+  end
+
+  #\[[A-z\s\S]+\]
+  def scrubWordpressTagsFromHTMLString html_string
+    scrubbed = html_string.gsub(/\[[A-z\s\S]+\]/, "")
+    return scrubbed
   end
   
   def format_description_text text
