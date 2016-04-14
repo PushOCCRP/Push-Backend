@@ -39,7 +39,6 @@ class ArticlesController < ApplicationController
 
       body = JSON.parse(request_response.body)
       articles = clean_up_response(body['results'])
-      byebug
       articles = format_occrp_joomla_articles(articles)
 
       {results: body}
