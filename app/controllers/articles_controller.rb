@@ -38,7 +38,11 @@ class ArticlesController < ApplicationController
       body = response.body
 
       body = JSON.parse(request_response.body)
-      {results: clean_up_response(body['results'])}
+      articles = clean_up_response(body['results'])
+      byebug
+      articles = format_occrp_joomla_articles(articles)
+
+      {results: body}
     end
 
     return @response
@@ -303,6 +307,12 @@ class ArticlesController < ApplicationController
 
     return articles
   end
+
+  def format_occrp_joomla_articles articles
+    articles.each do |article|
+      article['url'] = URI.join(base_url, article['id'])
+    end
+  end
   
   def format_newscoop_response body
     response = {}
@@ -453,6 +463,9 @@ class ArticlesController < ApplicationController
       else
         raise "CMS type #{cms_type} not valid for this version of Push."
     end
+
+    uri = URI.parse(url)
+    url = uri.scheme + "://" + uri.host
     return url
   end
 end
