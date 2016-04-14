@@ -132,6 +132,7 @@ class ArticlesController < ApplicationController
 
     # Turn all the responses into something that looks nice and is expected
     search_results = clean_up_response JSON.parse(response.body)
+    search_results = format_occrp_joomla_articles(search_results)
     @response = {query: query,
                  start_date: "19700101",
                  end_date: DateTime.now.strftime("%Y%m%d"),
