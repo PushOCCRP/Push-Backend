@@ -241,12 +241,18 @@ class ArticlesController < ApplicationController
 
       # Extract all image urls in the article and put them into a single array.
       article['images'] = []
+      article['image_urls'] = []
       elements = Nokogiri::HTML article['body']
       elements.css('img').each do |image|
         image_address = image.attributes['src'].value
         if !image_address.starts_with?("http")
           # Obviously needs to be fixed
-          article['image_urls'] << ENV["wordpress_url"] + "/" + image.attributes['src'].value
+          full_url = base_url + "/" + image.attributes['src'].value
+
+          image_object = {url: full_url, caption: "", width: "", height: "", byline: ""}
+          article['images'] << image_object
+
+          article['image_urls'] << full_url
         else
           if(@force_https)
             uri = URI(image_address)
@@ -255,7 +261,6 @@ class ArticlesController < ApplicationController
           end
 
           image_object = {url: image_address, caption: "", width: "", height: "", byline: ""}
-
           article['images'] << image_object
         end
 
@@ -415,6 +420,10 @@ class ArticlesController < ApplicationController
     scrubbed.squish!
     return scrubbed
   end
+
+  def scrubTargetFromHrefLinksInHTMLString html_string
+    #Fail here since its not implemented!!!!
+  end
   
   def format_description_text text
     text = ActionView::Base.full_sanitizer.sanitize(text)
@@ -432,4 +441,18 @@ class ArticlesController < ApplicationController
     return text
   end
   
+  def base_url
+    url = nil
+    case ENV['cms_mode']
+      when "occrp-joomla"
+        url = ENV['occrp_joomla_url']
+      when "wordpress"
+        url = ENV['wordpress_url']
+      when "newscoop"
+        url = ENV['newscoop_url']
+      else
+        raise "CMS type #{cms_type} not valid for this version of Push."
+    end
+    return url
+  end
 end
