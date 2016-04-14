@@ -40,8 +40,7 @@ class ArticlesController < ApplicationController
       body = JSON.parse(request_response.body)
       articles = clean_up_response(body['results'])
       articles = format_occrp_joomla_articles(articles)
-
-      {results: body}
+      {results: articles}
     end
 
     return @response
