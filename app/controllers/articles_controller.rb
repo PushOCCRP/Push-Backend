@@ -84,10 +84,10 @@ class ArticlesController < ApplicationController
 
     logger.info("Fetching articles")
 
-    cached = false
+    cached = true
     @response = Rails.cache.fetch("newscoop_articles/#{language}", expires_in: 1.hour) do
       logger.info("articles are not cached, making call to newscoop server")
-      cached = true
+      cached = false
       response = HTTParty.get(url, query: options)
       body = JSON.parse response.body
       format_newscoop_response(body)
@@ -97,7 +97,7 @@ class ArticlesController < ApplicationController
       logger.info("Cached hit for articles")
     else
       logger.info("Cached missed")
-    end
+    ends
     
     return @response
   end
