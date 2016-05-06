@@ -97,7 +97,7 @@ class ArticlesController < ApplicationController
       logger.info("Cached hit for articles")
     else
       logger.info("Cached missed")
-    ends
+    end
     
     return @response
   end
