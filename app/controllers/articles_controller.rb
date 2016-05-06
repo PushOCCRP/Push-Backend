@@ -99,6 +99,7 @@ class ArticlesController < ApplicationController
       logger.info("Cached missed")
     end
     
+    return @response
   end
   
   def get_newscoop_auth_token
