@@ -8,7 +8,7 @@ class ArticlesController < ApplicationController
   def index
     
     @response = []
-    
+
     case @cms_mode 
       when :occrp_joomla
         @response = get_occrp_joomla_articles
@@ -64,6 +64,7 @@ class ArticlesController < ApplicationController
 
   def get_wordpress_articles
     url = ENV['wordpress_url'] 
+
     response = HTTParty.get("#{url}?push-occrp=true&type=articles")
     response_json = JSON.parse(response.body)
     response_json['results'] = clean_up_response(response_json['results'])
@@ -289,6 +290,7 @@ class ArticlesController < ApplicationController
         article['body'] = scrubJSCommentsFromHTMLString article['body']
         article['body'] = scrubSpecialCharactersFromSingleLinesInHTMLString article['body']
         article['body'] = scrubHTMLSpecialCharactersInHTMLString article['body']
+        article['headline'] = article['headline'].encode("UTF-8")
       end
 
       # Just in case the dates are improperly formatted
