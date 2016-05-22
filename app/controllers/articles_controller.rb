@@ -290,7 +290,7 @@ class ArticlesController < ApplicationController
         article['body'] = scrubJSCommentsFromHTMLString article['body']
         article['body'] = scrubSpecialCharactersFromSingleLinesInHTMLString article['body']
         article['body'] = scrubHTMLSpecialCharactersInHTMLString article['body']
-        article['headline'] = article['headline'].encode("UTF-8")
+        article['headline'] = HTMLEntities.new.decode(article['headline'])
       end
 
       # Just in case the dates are improperly formatted
