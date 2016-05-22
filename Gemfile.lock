@@ -59,6 +59,7 @@ GEM
       thor (~> 0.14)
     globalid (0.3.6)
       activesupport (>= 4.1.0)
+    htmlentities (4.3.4)
     httparty (0.13.7)
       json (~> 1.8)
       multi_xml (>= 0.5.2)
@@ -170,6 +171,7 @@ DEPENDENCIES
   coffee-rails (~> 4.1.0)
   dalli
   figaro
+  htmlentities
   httparty
   jbuilder (~> 2.0)
   jquery-rails

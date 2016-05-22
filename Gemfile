@@ -60,3 +60,4 @@ gem 'puma'
 gem 'dalli'
 gem 'memcachier'
 gem "mini_magick"
+gem 'htmlentities'
