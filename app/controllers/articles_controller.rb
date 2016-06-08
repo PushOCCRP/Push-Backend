@@ -65,7 +65,15 @@ class ArticlesController < ApplicationController
   def get_wordpress_articles
     url = ENV['wordpress_url'] 
 
-    response = HTTParty.get("#{url}?push-occrp=true&type=articles")
+    final_url = "#{url}?push-occrp=true&type=articles"
+    language = params['language']
+    
+    if(!language.blank?)
+      # Should be extracted
+      final_url = "#{url}/#{language}?push-occrp=true&type=articles"
+    end
+
+    response = HTTParty.get(final_url)
     response_json = JSON.parse(response.body)
     response_json['results'] = clean_up_response(response_json['results'])
 
