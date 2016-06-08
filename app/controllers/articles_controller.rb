@@ -270,7 +270,7 @@ class ArticlesController < ApplicationController
           article['image_urls'] << full_url
         else
           if(@force_https)
-            uri = URI(image_address)
+            uri = Addressable::URI.parse(image_address)
             uri.scheme = 'https'
             image_address = uri.to_s
           end
