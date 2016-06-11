@@ -294,9 +294,8 @@ class ArticlesController < ApplicationController
 
       if(@cms_mode == :wordpress)
         article['body'] = scrubWordpressTagsFromHTMLString article['body']
-        article['body'] = scrubScriptTagsFromHTMLString article['body']
         article['body'] = cleanUpNewLines article['body']
-
+        article['body'] = scrubScriptTagsFromHTMLString article['body']
         article['body'] = scrubJSCommentsFromHTMLString article['body']
         article['body'] = scrubSpecialCharactersFromSingleLinesInHTMLString article['body']
         article['body'] = scrubHTMLSpecialCharactersInHTMLString article['body']
@@ -446,8 +445,9 @@ class ArticlesController < ApplicationController
     scrubber.tags = ['script']
 
     html_fragment = Loofah.fragment(html_string)
-    html_fragment.scrub!(scrubber)
-    scrubbed = html_fragment.to_s.squish.gsub(/<p[^>]*>([\s]*)<\/p>/, '')
+    scrubbed = html_fragment.scrub!(scrubber)
+    scrubbed = html_fragment.to_s.squish
+    scrubbed.gsub!(/<p[^>]*>([\s]*)<\/p>/, '')
     scrubbed.gsub!('/p>', '/p><br />')
     scrubbed.squish!
     return scrubbed
