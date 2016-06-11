@@ -445,11 +445,15 @@ class ArticlesController < ApplicationController
     scrubber.tags = ['script']
 
     html_fragment = Loofah.fragment(html_string)
-    scrubbed = html_fragment.scrub!(scrubber)
+    scrubbed = html_fragment.scrub!(scrubber).to_s
     scrubbed = html_fragment.to_s.squish
-    scrubbed.gsub!(/<p[^>]*>([\s]*)<\/p>/, '')
+    scrubbed.gsub!(/<p>([\s]*)/, '')
+    scrubbed.gsub!(/([\s]*)<\/p>/, '')
     scrubbed.gsub!('/p>', '/p><br />')
     scrubbed.squish!
+
+    #put back in the spacers
+    scrubbed.gsub!("::::", "<br /><br />")
     return scrubbed
   end
 
@@ -457,10 +461,11 @@ class ArticlesController < ApplicationController
     #Fail here since its not implemented!!!!
   end
 
-  #This adds <p> tags if necessary, originally for KRIK from Wordpress
+  #This adds <br /> tags if necessary, originally for KRIK from Wordpress
+  #This puts in :::: as place holder while we clean the rest
   def cleanUpNewLines html_string
     cleaned = html_string
-    cleaned.gsub!("\r\n\r\n", "<br /><br />")
+    cleaned.gsub!("\r\n\r\n", "::::")
     return cleaned
   end
   
