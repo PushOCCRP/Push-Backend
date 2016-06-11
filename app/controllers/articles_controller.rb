@@ -295,6 +295,8 @@ class ArticlesController < ApplicationController
       if(@cms_mode == :wordpress)
         article['body'] = scrubWordpressTagsFromHTMLString article['body']
         article['body'] = scrubScriptTagsFromHTMLString article['body']
+        article['body'] = cleanUpNewLines article['body']
+
         article['body'] = scrubJSCommentsFromHTMLString article['body']
         article['body'] = scrubSpecialCharactersFromSingleLinesInHTMLString article['body']
         article['body'] = scrubHTMLSpecialCharactersInHTMLString article['body']
@@ -453,6 +455,15 @@ class ArticlesController < ApplicationController
 
   def scrubTargetFromHrefLinksInHTMLString html_string
     #Fail here since its not implemented!!!!
+  end
+
+  #This adds <p> tags if necessary, originally for KRIK from Wordpress
+  def cleanUpNewLines html_string
+    cleaned = html_string
+    cleaned = "<p>" + cleaned
+    cleaned.gsub!("\r\n\r\n", "</p><p>")
+    cleaned = cleaned + "</p>"
+    return cleaned
   end
   
   def format_description_text text
