@@ -460,9 +460,7 @@ class ArticlesController < ApplicationController
   #This adds <p> tags if necessary, originally for KRIK from Wordpress
   def cleanUpNewLines html_string
     cleaned = html_string
-    cleaned = "<p>" + cleaned
-    cleaned.gsub!("\r\n\r\n", "</p><p>")
-    cleaned = cleaned + "</p>"
+    cleaned.gsub!("\r\n\r\n", "<br /><br />")
     return cleaned
   end
   
