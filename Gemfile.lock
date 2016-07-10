@@ -38,6 +38,7 @@ GEM
       tzinfo (~> 1.1)
     addressable (2.4.0)
     arel (6.0.3)
+    bcrypt (3.1.11)
     binding_of_caller (0.7.2)
       debug_inspector (>= 0.0.1)
     builder (3.2.2)
@@ -53,6 +54,12 @@ GEM
     daemons (1.2.3)
     dalli (2.7.6)
     debug_inspector (0.0.2)
+    devise (4.2.0)
+      bcrypt (~> 3.0)
+      orm_adapter (~> 0.1)
+      railties (>= 4.1.0, < 5.1)
+      responders
+      warden (~> 1.2.3)
     erubis (2.7.0)
     eventmachine (1.2.0.1)
     execjs (2.6.0)
@@ -90,6 +97,7 @@ GEM
     mysql2 (0.3.18)
     nokogiri (1.6.7.2)
       mini_portile2 (~> 2.0.0.rc2)
+    orm_adapter (0.5.0)
     pg (0.18.4)
     puma (3.4.0)
     rack (1.6.4)
@@ -114,6 +122,8 @@ GEM
       rails-deprecated_sanitizer (>= 1.0.1)
     rails-html-sanitizer (1.0.3)
       loofah (~> 2.0)
+    rails-settings-cached (0.6.5)
+      rails (>= 4.2.0)
     rails_12factor (0.0.3)
       rails_serve_static_assets
       rails_stdout_logging
@@ -127,6 +137,8 @@ GEM
     rake (11.1.2)
     rdoc (4.2.2)
       json (~> 1.4)
+    responders (2.2.0)
+      railties (>= 4.2.0, < 5.1)
     sass (3.4.22)
     sass-rails (5.0.4)
       railties (>= 4.0.0, < 5.0)
@@ -158,6 +170,8 @@ GEM
       thread_safe (~> 0.1)
     uglifier (3.0.0)
       execjs (>= 0.3.0, < 3)
+    warden (1.2.6)
+      rack (>= 1.0)
     web-console (2.3.0)
       activemodel (>= 4.0)
       binding_of_caller (>= 0.7.2)
@@ -172,6 +186,7 @@ DEPENDENCIES
   byebug
   coffee-rails (~> 4.1.0)
   dalli
+  devise
   figaro
   htmlentities
   httparty
@@ -185,6 +200,7 @@ DEPENDENCIES
   pg
   puma
   rails (= 4.2.3)
+  rails-settings-cached
   rails_12factor
   sass-rails (~> 5.0)
   sdoc (~> 0.4.0)
@@ -194,5 +210,8 @@ DEPENDENCIES
   uglifier (>= 1.3.0)
   web-console (~> 2.0)
 
+RUBY VERSION
+   ruby 2.2.3p173
+
 BUNDLED WITH
-   1.11.2
+   1.12.5

@@ -12,3 +12,7 @@ case ENV['cms_mode']
   else
   	raise "No valid cms mode, please fix the environment variable \"cms_mode\""
 end
+
+if(!ENV['developer_mode'] || ENV['developer_mode'].length > 0)
+  ENV['developer_mode'] = "false"
+end
