@@ -63,3 +63,7 @@ gem "mini_magick"
 gem 'htmlentities'
 
 gem "addressable"
+gem "devise"
+
+gem "rails-settings-cached"
+

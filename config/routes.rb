@@ -1,4 +1,20 @@
 Rails.application.routes.draw do
+  
+  devise_for :users
+  root to: "home#index"
+
+  get 'notifications' => 'notifications#index'
+
+  post 'notifications/subscribe' => 'notifications#subscribe'
+  post 'notifications/unsubscribe' => 'notifications#unsubscribe'
+
+  get 'notifications/cert_upload' => 'notifications#cert_upload'
+  post 'notifications/cert_upload' => 'notifications#process_cert'
+
+  get 'notifications/:id/push' => 'notifications#push', as: :push
+  resources :notifications
+
+
   get 'articles' => 'articles#index'
   get 'search' => 'articles#search'
   

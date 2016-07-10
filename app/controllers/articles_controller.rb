@@ -287,7 +287,16 @@ class ArticlesController < ApplicationController
           article['images'] << image_object
         end
 
-        image.remove
+        # This is a filler for the app itself. Which will replace the text with the images 
+        # (order being the same as in the array)
+        # for versioning we put this in
+        multiple_image_version_required = 1.1
+
+        if(params["v"] && params["v"] >= multiple_image_version_required)
+          image.replace("^&^&")
+        else
+          image.remove
+        end
       end
 
       article['body'] = elements.to_html

@@ -5,12 +5,13 @@
 #   gem 'sqlite3'
 #
 default: &default
-  adapter: mysql2
-  encoding: utf8
-  database: push
-  username: root
-  host: 127.0.0.1
-  port: 3306
+  adapter: postgresql
+  encoding: unicode
+  pool: 5
+  database: postgresql
+  username: postgres
+  password: postgres
+  host: db
 
 development:
   <<: *default
@@ -30,4 +31,4 @@ production:
   username: vbcleaemkxobpn
   password: 1LIUnEpvpfZ908-nXAv4LzPa9F
   host: localhost
-  database: dfjqipjpt50la5
+  database: production
