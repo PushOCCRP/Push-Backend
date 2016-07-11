@@ -1,0 +1,47 @@
+{
+  "name": "Push Backend",
+  "description": "A backend middleware to communicate between CMS and mobile app for the Push ecosystem.",
+  "website": "https://small-sharp-tool.com/",
+  "repository": "https://github.com/PushOCCRP/Push-Backend",
+  "success_url": "/notifications",
+  "scripts": {
+    "postdeploy": "bash entrypoint.sh"
+  },
+  "env": {
+    "cms_mode": {
+      "value": "occrp-joomla"
+      },
+    "force_https": {
+      "value": "true"
+    },
+    "occrp_joomla_url": {
+      "value": "https://www.occrp.org/index.html?option=com_push&format=json&view=articles"
+    },
+
+  },
+  "formation": {
+    "web": {
+      "quantity": 2,
+      "size": "Performance-M"
+    }
+  },
+  "image": "heroku/ruby",
+  "addons": [
+    "openredis",
+    {
+      "plan": "mongolab:shared-single-small",
+      "as": "MONGO"
+    },
+    {
+      "plan": "heroku-postgresql",
+      "options": {
+        "version": "9.5"
+      }
+    }
+  ],
+  "buildpacks": [
+    {
+      "url": "https://github.com/stomita/heroku-buildpack-phantomjs"
+    }
+  ]
+}
