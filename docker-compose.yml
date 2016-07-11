@@ -1,5 +1,22 @@
 version: '2'
 services:
+
+  # 
+  # nginx, working as a front-end proxy for uniqush
+  # we need it for only allowing certain endpoints to be available
+  nginx:
+      image: nginx
+      ports:
+          - "5000:80"
+          #- "60443:443"
+      depends_on:
+          - web
+      volumes:
+          - "./.docker/nginx/:/etc/nginx/:ro"                            # config
+          #- "/srv/data/secrets/nginx/:/etc/ssl/nginx/:ro"                # this is where dhparam goes; TODO maybe we should use a data container for this
+          #- "/srv/logs/gurac/:/srv/logs/gurac/"                          # logs
+          #- "/srv/data/ssl/:/srv/data/ssl/:ro"                           # ssl certificates/keys data, including letsencrypt-generated certs
+
   db:
     image: postgres
     environment:
@@ -12,6 +29,8 @@ services:
       - .:/push
     ports:
       - "3000:3000"
+    expose:
+      - "3000"
     depends_on:
       - db
     env_file:
