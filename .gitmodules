@@ -1,3 +1,6 @@
 [submodule "docker-uniqush"]
 	path = docker-uniqush
 	url = https://git.occrp.org/libre/docker-uniqush.git
+[submodule "uniqush-push"]
+	path = uniqush-push
+	url = https://github.com/uniqush/uniqush-push.git
