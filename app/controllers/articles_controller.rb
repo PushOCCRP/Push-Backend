@@ -292,7 +292,7 @@ class ArticlesController < ApplicationController
         # for versioning we put this in
         multiple_image_version_required = 1.1
 
-        if(params["v"] && params["v"] >= multiple_image_version_required)
+        if(params["v"] && params["v"].to_f >= multiple_image_version_required)
           image.replace("^&^&")
         else
           image.remove
