@@ -1,0 +1,7 @@
+<%= form_for @notification, url: {action: "create"}, html: {class: "nifty_form"} do |f| %>
+  <%= f.label :message %>
+  <%= f.text_area :message, size: "60x5" %><br />
+  <%= f.label :language %>
+  <%= f.text_field :language %>
+  <%= f.submit "Create" %>
+<% end %>

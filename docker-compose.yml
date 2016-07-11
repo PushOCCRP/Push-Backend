@@ -1,0 +1,46 @@
+version: '2'
+services:
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+  web:
+    build: .
+    command: bundle exec rails s -p 3000 -b '0.0.0.0'
+    volumes:
+      - .:/push
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      - cms_mode=occrp-joomla
+      - occrp_joomla_url=https://www.occrp.org/index.html?option=com_push&format=json&view=articles
+    entrypoint: /push/entrypoint.sh
+
+  # uniqush itself
+  uniqush:
+      build:
+          context: docker-uniqush
+      environment:
+          # this is the default, but let's be explicit here
+          UNIQUSH_DATABASE_HOST: "redis"
+#          UNIQUSH_LOGFILE:       "/srv/logs/gurac/uniqush.log"
+          UNIQUSH_LOGLEVEL:      "verbose"
+          UNIQUSH_GID:           "60001"
+          UNIQUSH_UID:           "60001"
+      ports:
+          - "9898:9898"
+      depends_on:
+          - redis
+      volumes:
+          - "./secrets:/secrets"
+          #- "/srv/logs/gurac/:/srv/logs/gurac/"
+
+  # the redis db server
+  redis:
+      image: redis
+      volumes:
+          - "./data:/data"
+      command: ["redis-server", "--appendonly", "yes"]

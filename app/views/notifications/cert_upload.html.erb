@@ -1,0 +1,7 @@
+<%= form_tag({action: :process_cert}, multipart: true) do %>
+  Cert
+  <%= file_field_tag 'cert' %><br /><br />
+  Key
+  <%= file_field_tag 'key' %>
+  <%= submit_tag %>
+<% end %>
