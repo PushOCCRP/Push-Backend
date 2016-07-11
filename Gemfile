@@ -67,5 +67,3 @@ gem "addressable"
 gem "devise"
 
 gem "rails-settings-cached"
-
-gem 'rails_stdout_logging'
