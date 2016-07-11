@@ -21,3 +21,5 @@
 
 # Ignore the installed gems
 /vendor/bundle
+
+/secrets.dev
