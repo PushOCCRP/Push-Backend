@@ -18,7 +18,7 @@ class NotificationsController < ApplicationController
         			 "dev_token": params["dev_token"]
         			}
 
-		response = HTTParty.post("http://uniqush:9898/subscribe", options)
+		response = HTTParty.post("http://uniqush:9898/subscribe?#{options.to_query}", options)
     	response_json = JSON.parse(response.body)
     	logger.debug(response_json)
 
@@ -57,7 +57,7 @@ class NotificationsController < ApplicationController
         			 "dev_token": params["dev_token"]
         			}
 
-		response = HTTParty.post("http://uniqush:9898/unsubscribe", options)
+		response = HTTParty.post("http://uniqush:9898/unsubscribe?#{options.to_query}", options)
     	response_json = JSON.parse(response.body)
     	
     	if(response_json["status"] == 0)
