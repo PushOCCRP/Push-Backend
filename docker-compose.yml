@@ -14,9 +14,8 @@ services:
       - "80:3000"
     depends_on:
       - db
-    environment:
-      - cms_mode=occrp-joomla
-      - occrp_joomla_url=https://www.occrp.org/index.html?option=com_push&format=json&view=articles
+    env_file:
+      - ./secrets.env
     entrypoint: /push/entrypoint.sh
 
   # uniqush itself
