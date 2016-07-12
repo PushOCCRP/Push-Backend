@@ -7,10 +7,6 @@ class NotificationsController < ApplicationController
 
 	end
 
-	def create
-
-	end
-
 	def subscribe
 		if(params["sandbox"] == "true")
 	        options = {"service": "#{push_id}-ios-sandbox",
@@ -191,6 +187,7 @@ class NotificationsController < ApplicationController
 		@notification = Notification.new
 		@notification.message = params[:notification][:message]
 		@notification.language = params[:notification][:language]
+		@notification.article_id = params[:notification][:article_id]
 		@notification.save!
 
 		redirect_to @notification
@@ -207,13 +204,15 @@ class NotificationsController < ApplicationController
 	        options = {"service": "#{push_id}-ios-sandbox",
 	        			 "subscriber": "*.#{@notification.language}",
 	        			 "msg": @notification.message,
-	        			 "sound": 'default'
+	        			 "sound": 'default',
+	        			 "article_id": @notification.article_id
 	        			}
 		else
 	        options = {"service": "#{push_id}-ios",
 			 "subscriber": "*.#{@notification.language}",
 			 "msg": @notification.message,
-			 "sound": 'default'
+			 "sound": 'default',
+			 "article_id": @notification.article_id
 			}
 		end
 
@@ -249,7 +248,7 @@ class NotificationsController < ApplicationController
   end
 
   def notification_params
-    params.require(:notification).permit(:message, :language)
+    params.require(:notification).permit(:message, :language, :article_id)
   end
 
 
