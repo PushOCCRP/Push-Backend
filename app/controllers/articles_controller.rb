@@ -30,10 +30,12 @@ class ArticlesController < ApplicationController
   def get_occrp_joomla_articles
     url = ENV['occrp_joomla_url'] + "&view=articles"
 
+    version = params["v"]
+
     # Shortcut
     # We need the request to look like this, so we have to get the correct key.
     # At the moment it makes the call twice. We need to cache this.
-    @response = Rails.cache.fetch("joomla_articles", expires_in: 1.hour) do
+    @response = Rails.cache.fetch("joomla_articles#{version}", expires_in: 1.hour) do
       request_response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
       body = response.body
 
@@ -54,7 +56,9 @@ class ArticlesController < ApplicationController
       language = "rs"
     end
 
-    @response = Rails.cache.fetch("cins_codeigniter_articles/#{language}", expires_in: 1.hour) do
+    version = params["v"]
+
+    @response = Rails.cache.fetch("cins_codeigniter_articles/#{language}/#{version}", expires_in: 1.hour) do
       logger.info("aritcles are not cached, making call to newscoop server")
       response = HTTParty.get(url, query: options)
       body = JSON.parse response.body
@@ -64,6 +68,7 @@ class ArticlesController < ApplicationController
 
   def get_wordpress_articles
     url = ENV['wordpress_url'] 
+    version = params["v"]
 
     final_url = "#{url}?push-occrp=true&type=articles"
     language = params['language']
@@ -84,6 +89,8 @@ class ArticlesController < ApplicationController
     access_token = get_newscoop_auth_token
     url = ENV['newscoop_url'] + '/api/articles.json'
     language = params['language']
+    version = params["v"]
+
     if(language.blank?)
       # Should be extracted
       language = "az"
@@ -94,7 +101,7 @@ class ArticlesController < ApplicationController
     logger.info("Fetching articles")
 
     cached = true
-    @response = Rails.cache.fetch("newscoop_articles/#{language}", expires_in: 1.hour) do
+    @response = Rails.cache.fetch("newscoop_articles/#{language}/#{version}", expires_in: 1.hour) do
       logger.info("articles are not cached, making call to newscoop server")
       cached = false
       response = HTTParty.get(url, query: options)
