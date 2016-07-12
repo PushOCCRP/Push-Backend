@@ -12,11 +12,19 @@ class NotificationsController < ApplicationController
 	end
 
 	def subscribe
-        options = {"service": "#{push_id}-ios-sandbox",
-        			 "subscriber": "#{params["dev_id"]}.#{params['language']}",
-        			 "pushservicetype": "apns",
-        			 "devtoken": params["dev_token"]
-        			}
+		if(params["sandbox"] == "true")
+	        options = {"service": "#{push_id}-ios-sandbox",
+	        			 "subscriber": "#{params["dev_id"]}.#{params['language']}",
+	        			 "pushservicetype": "apns",
+	        			 "devtoken": params["dev_token"]
+	        			}
+	    else
+	        options = {"service": "#{push_id}-ios",
+			 "subscriber": "#{params["dev_id"]}.#{params['language']}",
+			 "pushservicetype": "apns",
+			 "devtoken": params["dev_token"]
+			}
+		end
 
 		response = HTTParty.post("http://uniqush:9898/subscribe?#{options.to_query}", options)
     	response_json = JSON.parse(response.body)
@@ -51,11 +59,19 @@ class NotificationsController < ApplicationController
 	end
 
 	def unsubscribe
-        options = {"service": "#{push_id}-ios-sandbox",
-        			 "subscriber": "#{params["dev_id"]}.#{params['language']}",
-        			 "pushservicetype": "apns",
-        			 "devtoken": params["dev_token"]
-        			}
+		if(params["sandbox"] == "true")
+	        options = {"service": "#{push_id}-ios-sandbox",
+	        			 "subscriber": "#{params["dev_id"]}.#{params['language']}",
+	        			 "pushservicetype": "apns",
+	        			 "devtoken": params["dev_token"]
+	        			}
+	    else
+	        options = {"service": "#{push_id}-ios",
+			 "subscriber": "#{params["dev_id"]}.#{params['language']}",
+			 "pushservicetype": "apns",
+			 "devtoken": params["dev_token"]
+			}
+		end
 
 		response = HTTParty.post("http://uniqush:9898/unsubscribe?#{options.to_query}", options)
     	response_json = JSON.parse(response.body)
@@ -188,6 +204,7 @@ class NotificationsController < ApplicationController
 		@notification = Notification.find(params[:id])
 
 		# Add a swtich for production/sandbox pushing
+		# TEST THIS
 		if(params["sandbox"] == "true")
 	        options = {"service": "#{push_id}-ios-sandbox",
 	        			 "subscriber": "*.#{@notification.language}",
