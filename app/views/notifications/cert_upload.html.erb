@@ -1,12 +1,12 @@
 <%= form_tag({action: :process_cert}, multipart: true) do %>
   Sandbox Cert
-  <%= file_field_tag 'sandbox-cert' %><br /><br />
+  <%= file_field_tag 'sandbox_cert' %><br /><br />
   Sandbox Key
-  <%= file_field_tag 'sandbox-key' %><br /><br />
+  <%= file_field_tag 'sandbox_key' %><br /><br />
   Production Cert
-  <%= file_field_tag 'production-cert' %><br /><br />
+  <%= file_field_tag 'production_cert' %><br /><br />
   Production Key
-  <%= file_field_tag 'production-key' %>
+  <%= file_field_tag 'production_key' %>
 
   <%= submit_tag %>
 <% end %>
