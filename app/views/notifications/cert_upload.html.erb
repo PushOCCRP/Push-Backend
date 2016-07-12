@@ -1,7 +1,12 @@
 <%= form_tag({action: :process_cert}, multipart: true) do %>
-  Cert
-  <%= file_field_tag 'cert' %><br /><br />
-  Key
-  <%= file_field_tag 'key' %>
+  Sandbox Cert
+  <%= file_field_tag 'sandbox-cert' %><br /><br />
+  Sandbox Key
+  <%= file_field_tag 'sandbox-key' %><br /><br />
+  Production Cert
+  <%= file_field_tag 'production-cert' %><br /><br />
+  Production Key
+  <%= file_field_tag 'production-key' %>
+
   <%= submit_tag %>
 <% end %>

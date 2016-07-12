@@ -84,29 +84,43 @@ class NotificationsController < ApplicationController
 	end
 
 	def process_cert
-		cert_io = params[:cert]
-		key_io = params[:key]
+		sandbox_cert_io = params[:sandbox_cert]
+		sandbox_key_io = params[:sandbox_key]
+		production_cert_io = params[:production_cert]
+		production_key_io = params[:production_key]
+
 
 		filename = push_id
-		if(ENV['developer_mode'])
-			filename += "-sandbox"
+
+		sandbox_cert_file_name = "secrets/certs/#{filename}-sandbox-cert.pem"
+		sandbox_key_file_name = "secrets/certs/#{filename}-sandbox-key.pem"
+		production_cert_file_name = "secrets/certs/#{filename}-production-cert.pem"
+		production_key_file_name = "secrets/certs/#{filename}-production-key.pem"
+
+		File.open("/push/#{sandbox_cert_file_name}", 'wb') do |file|
+			file.write(sandbox_cert_io.read)
 		end
 
-		cert_file_name = "secrets/certs/#{filename}-cert.pem"
-		key_file_name = "secrets/certs/#{filename}-key.pem"
-
-		File.open("/push/#{cert_file_name}", 'wb') do |file|
-			file.write(cert_io.read)
+		File.open("/push/#{sandbox_key_file_name}", 'wb') do |file|
+			file.write(sandbox_key_io.read)
 		end
 
-		File.open("/push/#{key_file_name}", 'wb') do |file|
-			file.write(key_io.read)
+		File.open("/push/#{production_cert_file_name}", 'wb') do |file|
+			file.write(production_cert_io.read)
 		end
 
-		Setting.cert = cert_file_name
-		Setting.key = key_file_name
+		File.open("/push/#{production_key_file_name}", 'wb') do |file|
+			file.write(production_key_io.read)
+		end
 
-		response_json = create_apns
+
+		Setting.sandbox_cert = sandbox_cert_file_name
+		Setting.sandbox_key = sandbox_key_file_name
+		Setting.production_cert = production_cert_file_name
+		Setting.production_key = production_key_file_name
+
+		response_json = create_apns(true)
+		response_json = create_apns(false)
 
     	if(response_json["status"] == 1)
     		flash[:error] = "Error updating certs: #{@uniqush_message}"
@@ -117,27 +131,27 @@ class NotificationsController < ApplicationController
 		redirect_to 'cert_upload'
 	end
 
-	def create_apns
+	def create_apns(sandbox=false)
 		service_name = "#{push_id}-ios"
-		if(ENV['developer_mode'])
+		if(!sandbox)
 			service_name += "-sandbox"
 		end
 
-		logger.debug("Development: #{ENV['developer_mode']}")
+		if(sandbox)
+	        options = {"service": service_name,
+			 "pushservicetype": "apns",
+			 "cert": Setting.production_cert,
+			 "key": Setting.production_key,
+			}
+		else
+			options = {"service": service_name,
+			 "pushservicetype": "apns",
+			 "cert": Setting.sandbox_cert,
+			 "key": Setting.sandbox_key,
+			 "sandbox": "true"
+			}
+		end
 
-        options = {"service": service_name,
-		 "pushservicetype": "apns",
-		 "cert": Setting.cert,
-		 "key": Setting.key,
-		}
-=begin
-		options = {"service": service_name,
-		 "pushservicetype": "apns",
-		 "cert": Setting.cert,
-		 "key": Setting.key,
-		 "sandbox": "true"
-		}
-=end
 		response = HTTParty.get("http://uniqush:9898/addpsp?#{options.to_query}", options)
     	response_json = JSON.parse(response.body)
 
@@ -146,7 +160,8 @@ class NotificationsController < ApplicationController
 	    	if(response_json["status"] == 1)
     		raise("Error creating APNS service: #{response_json}")
     	else
-    		Setting.apns_name = push_id
+    		Setting.apns_name_production = push_id
+    		Setting.apns_name_sandbox = push_id
     	end
 
     	return response_json
@@ -172,11 +187,20 @@ class NotificationsController < ApplicationController
 	def push
 		@notification = Notification.find(params[:id])
 
-        options = {"service": "#{push_id}-ios-sandbox",
-        			 "subscriber": "*.#{@notification.language}",
-        			 "msg": @notification.message,
-        			 "sound": 'default'
-        			}
+		# Add a swtich for production/sandbox pushing
+		if(params["sandbox"] == "true")
+	        options = {"service": "#{push_id}-ios-sandbox",
+	        			 "subscriber": "*.#{@notification.language}",
+	        			 "msg": @notification.message,
+	        			 "sound": 'default'
+	        			}
+		else
+	        options = {"service": "#{push_id}-ios",
+			 "subscriber": "*.#{@notification.language}",
+			 "msg": @notification.message,
+			 "sound": 'default'
+			}
+		end
 
 		response = HTTParty.post("http://uniqush:9898/push?#{options.to_query}")
     	response_json = JSON.parse(response.body)
