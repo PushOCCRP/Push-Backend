@@ -124,13 +124,20 @@ class NotificationsController < ApplicationController
 		end
 
 		logger.debug("Development: #{ENV['developer_mode']}")
+=begin
         options = {"service": service_name,
 		 "pushservicetype": "apns",
 		 "cert": Setting.cert,
 		 "key": Setting.key,
-		 "sandbox": ENV['developer_mode']
+		 "sandbox": true
 		}
-
+=end
+		options = {"service": service_name,
+		 "pushservicetype": "apns",
+		 "cert": Setting.cert,
+		 "key": Setting.key,
+		 "sandbox": "true"
+		}
 		response = HTTParty.get("http://uniqush:9898/addpsp?#{options.to_query}", options)
     	response_json = JSON.parse(response.body)
 
