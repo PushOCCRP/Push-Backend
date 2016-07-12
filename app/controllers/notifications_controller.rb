@@ -15,7 +15,7 @@ class NotificationsController < ApplicationController
         options = {"service": "#{push_id}-ios-sandbox",
         			 "subscriber": "#{params["dev_id"]}.#{params['language']}",
         			 "pushservicetype": "apns",
-        			 "dev_token": params["dev_token"]
+        			 "devtoken": params["dev_token"]
         			}
 
 		response = HTTParty.post("http://uniqush:9898/subscribe?#{options.to_query}", options)
@@ -54,7 +54,7 @@ class NotificationsController < ApplicationController
         options = {"service": "#{push_id}-ios-sandbox",
         			 "subscriber": "#{params["dev_id"]}.#{params['language']}",
         			 "pushservicetype": "apns",
-        			 "dev_token": params["dev_token"]
+        			 "devtoken": params["dev_token"]
         			}
 
 		response = HTTParty.post("http://uniqush:9898/unsubscribe?#{options.to_query}", options)
