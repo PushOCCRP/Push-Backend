@@ -203,8 +203,6 @@ class NotificationsController < ApplicationController
 	def push
 		@notification = Notification.find(params[:id])
 
-		# Add a swtich for production/sandbox pushing
-		# TEST THIS
 		if(params["sandbox"] == "true")
 	        options = {"service": "#{push_id}-ios-sandbox",
 	        			 "subscriber": "*.#{@notification.language}",
@@ -234,7 +232,7 @@ class NotificationsController < ApplicationController
     		@status_id == 0
 		end
 
-	    @uniqush_code = response_json['details']['code']
+	    @uniqush_code = response_json["status"]
 		@uniqush_reponse = response_json
 
 	end
