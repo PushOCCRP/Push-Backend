@@ -21,7 +21,7 @@ services:
   db:
     image: postgres
     volumes:
-      - ./docker/postgres:/data/postgres
+      - ./.docker/postgres:/data/postgres
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
