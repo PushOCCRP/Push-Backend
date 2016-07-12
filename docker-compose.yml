@@ -21,11 +21,11 @@ services:
   db:
     image: postgres
     volumes:
-      - ./docker/postgres:/var/lib/pgsql/data
+      - ./docker/postgres:/data/postgres
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - PGDATA=/var/lib/pgsql/data
+      - PGDATA=/data/postgres
 
   web:
     build: .
