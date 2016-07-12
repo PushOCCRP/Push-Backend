@@ -224,17 +224,22 @@ class NotificationsController < ApplicationController
     		@status == "FAILURE"
     		@uniqush_message = response_json['details']['errorMsg']    		
     		@status_id == 1
+    		flash[:warning] = "Error: " + @uniqush_message
     	else
     		@notification.push_time = Time.now
     		@notification.save!
 
 			@status == "SUCCESS"
     		@status_id == 0
+
+    		flash[:notice] = "Successfully Pushed"
+
 		end
 
 	    @uniqush_code = response_json["status"]
 		@uniqush_reponse = response_json
 
+		redirect_to @notification
 	end
 
   private
