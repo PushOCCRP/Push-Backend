@@ -28,7 +28,7 @@ class ArticlesController < ApplicationController
   end
 
   def get_occrp_joomla_articles
-    url = ENV['occrp_joomla_url']
+    url = ENV['occrp_joomla_url'] + "&view=articles"
 
     # Shortcut
     # We need the request to look like this, so we have to get the correct key.
@@ -200,6 +200,49 @@ class ArticlesController < ApplicationController
     @response = format_newscoop_response(body)
   end
 
+  def article
+    case @cms_mode
+      when :occrp_joomla
+        @response = get_occrp_joomla_article
+      when :wordpress
+        @response = get_wordpress_article
+      when :newscoop
+        @response = get_newscoop_article
+    end 
+    
+    respond_to do |format|
+      format.json
+    end
+  end
+
+  def get_occrp_joomla_article
+    url = ENV['occrp_joomla_url'] + "&view=article&id=#{params["id"]}"
+
+    # Shortcut
+    # We need the request to look like this, so we have to get the correct key.
+    # At the moment it makes the call twice. We need to cache this.
+    @response = Rails.cache.fetch("joomla_article_#{params['id']}", expires_in: 1.hour) do
+      request_response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
+      body = response.body
+
+      body = JSON.parse(request_response.body)
+      articles = clean_up_response(body['results'])
+      articles = format_occrp_joomla_articles(articles)
+      {results: articles}
+    end
+
+    return @response
+
+  end
+
+  def get_wordpress_article
+
+  end
+
+  def get_newscoop_article
+
+  end
+
   private
   
   def check_for_valid_cms_mode
@@ -234,6 +277,7 @@ class ArticlesController < ApplicationController
   end
   
   def get_cookie
+    #change to the environment variable
     url = "https://www.occrp.org/index.html?option=com_push&format=json&view=urllookup&u="
     response = HTTParty.get(url)
     cookies = response.headers['set-cookie']

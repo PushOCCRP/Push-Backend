@@ -16,6 +16,7 @@ Rails.application.routes.draw do
 
 
   get 'articles' => 'articles#index'
+  get 'article' => 'articles#article'
   get 'search' => 'articles#search'
   
   get 'passthrough' => 'application#passthrough'
