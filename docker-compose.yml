@@ -7,7 +7,7 @@ services:
   nginx:
       image: nginx
       ports:
-          - "80:80"
+          - "5000:80"
           #- "5000:80"
           #- "60443:443"
       depends_on:
@@ -26,12 +26,6 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - PGDATA=/var/lib/pgsql/data
-
-  data:
-    image: cogniteev/echo
-    command: echo 'Data Container for PostgreSQL'
-    volumes:
-      - /var/lib/postgresql/data
 
   web:
     build: .
