@@ -20,11 +20,12 @@ services:
 
   db:
     image: postgres
-    volumes_from:
-      - data
+    volumes:
+      - ./docker/postgres:/var/lib/pgsql/data
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+      - PGDATA=/var/lib/pgsql/data
 
   data:
     image: cogniteev/echo
@@ -71,7 +72,5 @@ services:
   redis:
       image: redis
       volumes:
-          - "./data:/data"
+          - "./.docker/redis:/data"
       command: ["redis-server", "--appendonly", "yes"]
-volumes:
-  data: {}
