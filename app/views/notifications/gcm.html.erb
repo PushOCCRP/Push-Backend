@@ -1,0 +1,9 @@
+<%= form_tag({action: :process_gcm}) do %>
+  Project Id
+  <%= text_field_tag 'project_id' %><br /><br />
+  API Key - Test
+  <%= text_field_tag 'api_key_sandbox' %><br /><br />
+  API Key - Production
+  <%= text_field_tag 'api_key_production' %>
+  <%= submit_tag %>
+<% end %>

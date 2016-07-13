@@ -23,3 +23,7 @@
 /vendor/bundle
 
 /secrets.dev
+/.docker/postgres/*
+/.docker/data/live/*
+/.docker/data/secrets/*
+/.docker/redis/*
