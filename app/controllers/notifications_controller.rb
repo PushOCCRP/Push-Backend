@@ -84,14 +84,14 @@ class NotificationsController < ApplicationController
 		service_name = push_id
 		push_service_type = "apns"
 		if(params['platform'] == 'android')
-			push_service_type == 'gcm'
+			push_service_type = 'gcm'
 			service_name += "-gcm"
 		else
 			service_name += "-ios"
 		end
 
 		if(params["sandbox"])
-			service_name += "-sandabox"
+			service_name += "-sandbox"
 		end
 
 		# Build up the options
@@ -108,25 +108,45 @@ class NotificationsController < ApplicationController
 			options["devtoken"] = params["dev_token"]
 		end
 
-
+		logger.debug("Unsubscribing to Uniqush with options: #{options}")
+		# make the call!
 		response = HTTParty.post("http://uniqush:9898/unsubscribe?#{options.to_query}", options)
     	response_json = JSON.parse(response.body)
-    	
-    	if(response_json["status"] == 0)
-    		@status == "FAILURE"
-    		@uniqush_message = response_json['details']['errorMsg']    		
-    		@status_id == 1
+    	logger.debug("Uniqush response: #{response_json}")
+
+    	if(response_json["status"] == 1)
+    		@status = "FAILURE"
+			@uniqush_message = response_json['details']['errorMsg']    		
+    		@status_id = 1
     	else
+	    	# If the response is successful, save the device
 			device = PushDevice.find_by_dev_id(params["dev_id"])
-			if(device)
-				device.delete!
+			if(!device)
+
+				case params["platform"]
+				when 'android'
+					dev_token = params['regid']
+				when 'ios'
+					dev_token = params['dev_token']
+				end
+
+
+				device = PushDevice.new({
+					dev_id: params['dev_id'],
+					dev_token: dev_token,
+					language: params['language'],
+					platform: params['platform']
+				})
+			else
+				device.language = params['language']
+				device.save!
 			end
 
-			@status == "SUCCESS"
-    		@status_id == 0
+			@status = "SUCCESS"
+    		@status_id = 0
 		end
 
-	    @uniqush_code = response_json['details']['code']
+   		@uniqush_code = response_json['details']['code']
 		@uniqush_reponse = response_json
 	end
 
@@ -301,49 +321,72 @@ class NotificationsController < ApplicationController
 	end
 
 	def push
-		@notification = Notification.find(params[:id])
+		notification = Notification.find(params[:id])
 
-		if(params["sandbox"] == "true")
-	        options = {"service": "#{push_id}-ios-sandbox",
-	        			 "subscriber": "*.#{@notification.language}",
-	        			 "msg": @notification.message,
-	        			 "sound": 'default',
-	        			 "article_id": @notification.article_id
-	        			}
+		sandbox = to_boolean(params['sandbox'])
+
+		ios_status = push_ios(notification, sandbox)
+		android_status = push_gcm(notification, sandbox)
+
+		if(ios_status == "SUCCESS" && android_status == "SUCCESS")
+			flash[:notice] = "Successfully pushed"
+
+	   		notification.push_time = Time.now
+    		notification.save!
 		else
-	        options = {"service": "#{push_id}-ios",
-			 "subscriber": "*.#{@notification.language}",
-			 "msg": @notification.message,
-			 "sound": 'default',
-			 "article_id": @notification.article_id
-			}
+			error = ""
+			if(ios_status != "SUCCESS")
+				error += "iOS Error: #{ios_status} "
+			end
+
+			if(android_status != "SUCCESS")
+				error += "Android Error: #{android_status}"
+			end
+
+			flash[:warning] = error
 		end
 
+		redirect_to notification
+	end
+
+	def push_ios(notification, sandbox=false)
+		return build_push(notification, 'ios', sandbox)
+	end
+
+	def push_gcm(notification, sandbox=false)
+		return build_push(notification, 'android', sandbox)
+	end
+
+	def build_push(notification, platform, sandbox)
+		push_service_name = service_name(platform, sandbox)
+		options = options_for_push(push_service_name, notification)
+		return push_call options
+	end
+
+	def options_for_push(push_service_name, notification)
+        options = {"service": push_service_name,
+			 "subscriber": "*.#{notification.language}",
+			 "msg": notification.message,
+			 "sound": 'default',
+			 "article_id": notification.article_id
+			}
+		return options
+	end
+
+	def push_call(options)
 		response = HTTParty.post("http://uniqush:9898/push?#{options.to_query}")
     	response_json = JSON.parse(response.body)
     	
+    	logger.debug("Sending push with options: #{options}")
+
     	if(response_json["status"] == 0)
-    		@status == "FAILURE"
-    		@uniqush_message = response_json['details']['errorMsg']    		
-    		@status_id == 1
-    		flash[:warning] = "Error: " + @uniqush_message
+    		logger.debug("Uniqush Error: #{response_json}")
+    		return "Error: " + response_json['details']['errorMsg']
     	else
-    		@notification.push_time = Time.now
-    		@notification.save!
-
-			@status == "SUCCESS"
-    		@status_id == 0
-
-    		flash[:notice] = "Successfully Pushed"
-
+    		logger.debug("Push successful")
+    		return "SUCCESS"
 		end
-
-	    @uniqush_code = response_json["status"]
-		@uniqush_reponse = response_json
-
-		redirect_to @notification
 	end
-
   private
 
   def push_device_params
@@ -364,5 +407,29 @@ class NotificationsController < ApplicationController
 	return push_id
   end
 
+  def service_name(platform, sandbox=false)
+		service_name = push_id
+		push_service_type = "apns"
+		if(platform == 'android')
+			push_service_type = 'gcm'
+			service_name += "-gcm"
+		else
+			service_name += "-ios"
+		end
+
+		if(params["sandbox"])
+			service_name += "-sandbox"
+		end
+
+		return service_name
+  end
+
+  def to_boolean(str)
+  	if(!str)
+  		return false
+  	end
+
+    str.downcase == 'true'
+  end
 
 end
