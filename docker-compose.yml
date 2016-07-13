@@ -14,6 +14,7 @@ services:
       depends_on:
           - web
       volumes:
+          #- "./.docker/nginx/dev/:/etc/nginx/:ro"                            # config for development
           - "./.docker/nginx/:/etc/nginx/:ro"                            # config
           - "./.docker/data/secrets/:/etc/ssl/nginx/:ro"                # this is where dhparam goes; TODO maybe we should use a data container for this
           #- "/srv/logs/gurac/:/srv/logs/gurac/"                          # logs
