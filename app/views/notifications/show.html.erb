@@ -2,4 +2,5 @@ Message: <%= @notification.message %><br />
 Language: <%= @notification.language %><br />
 Notification ID: <%= @notification.article_id %>
 <br /><br />
-<%= link_to "Push", push_path(@notification) %>
+<%= link_to "Push to production", push_path(@notification) %>
+<%= link_to "Push to test", push_path(@notification, :sandbox => "true") %>
