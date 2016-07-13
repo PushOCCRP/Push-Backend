@@ -13,7 +13,7 @@ class NotificationsController < ApplicationController
 		service_name = push_id
 		push_service_type = "apns"
 		if(params['platform'] == 'android')
-			push_service_type == 'gcm'
+			push_service_type = 'gcm'
 			service_name += "-gcm"
 		else
 			service_name += "-ios"
