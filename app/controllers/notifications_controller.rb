@@ -20,7 +20,7 @@ class NotificationsController < ApplicationController
 		end
 
 		if(params["sandbox"])
-			service_name += "-sandabox"
+			service_name += "-sandbox"
 		end
 
 		# Build up the options
