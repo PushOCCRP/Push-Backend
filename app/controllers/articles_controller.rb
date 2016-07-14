@@ -67,17 +67,16 @@ class ArticlesController < ApplicationController
   end
 
   def get_wordpress_articles
+    language = params['language']
+    if(!language.blank?)
+      language = "/#{language}/"
+    end
+
     url = ENV['wordpress_url'] 
     version = params["v"]
 
-    final_url = "#{url}?push-occrp=true&type=articles"
-    language = params['language']
+    final_url = "#{url}#{language}?push-occrp=true&type=articles"
     
-    if(!language.blank?)
-      # Should be extracted
-      final_url = "#{url}/#{language}?push-occrp=true&type=articles"
-    end
-
     response = HTTParty.get(final_url)
     response_json = JSON.parse(response.body)
     response_json['results'] = clean_up_response(response_json['results'])
@@ -172,8 +171,14 @@ class ArticlesController < ApplicationController
   end
   
   def search_wordpress
+
+      language = params['language']
+      if(!language.blank?)
+        language = "/#{language}/"
+      end
+
       query = params['q']
-      url = "#{ENV['wordpress_url']}?push-occrp=true&type=search&q=#{query}"
+      url = "#{ENV['wordpress_url']}#{language}?push-occrp=true&type=search&q=#{query}"
       response = HTTParty.get(url)
 
       body = JSON.parse response.body
@@ -243,6 +248,32 @@ class ArticlesController < ApplicationController
   end
 
   def get_wordpress_article
+
+      language = params['language']
+      if(!language.blank?)
+        language = "/#{language}/"
+      end
+
+      article_id = params['id']
+      url = "#{ENV['wordpress_url']}#{language}?push-occrp=true&type=article&article_id=#{article_id}"
+
+      logger.debug("Fetching article id: article_id")
+      logger.debug(url)
+
+      response = HTTParty.get(url)
+
+      body = JSON.parse response.body
+    
+      article_results = clean_up_response(body['results'])
+
+      @response = {article_id: article_id,
+                 start_date: "19700101",
+                 end_date: DateTime.now.strftime("%Y%m%d"),
+                 total_results: article_results.size,
+                 page: "1",
+                 results: article_results
+                }
+      return @response
 
   end
 
