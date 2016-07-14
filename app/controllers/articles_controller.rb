@@ -77,7 +77,7 @@ class ArticlesController < ApplicationController
 
     final_url = "#{url}#{language}?push-occrp=true&type=articles"
 
-    logger.debug("Retrieveing articles at: #{url}")
+    logger.debug("Retrieveing articles at: #{final_url}")
     response = HTTParty.get(final_url)
     response_json = JSON.parse(response.body)
     response_json['results'] = clean_up_response(response_json['results'])
