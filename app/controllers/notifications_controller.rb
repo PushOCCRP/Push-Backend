@@ -19,7 +19,7 @@ class NotificationsController < ApplicationController
 			service_name += "-ios"
 		end
 
-		if(params["sandbox"])
+		if(params["sandbox"] == "true")
 			service_name += "-sandbox"
 		end
 
@@ -90,7 +90,7 @@ class NotificationsController < ApplicationController
 			service_name += "-ios"
 		end
 
-		if(params["sandbox"])
+		if(params["sandbox"] == "true")
 			service_name += "-sandbox"
 		end
 
