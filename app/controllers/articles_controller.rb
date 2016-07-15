@@ -233,7 +233,6 @@ class ArticlesController < ApplicationController
 
     return @response
   end
-  end
   
   def search_newscoop
     query = params['q']
