@@ -612,7 +612,7 @@ class ArticlesController < ApplicationController
 
       images = []
       item['images'].each do |image|
-        image.url = base_url + image.url
+        image['url'] = base_url + image['url']
         images.push image
       end
 
@@ -725,7 +725,6 @@ class ArticlesController < ApplicationController
       when "newscoop"
         url = ENV['newscoop_url']
       when "cins-codeignitor"
-        logger.debug "got cins"
         url = ENV['cins_codeignitor_url']
       else
         raise "CMS type #{cms_type} not valid for this version of Push."
