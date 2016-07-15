@@ -373,13 +373,14 @@ class ArticlesController < ApplicationController
   end
 
   def get_cins_codeigniter_article
-    url = ENV['cins_codeigniter_url']+'api/article'
+
+    url = ENV['cins_codeignitor_url']+'/api/article'
     language = params['language']
     if(language.blank?)
       # Should be extracted
       language = "rs"
     end
-
+    
     version = params["v"]
     article_id = params['id']
 
