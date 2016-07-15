@@ -607,7 +607,7 @@ class ArticlesController < ApplicationController
     new_items = []
     items.each do |item|
       logger.debug "Parsing: #{item['publish_date']}"
-      date = Date.strptime("item['publish_date']", "%Y-%m-%d %H:%M:%S")
+      date = Date.strptime(item['publish_date'], "%Y-%m-%d %H:%M:%S")
       item['publish_date'] = date.strftime("%Y%m%d")
       new_items[] = item
     end
