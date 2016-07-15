@@ -60,24 +60,24 @@ class ArticlesController < ApplicationController
 
     @response = Rails.cache.fetch("cins_codeigniter_articles/#{language}/#{version}", expires_in: 1.hour) do
       logger.info("aritcles are not cached, making call to newscoop server")
-      response = HTTParty.get(url, query: options)
+      response = HTTParty.get(url)
       body = JSON.parse response.body
       formate_cins_codeigniter_response(body)
     end        
   end
 
   def get_wordpress_articles
+    language = params['language']
+    if(!language.blank?)
+      language = "/#{language}/"
+    end
+
     url = ENV['wordpress_url'] 
     version = params["v"]
 
-    final_url = "#{url}?push-occrp=true&type=articles"
-    language = params['language']
-    
-    if(!language.blank?)
-      # Should be extracted
-      final_url = "#{url}/#{language}?push-occrp=true&type=articles"
-    end
+    final_url = "#{url}#{language}?push-occrp=true&type=articles"
 
+    logger.debug("Retrieveing articles at: #{final_url}")
     response = HTTParty.get(final_url)
     response_json = JSON.parse(response.body)
     response_json['results'] = clean_up_response(response_json['results'])
@@ -130,6 +130,8 @@ class ArticlesController < ApplicationController
         @response = search_wordpress
       when :newscoop
         @response = search_newscoop
+      when :cins_codeigniter
+        @response = get_cins_codeigniter_articles
     end 
     
     respond_to do |format|
@@ -172,8 +174,14 @@ class ArticlesController < ApplicationController
   end
   
   def search_wordpress
+
+      language = params['language']
+      if(!language.blank?)
+        language = "/#{language}/"
+      end
+
       query = params['q']
-      url = "#{ENV['wordpress_url']}?push-occrp=true&type=search&q=#{query}"
+      url = "#{ENV['wordpress_url']}#{language}?push-occrp=true&type=search&q=#{query}"
       response = HTTParty.get(url)
 
       body = JSON.parse response.body
@@ -207,6 +215,22 @@ class ArticlesController < ApplicationController
     @response = format_newscoop_response(body)
   end
 
+  def search_cins_codeigniter
+    url = ENV['cins_codeigniter_url']+'api/search'
+    language = params['language']
+    if(language.blank?)
+      # Should be extracted
+      language = "rs"
+    end
+
+    version = params["v"]
+
+    options = {q: params['q']}
+    response = HTTParty.get(url, query: options)
+    body = JSON.parse response.body
+    formate_cins_codeigniter_response(body)
+  end
+
   def article
     case @cms_mode
       when :occrp_joomla
@@ -215,6 +239,8 @@ class ArticlesController < ApplicationController
         @response = get_wordpress_article
       when :newscoop
         @response = get_newscoop_article
+      when :cins_codeigniter
+        @response = get_cins_codeigniter_article
     end 
     
     respond_to do |format|
@@ -244,10 +270,87 @@ class ArticlesController < ApplicationController
 
   def get_wordpress_article
 
+      language = params['language']
+      if(!language.blank?)
+        language = "/#{language}/"
+      end
+
+      article_id = params['id']
+      url = "#{ENV['wordpress_url']}#{language}?push-occrp=true&type=article&article_id=#{article_id}"
+
+      logger.debug("Fetching article id: article_id")
+      logger.debug(url)
+
+      response = HTTParty.get(url)
+
+      body = JSON.parse response.body
+    
+      article_results = clean_up_response(body['results'])
+
+      @response = {article_id: article_id,
+                 start_date: "19700101",
+                 end_date: DateTime.now.strftime("%Y%m%d"),
+                 total_results: article_results.size,
+                 page: "1",
+                 results: article_results
+                }
+      return @response
+
   end
 
   def get_newscoop_article
+    article_id = params['id']
 
+    access_token = get_newscoop_auth_token
+    url = ENV['newscoop_url'] + "/api/articles.json/#{article_id}"
+    language = params['language']
+    version = params["v"]
+
+    if(language.blank?)
+      # Should be extracted
+      language = "az"
+    end
+    
+    options = {access_token: access_token, language: language, 'sort[published]' => 'desc'}
+
+    logger.info("Fetching article with id #{article_id}")
+
+    cached = true
+    @response = Rails.cache.fetch("newscoop_articles/#{language}/#{version}", expires_in: 1.hour) do
+      logger.info("articles are not cached, making call to newscoop server")
+      cached = false
+      response = HTTParty.get(url, query: options)
+      body = JSON.parse response.body
+      format_newscoop_response(body)
+    end        
+
+    if(cached == true)
+      logger.info("Cached hit for articles")
+    else
+      logger.info("Cached missed")
+    end
+    
+    return @response
+  end
+
+  def get_cins_codeigniter_article
+    url = ENV['cins_codeigniter_url']+'api/article'
+    language = params['language']
+    if(language.blank?)
+      # Should be extracted
+      language = "rs"
+    end
+
+    version = params["v"]
+    article_id = params['id']
+
+    @response = Rails.cache.fetch("cins_codeigniter_article/#{article_id}/#{language}/#{version}", expires_in: 1.hour) do
+      options = {id: params['id']}
+      logger.info("aritcles are not cached, making call to newscoop server")
+      response = HTTParty.get(url, query: options)
+      body = JSON.parse response.body
+      formate_cins_codeigniter_response(body)
+    end        
   end
 
   private
