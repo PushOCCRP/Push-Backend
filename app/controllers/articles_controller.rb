@@ -608,6 +608,7 @@ class ArticlesController < ApplicationController
     items.each do |item|
       date = Date.strptime("item['publish_date']", "%Y-%m-%d %H:%M:%S")
       item['publish_date'] = date.strftime("%Y%m%d")
+      new_items[] = item
     end
 
     body['results'] = new_items
