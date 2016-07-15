@@ -299,7 +299,38 @@ class ArticlesController < ApplicationController
   end
 
   def get_newscoop_article
+    article_id = params['id']
 
+    access_token = get_newscoop_auth_token
+    url = ENV['newscoop_url'] + "/api/articles.json/#{article_id}"
+    language = params['language']
+    version = params["v"]
+
+    if(language.blank?)
+      # Should be extracted
+      language = "az"
+    end
+    
+    options = {access_token: access_token, language: language, 'sort[published]' => 'desc'}
+
+    logger.info("Fetching article with id #{article_id}")
+
+    cached = true
+    @response = Rails.cache.fetch("newscoop_articles/#{language}/#{version}", expires_in: 1.hour) do
+      logger.info("articles are not cached, making call to newscoop server")
+      cached = false
+      response = HTTParty.get(url, query: options)
+      body = JSON.parse response.body
+      format_newscoop_response(body)
+    end        
+
+    if(cached == true)
+      logger.info("Cached hit for articles")
+    else
+      logger.info("Cached missed")
+    end
+    
+    return @response
   end
 
   def get_cins_codeigniter_article
