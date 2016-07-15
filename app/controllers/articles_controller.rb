@@ -302,7 +302,10 @@ class ArticlesController < ApplicationController
     article_id = params['id']
 
     access_token = get_newscoop_auth_token
-    url = ENV['newscoop_url'] + "/api/articles/#{article_id}.json"
+    url = ENV['newscoop_url'] + "/api/articles/#{article_id}"
+
+    logger.debug("Calling newscoop url: ${url}")
+    
     language = params['language']
     version = params["v"]
 
