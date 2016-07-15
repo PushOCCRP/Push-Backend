@@ -324,7 +324,7 @@ class ArticlesController < ApplicationController
       cached = false
       response = HTTParty.get(url, query: options)
       body = JSON.parse response.body
-      format_newscoop_response({:items => [body]})
+      format_newscoop_response({'items' => [body]})
     end        
 
     if(cached == true)
