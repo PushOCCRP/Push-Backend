@@ -62,7 +62,7 @@ class ArticlesController < ApplicationController
       logger.info("aritcles are not cached, making call to newscoop server")
       response = HTTParty.get(url)
       body = JSON.parse response.body
-      format_cins_codeigniter_response(body)
+      return body
     end        
   end
 
