@@ -407,7 +407,7 @@ class ArticlesController < ApplicationController
       when "cins_codeigniter"
         @cms_mode = :cins_codeigniter
       else
-        raise "CMS type #{cms_type} not valid for this version of Push."
+        raise "CMS type #{cms_mode} not valid for this version of Push."
     end
   end
 
