@@ -388,7 +388,7 @@ class ArticlesController < ApplicationController
       logger.info("aritcles are not cached, making call to newscoop server")
       response = HTTParty.get(url, query: options)
       body = JSON.parse response.body
-      formate_cins_codeigniter_response(body)
+      return format_cins_codeignitor_response(body)
     end        
   end
 
@@ -600,6 +600,19 @@ class ArticlesController < ApplicationController
     end
     
     return formatted_articles
+  end
+
+  def format_cins_codeignitor_response body
+    items = body['results']
+    new_items = []
+    items.each do |item|
+      date = Date.strptime("item['publish_date']", "%Y-%m-%d %H:%M:%S")
+      item['publish_date'] = date.strftime("%Y%m%d")
+    end
+
+    body['results'] = new_items
+
+    return body
   end
 
   def scrubImageTagsFromHTMLString html_string
