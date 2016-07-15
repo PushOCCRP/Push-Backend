@@ -7,15 +7,15 @@ services:
   nginx:
       image: nginx
       ports:
-          - "80:80"
-          - "443:443"
-          #- "5000:80"
+          #- "80:80"
+          #- "443:443"
+          - "5000:80"
           #- "60443:443"
       depends_on:
           - web
       volumes:
-          #- "./.docker/nginx/dev/:/etc/nginx/:ro"                            # config for development
-          - "./.docker/nginx/:/etc/nginx/:ro"                            # config
+          - "./.docker/nginx/dev/:/etc/nginx/:ro"                            # config for development
+          #- "./.docker/nginx/:/etc/nginx/:ro"                            # config
           - "./.docker/data/secrets/:/etc/ssl/nginx/:ro"                # this is where dhparam goes; TODO maybe we should use a data container for this
           #- "/srv/logs/gurac/:/srv/logs/gurac/"                          # logs
           - "./.docker/data/live/:/srv/data/ssl/:ro"                           # ssl certificates/keys data, including letsencrypt-generated certs
@@ -31,8 +31,8 @@ services:
 
   web:
     build: .
-    command: bundle exec rails s -p 3000 -b '0.0.0.0' --environment=production
-    #command: bundle exec rails s -p 3000 -b '0.0.0.0'
+    #command: bundle exec rails s -p 3000 -b '0.0.0.0' --environment=production
+    command: bundle exec rails s -p 3000 -b '0.0.0.0'
     volumes:
       - .:/push
     expose:
