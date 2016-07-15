@@ -502,6 +502,7 @@ class ArticlesController < ApplicationController
   end
   
   def format_newscoop_response body
+    logger.debug("Received #{body}")
     response = {}
     response['start_date'] = nil
     response['end_date'] = nil
