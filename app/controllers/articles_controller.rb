@@ -383,7 +383,7 @@ class ArticlesController < ApplicationController
     version = params["v"]
     article_id = params['id']
 
-    @response = Rails.cache.fetch("cins_codeigniter_article/#{article_id}/#{language}/#{version}", expires_in: 1.hour) do
+    @response = Rails.cache.fetch("cins_codeigniter_article/#{article_id}/#{language}/#{version}", expires_in: 1.second) do
       options = {id: params['id']}
       logger.info("aritcles are not cached, making call to newscoop server")
       response = HTTParty.get(url, query: options)
