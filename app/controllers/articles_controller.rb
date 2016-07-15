@@ -305,7 +305,7 @@ class ArticlesController < ApplicationController
     url = ENV['newscoop_url'] + "/api/articles/#{article_id}"
 
     logger.debug("Calling newscoop url: ${url}")
-    
+
     language = params['language']
     version = params["v"]
 
@@ -319,7 +319,7 @@ class ArticlesController < ApplicationController
     logger.info("Fetching article with id #{article_id}")
 
     cached = true
-    @response = Rails.cache.fetch("newscoop_articles/#{language}/#{version}", expires_in: 1.hour) do
+    @response = Rails.cache.fetch("newscoop_articles/#{article_id}/#{language}/#{version}", expires_in: 1.hour) do
       logger.info("articles are not cached, making call to newscoop server")
       cached = false
       response = HTTParty.get(url, query: options)
