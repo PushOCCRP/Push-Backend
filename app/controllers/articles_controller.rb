@@ -197,6 +197,43 @@ class ArticlesController < ApplicationController
                 }
       return @response
   end
+
+  #stub this out to a specific feature
+  # need to add "get articles for id list to wordpress too..."
+  def search_bivol_google
+    url = ENV['occrp_joomla_url']
+
+    query = params['q']
+    # Get the search results from Google
+    url = "https://www.googleapis.com/customsearch/v1?key=AIzaSyCahDlxYxTgXsPUV85L91ytd7EV1_i72pc&cx=003136008787419213412:ran67-vhl3y&q=#{query}"
+    response = HTTParty.get(url)
+    # Go through all the responses, and then make a call to the Joomla server to get all the correct responses
+    url = "https://www.occrp.org/index.html?option=com_push&format=json&view=urllookup&u="
+    @response = {items: []}
+    links = []
+    response['items'].each do |result|
+      url << URI.encode(result['link'])
+      if result != response['items'].last
+        url << ","
+      end
+    end
+
+    response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
+
+    # Turn all the responses into something that looks nice and is expected
+    search_results = clean_up_response JSON.parse(response.body)
+    search_results = format_occrp_joomla_articles(search_results)
+    @response = {query: query,
+                 start_date: "19700101",
+                 end_date: DateTime.now.strftime("%Y%m%d"),
+                 total_results: search_results.size,
+                 page: "1",
+                 results: search_results
+                }
+
+    return @response
+  end
+  end
   
   def search_newscoop
     query = params['q']
