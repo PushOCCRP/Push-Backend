@@ -60,7 +60,7 @@ class ArticlesController < ApplicationController
 
     @response = Rails.cache.fetch("cins_codeigniter_articles/#{language}/#{version}", expires_in: 1.hour) do
       logger.info("aritcles are not cached, making call to newscoop server")
-      response = HTTParty.get(url, query: options)
+      response = HTTParty.get(url)
       body = JSON.parse response.body
       formate_cins_codeigniter_response(body)
     end        
@@ -76,7 +76,8 @@ class ArticlesController < ApplicationController
     version = params["v"]
 
     final_url = "#{url}#{language}?push-occrp=true&type=articles"
-    
+
+    logger.debug("Retrieveing articles at: #{final_url}")
     response = HTTParty.get(final_url)
     response_json = JSON.parse(response.body)
     response_json['results'] = clean_up_response(response_json['results'])
@@ -129,6 +130,8 @@ class ArticlesController < ApplicationController
         @response = search_wordpress
       when :newscoop
         @response = search_newscoop
+      when :cins_codeigniter
+        @response = get_cins_codeigniter_articles
     end 
     
     respond_to do |format|
@@ -212,6 +215,22 @@ class ArticlesController < ApplicationController
     @response = format_newscoop_response(body)
   end
 
+  def search_cins_codeigniter
+    url = ENV['cins_codeigniter_url']+'api/search'
+    language = params['language']
+    if(language.blank?)
+      # Should be extracted
+      language = "rs"
+    end
+
+    version = params["v"]
+
+    options = {q: params['q']}
+    response = HTTParty.get(url, query: options)
+    body = JSON.parse response.body
+    formate_cins_codeigniter_response(body)
+  end
+
   def article
     case @cms_mode
       when :occrp_joomla
@@ -220,6 +239,8 @@ class ArticlesController < ApplicationController
         @response = get_wordpress_article
       when :newscoop
         @response = get_newscoop_article
+      when :cins_codeigniter
+        @response = get_cins_codeigniter_article
     end 
     
     respond_to do |format|
@@ -278,7 +299,61 @@ class ArticlesController < ApplicationController
   end
 
   def get_newscoop_article
+    article_id = params['id']
 
+    access_token = get_newscoop_auth_token
+    url = ENV['newscoop_url'] + "/api/articles/#{article_id}.json"
+
+    logger.debug("Calling newscoop url: ${url}")
+
+    language = params['language']
+    version = params["v"]
+
+    if(language.blank?)
+      # Should be extracted
+      language = "az"
+    end
+    
+    options = {access_token: access_token, language: language, 'sort[published]' => 'desc'}
+
+    logger.info("Fetching article with id #{article_id}")
+
+    cached = true
+    @response = Rails.cache.fetch("newscoop_articles/#{article_id}/#{language}/#{version}", expires_in: 1.hour) do
+      logger.info("article is not cached, making call to newscoop server")
+      cached = false
+      response = HTTParty.get(url, query: options)
+      body = JSON.parse response.body
+      format_newscoop_response({'items' => [body]})
+    end        
+
+    if(cached == true)
+      logger.info("Cached hit for articles")
+    else
+      logger.info("Cached missed")
+    end
+    
+    return @response
+  end
+
+  def get_cins_codeigniter_article
+    url = ENV['cins_codeigniter_url']+'api/article'
+    language = params['language']
+    if(language.blank?)
+      # Should be extracted
+      language = "rs"
+    end
+
+    version = params["v"]
+    article_id = params['id']
+
+    @response = Rails.cache.fetch("cins_codeigniter_article/#{article_id}/#{language}/#{version}", expires_in: 1.hour) do
+      options = {id: params['id']}
+      logger.info("aritcles are not cached, making call to newscoop server")
+      response = HTTParty.get(url, query: options)
+      body = JSON.parse response.body
+      formate_cins_codeigniter_response(body)
+    end        
   end
 
   private
@@ -427,6 +502,7 @@ class ArticlesController < ApplicationController
   end
   
   def format_newscoop_response body
+    logger.debug("Received #{body}")
     response = {}
     response['start_date'] = nil
     response['end_date'] = nil
