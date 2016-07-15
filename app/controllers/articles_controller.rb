@@ -404,6 +404,8 @@ class ArticlesController < ApplicationController
         @cms_mode = :wordpress
       when "newscoop"
         @cms_mode = :newscoop
+      when "cins_codeigniter"
+        @cms_mode = :cins_codeigniter
       else
         raise "CMS type #{cms_type} not valid for this version of Push."
     end
