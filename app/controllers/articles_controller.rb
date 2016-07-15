@@ -397,9 +397,8 @@ class ArticlesController < ApplicationController
   def check_for_valid_cms_mode
     @cms_mode
 
-    cms_mode = ENV['cms_mode']
-    logger.debug "Checking validity of #{cms_mode}"
-    case cms_mode
+    logger.debug "Checking validity of #{ENV['cms_mode']}"
+    case ENV['cms_mode']
       when "occrp-joomla"
         @cms_mode = :occrp_joomla
       when "wordpress"
@@ -409,7 +408,7 @@ class ArticlesController < ApplicationController
       when "cins-codeignitor"
         @cms_mode = :cins_codeigniter
       else
-        raise "CMS type #{cms_mode} not valid for this version of Push."
+        raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
     end
   end
 
