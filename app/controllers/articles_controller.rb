@@ -612,7 +612,7 @@ class ArticlesController < ApplicationController
 
       images = []
       item['images'].each do |image|
-        image['url'] = base_url + image['url']
+        image['url'] = base_url + '/' + image['url']
         images.push image
       end
 
