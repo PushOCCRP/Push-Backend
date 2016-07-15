@@ -62,7 +62,7 @@ class ArticlesController < ApplicationController
       logger.info("aritcles are not cached, making call to newscoop server")
       response = HTTParty.get(url)
       body = JSON.parse response.body
-      return body
+      return format_cins_codeignitor_response(body)
     end        
   end
 
@@ -264,7 +264,7 @@ class ArticlesController < ApplicationController
     options = {q: params['q']}
     response = HTTParty.get(url, query: options)
     body = JSON.parse response.body
-    formate_cins_codeigniter_response(body)
+    return format_cins_codeignitor_response(body)
   end
 
   def article
@@ -383,7 +383,7 @@ class ArticlesController < ApplicationController
     version = params["v"]
     article_id = params['id']
 
-    @response = Rails.cache.fetch("cins_codeigniter_article/#{article_id}/#{language}/#{version}", expires_in: 1.second) do
+    @response = Rails.cache.fetch("cins_codeigniter_article/#{article_id}/#{language}/#{version}", expires_in: 1.hour) do
       options = {id: params['id']}
       logger.info("aritcles are not cached, making call to newscoop server")
       response = HTTParty.get(url, query: options)
