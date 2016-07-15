@@ -320,11 +320,11 @@ class ArticlesController < ApplicationController
 
     cached = true
     @response = Rails.cache.fetch("newscoop_articles/#{article_id}/#{language}/#{version}", expires_in: 1.hour) do
-      logger.info("articles are not cached, making call to newscoop server")
+      logger.info("article is not cached, making call to newscoop server")
       cached = false
       response = HTTParty.get(url, query: options)
       body = JSON.parse response.body
-      format_newscoop_response({items: [body]})
+      format_newscoop_response({:items => [body]})
     end        
 
     if(cached == true)
