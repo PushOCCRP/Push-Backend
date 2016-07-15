@@ -609,6 +609,15 @@ class ArticlesController < ApplicationController
       logger.debug "Parsing: #{item['publish_date']}"
       date = Date.strptime(item['publish_date'], "%Y-%m-%d %H:%M:%S")
       item['publish_date'] = date.strftime("%Y%m%d")
+
+      images = []
+      item['images'].each do |image|
+        image.url = base_url + image.url
+        images.push image
+      end
+
+      item['images'] = images
+
       new_items.push item
     end
 
@@ -715,6 +724,8 @@ class ArticlesController < ApplicationController
         url = ENV['wordpress_url']
       when "newscoop"
         url = ENV['newscoop_url']
+      when "cins-codeignitor"
+        url = ENV['cins_codeigniter_url']
       else
         raise "CMS type #{cms_type} not valid for this version of Push."
     end
