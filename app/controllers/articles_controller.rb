@@ -725,7 +725,8 @@ class ArticlesController < ApplicationController
       when "newscoop"
         url = ENV['newscoop_url']
       when "cins-codeignitor"
-        url = ENV['cins_codeigniter_url']
+        logger.debug "got cins"
+        url = ENV['cins_codeignitor_url']
       else
         raise "CMS type #{cms_type} not valid for this version of Push."
     end
