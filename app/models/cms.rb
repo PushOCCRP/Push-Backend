@@ -7,6 +7,8 @@ class CMS < ActiveRecord::Base
 
     response = HTTParty.get(url)
 
+    logger.debug("Google search response: #{response}")
+
     return parse_google_search_to_links response
   end
 
@@ -67,16 +69,6 @@ class CMS < ActiveRecord::Base
       end
 
       article['body'] = elements.to_html
-
-      if(@cms_mode == :wordpress)
-        article['body'] = scrubWordpressTagsFromHTMLString article['body']
-        article['body'] = cleanUpNewLines article['body']
-        article['body'] = scrubScriptTagsFromHTMLString article['body']
-        article['body'] = scrubJSCommentsFromHTMLString article['body']
-        article['body'] = scrubSpecialCharactersFromSingleLinesInHTMLString article['body']
-        article['body'] = scrubHTMLSpecialCharactersInHTMLString article['body']
-        article['headline'] = HTMLEntities.new.decode(article['headline'])
-      end
 
       # Just in case the dates are improperly formatted
       # Cycle through options
