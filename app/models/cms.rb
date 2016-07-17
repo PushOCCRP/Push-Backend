@@ -17,7 +17,7 @@ class CMS < ActiveRecord::Base
 
 
 
-  def self.clean_up_response articles = [], version = 1
+  def self.clean_up_response articles = Array.new, version = 1.0
     articles.delete_if{|article| article['headline'].blank?}
     articles.each do |article|
 
