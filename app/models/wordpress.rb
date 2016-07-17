@@ -74,7 +74,7 @@ class Wordpress < CMS
 	    return language
 	end
 
-	def clean_up_for_wordpress articles	
+	def self.clean_up_for_wordpress articles	
 		articles.each do |article|
 		    article['body'] = scrubWordpressTagsFromHTMLString article['body']
 		    article['body'] = cleanUpNewLines article['body']
