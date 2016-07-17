@@ -51,6 +51,11 @@ class Wordpress < CMS
 
 		response = HTTParty.get(url)
 	    body = JSON.parse response.body
+
+	    if(results.nil?)
+	    	results = Array.new
+	    end
+
 	    results = clean_up_response(body['results'], version)
 	    results = clean_up_for_wordpress results
 
