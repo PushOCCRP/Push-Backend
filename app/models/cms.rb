@@ -109,8 +109,10 @@ class CMS < ActiveRecord::Base
   		allow_subdomains = true
   	end
 
-    response['items'].each do |result|
-        links << result['link']
+    if(response.has_key?("items"))
+      response['items'].each do |result|
+          links << result['link']
+      end
     end
 
     return links
