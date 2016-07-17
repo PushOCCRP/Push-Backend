@@ -52,6 +52,7 @@ class Wordpress < CMS
 		response = HTTParty.get(url)
 	    body = JSON.parse response.body
 	    results = clean_up_response(body['results'], version)
+	    results = clean_up_for_wordpress results
 
 	    response = {start_date: "19700101",
 	               end_date: DateTime.now.strftime("%Y%m%d"),
@@ -72,5 +73,20 @@ class Wordpress < CMS
 
 	    return language
 	end
+
+	def clean_up_for_wordpress articles	
+		articles.each do |article|
+		    article['body'] = scrubWordpressTagsFromHTMLString article['body']
+		    article['body'] = cleanUpNewLines article['body']
+		    article['body'] = scrubScriptTagsFromHTMLString article['body']
+		    article['body'] = scrubJSCommentsFromHTMLString article['body']
+		    article['body'] = scrubSpecialCharactersFromSingleLinesInHTMLString article['body']
+		    article['body'] = scrubHTMLSpecialCharactersInHTMLString article['body']
+		    article['headline'] = HTMLEntities.new.decode(article['headline'])
+		end
+
+	    return articles
+	end
+
 
 end
