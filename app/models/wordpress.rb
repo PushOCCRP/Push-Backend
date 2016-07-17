@@ -23,6 +23,7 @@ class Wordpress < CMS
 
 	    google_search_engine_id = ENV['google_search_engine_id']
 		if(!google_search_engine_id.blank?)
+			logger.debug "Searching google with id: #{google_search_engine_id}"
 			articles_list = search_google_custom query, google_search_engine_id
 			url = get_url "push-occrp=true&type=urllookup&u=#{articles_list.join(',')}", language
 		else
