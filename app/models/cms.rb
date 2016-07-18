@@ -6,9 +6,6 @@ class CMS < ActiveRecord::Base
     logger.debug("Calling google at: #{url}")
 
     response = HTTParty.get(url)
-
-    logger.debug("Google search response: #{response}")
-
     return parse_google_search_to_links response
   end
 
@@ -45,7 +42,7 @@ class CMS < ActiveRecord::Base
 
           article['image_urls'] << full_url
         else
-          if(@force_https)
+          if(ENV["force_ssl"] == "true")
             uri = Addressable::URI.parse(image_address)
             uri.scheme = 'https'
             image_address = uri.to_s
