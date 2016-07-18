@@ -42,7 +42,7 @@ class CMS < ActiveRecord::Base
 
           article['image_urls'] << full_url
         else
-          if(ENV["force_ssl"] == "true")
+          if(ENV["force_https"] == "true")
             uri = Addressable::URI.parse(image_address)
             uri.scheme = 'https'
             image_address = uri.to_s
