@@ -1,4 +1,4 @@
-Figaro.require_keys("cms_mode")
+Figaro.require_keys("cms_mode", "title")
 
 case ENV['cms_mode']
   when "occrp-joomla"
