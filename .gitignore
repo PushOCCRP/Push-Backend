@@ -22,8 +22,10 @@
 # Ignore the installed gems
 /vendor/bundle
 
-/secrets.dev
+secrets.env
 /.docker/postgres/*
 /.docker/data/live/*
 /.docker/data/secrets/*
 /.docker/redis/*
+docker/postgres/*
+.docker/postgres/*
