@@ -17,6 +17,8 @@ Rails.application.routes.draw do
   get 'notifications/:id/push' => 'notifications#push', as: :push
   resources :notifications
 
+  resources :users
+
 
   get 'articles' => 'articles#index'
   get 'article' => 'articles#article'

@@ -27,3 +27,5 @@
 /.docker/data/live/*
 /.docker/data/secrets/*
 /.docker/redis/*
+docker/postgres/*
+.docker/postgres/*
