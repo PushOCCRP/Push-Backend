@@ -1,9 +1,28 @@
-<%= form_for @notification, url: {action: "create"}, html: {class: "nifty_form"} do |f| %>
-  <%= f.label :message %>
-  <%= f.text_area :message, size: "60x5" %><br />
-  <%= f.label :language %>
-  <%= f.text_field :language %><br />
-  <%= f.label :article_id %>
-  <%= f.text_field :article_id %>
-  <%= f.submit "Create" %>
-<% end %>
+<div class="container">
+	<div class="page-header col-md-12">
+			<div class="col-md-10"><span class="h1">New Notification</span></div>
+			<div class="col-md-2 vertical-center"><%= link_to "All Notifications", "/notifications" %></div>
+	</div>
+</div>
+
+<div class="container">
+	<div class="col-md-8">
+		<%= form_for @notification, url: {action: "create"} do |f| %>
+			<div class="form-group">
+
+		  		<%= f.label :message %>
+				<%= f.text_area :message, size: "60x5", class: "form-control" %><br />
+			</div>
+		  	<div class="form-group">
+		  		<%= f.label :language %>
+				<%= f.text_field :language, class: "form-control" %><br />
+			</div>
+			<div class="form-group">
+		  		<%= f.label :article_id %>
+		  		<%= f.text_field :article_id, class: "form-control" %>
+		  	</div>
+
+			<%= f.submit "Create", class:"btn btn-default" %>
+		<% end %>	
+	</div>
+</div>

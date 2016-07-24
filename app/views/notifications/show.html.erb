@@ -1,6 +1,28 @@
-Message: <%= @notification.message %><br />
-Language: <%= @notification.language %><br />
-Notification ID: <%= @notification.article_id %>
-<br /><br />
-<%= link_to "Push to production", push_path(@notification) %>
-<%= link_to "Push to test", push_path(@notification, :sandbox => "true") %>
+
+<div class="container">
+	<div class="page-header col-md-12">
+			<div class="col-md-10"><span class="h1">Notification</span></div>
+			<div class="col-md-2 vertical-center"><%= link_to "All Notifications", notifications_path %></div>
+	</div>
+</div>
+
+<div class="container">
+	<div class="col-md-8">
+		<span class="h5">Message:</span> <%= @notification.message %><br />
+		<span class="h5">Language:</span> <%= @notification.language %><br />
+		<span class="h5">Article ID:</span> <%= @notification.article_id %>
+	</div>
+	<div class="col-md-4">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+		    	<h3 class="panel-title">Actions</h3>
+  			</div>
+		  	<div class="panel-body">
+
+				<%= link_to "Push to production", push_path(@notification),  data:{:confirm => 'Are you sure?'}, class:"btn btn-success action_button" %><br /><br />
+				<%= link_to "Push to test", push_path(@notification, :sandbox => "true"), data:{:confirm => 'Are you sure?'}, class:"btn btn-info action_button" %>
+			</div>
+		</div>
+
+	</div>
+</div>

@@ -13,7 +13,7 @@ class ArticlesController < ApplicationController
       when :occrp_joomla
         @response = get_occrp_joomla_articles
       when :wordpress
-        @response = get_wordpress_articles
+        @response = Wordpress.articles(params)
         #@response['results'] = clean_up_response @response['results']
       when :newscoop
         @response = get_newscoop_articles
@@ -66,25 +66,6 @@ class ArticlesController < ApplicationController
     end        
   end
 
-  def get_wordpress_articles
-    language = params['language']
-    if(!language.blank?)
-      language = "/#{language}/"
-    end
-
-    url = ENV['wordpress_url'] 
-    version = params["v"]
-
-    final_url = "#{url}#{language}?push-occrp=true&type=articles"
-
-    logger.debug("Retrieveing articles at: #{final_url}")
-    response = HTTParty.get(final_url)
-    response_json = JSON.parse(response.body)
-    response_json['results'] = clean_up_response(response_json['results'])
-
-    return response_json
-  end
-
   def get_newscoop_articles
     access_token = get_newscoop_auth_token
     url = ENV['newscoop_url'] + '/api/articles.json'
@@ -127,7 +108,7 @@ class ArticlesController < ApplicationController
       when :occrp_joomla
         @response = search_occrp_joomla
       when :wordpress
-        @response = search_wordpress
+        @response = Wordpress.search(params)
       when :newscoop
         @response = search_newscoop
       when :cins_codeigniter
@@ -172,68 +153,7 @@ class ArticlesController < ApplicationController
 
     return @response
   end
-  
-  def search_wordpress
-
-      language = params['language']
-      if(!language.blank?)
-        language = "/#{language}/"
-      end
-
-      query = params['q']
-      url = "#{ENV['wordpress_url']}#{language}?push-occrp=true&type=search&q=#{query}"
-      response = HTTParty.get(url)
-
-      body = JSON.parse response.body
     
-      search_results = clean_up_response(body['results'])
-
-      @response = {query: query,
-                 start_date: "19700101",
-                 end_date: DateTime.now.strftime("%Y%m%d"),
-                 total_results: search_results.size,
-                 page: "1",
-                 results: search_results
-                }
-      return @response
-  end
-
-  #stub this out to a specific feature
-  # need to add "get articles for id list to wordpress too..."
-  def search_bivol_google
-    url = ENV['occrp_joomla_url']
-
-    query = params['q']
-    # Get the search results from Google
-    url = "https://www.googleapis.com/customsearch/v1?key=AIzaSyCahDlxYxTgXsPUV85L91ytd7EV1_i72pc&cx=003136008787419213412:ran67-vhl3y&q=#{query}"
-    response = HTTParty.get(url)
-    # Go through all the responses, and then make a call to the Joomla server to get all the correct responses
-    url = "https://www.occrp.org/index.html?option=com_push&format=json&view=urllookup&u="
-    @response = {items: []}
-    links = []
-    response['items'].each do |result|
-      url << URI.encode(result['link'])
-      if result != response['items'].last
-        url << ","
-      end
-    end
-
-    response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
-
-    # Turn all the responses into something that looks nice and is expected
-    search_results = clean_up_response JSON.parse(response.body)
-    search_results = format_occrp_joomla_articles(search_results)
-    @response = {query: query,
-                 start_date: "19700101",
-                 end_date: DateTime.now.strftime("%Y%m%d"),
-                 total_results: search_results.size,
-                 page: "1",
-                 results: search_results
-                }
-
-    return @response
-  end
-  
   def search_newscoop
     query = params['q']
 
@@ -272,7 +192,7 @@ class ArticlesController < ApplicationController
       when :occrp_joomla
         @response = get_occrp_joomla_article
       when :wordpress
-        @response = get_wordpress_article
+        @response = Wordpress.article(params)
       when :newscoop
         @response = get_newscoop_article
       when :cins_codeigniter
@@ -301,36 +221,6 @@ class ArticlesController < ApplicationController
     end
 
     return @response
-
-  end
-
-  def get_wordpress_article
-
-      language = params['language']
-      if(!language.blank?)
-        language = "/#{language}/"
-      end
-
-      article_id = params['id']
-      url = "#{ENV['wordpress_url']}#{language}?push-occrp=true&type=article&article_id=#{article_id}"
-
-      logger.debug("Fetching article id: article_id")
-      logger.debug(url)
-
-      response = HTTParty.get(url)
-
-      body = JSON.parse response.body
-    
-      article_results = clean_up_response(body['results'])
-
-      @response = {article_id: article_id,
-                 start_date: "19700101",
-                 end_date: DateTime.now.strftime("%Y%m%d"),
-                 total_results: article_results.size,
-                 page: "1",
-                 results: article_results
-                }
-      return @response
 
   end
 
