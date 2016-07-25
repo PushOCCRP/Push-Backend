@@ -509,11 +509,32 @@ class ArticlesController < ApplicationController
 
       item['images'] = images
 
+      # There's a bug in the cins plugin that doesn't add protocols to links
+      # This should fix it
+      # first determine if it's a link to CINS
+      # If it is, then add https
+
+      url = Addressable::URI.parse(base_url)
+
+      elements = Nokogiri::HTML::fragment item['body']
+      elements.css('a').each do |link|
+        uri = Addressable::URI.parse(link.attribute("href"))
+        url_host = url.host.gsub("www.", "")
+        uri_host = uri.host.gsub("www.", "")
+        if(url_host == uri_host)
+          uri.scheme = 'https'
+          link.attribute("href").value = uri.to_s
+        end
+      end
+
+      item = elements.to_html
+
       new_items.push item
+
+
     end
 
     body['results'] = new_items
-
     return body
   end
 
