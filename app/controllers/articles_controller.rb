@@ -527,7 +527,7 @@ class ArticlesController < ApplicationController
         end
       end
 
-      item = elements.to_html
+      item['body'] = elements.to_html
 
       new_items.push item
 
