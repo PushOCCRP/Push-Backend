@@ -402,8 +402,19 @@ class ArticlesController < ApplicationController
       image_address = image.attributes['src'].value
 
       if !image_address.starts_with?("http")
+        # build up missing parts
+        prefix = ""
+        if(image.attributes['src'].value.starts_with?(":"))
+          prefix = 'https'
+        elsif(image.attributes['src'].value.starts_with?("//"))
+          prefix = 'https:'
+        elsif(image.attributes['src'].value.starts_with?("/"))
+          prefix = base_url
+        else
+          prefix = base_url + "/"
+        end  
         # Obviously needs to be fixed
-        full_url = base_url + "/" + image.attributes['src'].value
+        full_url = prefix + image.attributes['src'].value
 
         image_object = {url: full_url, start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
         article['images'] << image_object
