@@ -395,8 +395,51 @@ class ArticlesController < ApplicationController
   def extract_images article
 
     # Extract all image urls in the article and put them into a single array.
-    article['images'] = []
-    article['image_urls'] = []
+    if(article['images'] == nil)
+      article['images'] = []
+    end
+    
+    if(article['image_urls'] == nil)
+      article['image_urls'] = []
+    end
+
+    #Yes, i'm aware this is repetitive code.
+    article['images'].each do |image|
+      image_address = image['url']
+
+      if !image_address.starts_with?("http")
+        # build up missing parts
+        prefix = ""
+        if(image_address.starts_with?(":"))
+          prefix = 'https'
+        elsif(image_address.starts_with?("//"))
+          prefix = 'https:'
+        elsif(image_address.starts_with?("/"))
+          prefix = base_url
+        else
+          prefix = base_url + "/"
+        end  
+        # Obviously needs to be fixed
+        full_url = prefix + image_address
+
+        image['url'] = full_url
+        image['start'] = 0
+        image['length'] = 0
+
+        article['image_urls'] << full_url
+      else
+        if(@force_https)
+          uri = Addressable::URI.parse(image_address)
+          uri.scheme = 'https'
+          image_address = uri.to_s
+        end
+
+        image['url'] = full_url
+        image['start'] = 0
+        image['length'] = 0
+      end
+    end
+
     elements = Nokogiri::HTML article['body']
     elements.css('img').each do |image|
       image_address = image.attributes['src'].value
