@@ -349,42 +349,7 @@ class ArticlesController < ApplicationController
 
       article['description'] = format_description_text article['description']
 
-      # Extract all image urls in the article and put them into a single array.
-      article['images'] = []
-      article['image_urls'] = []
-      elements = Nokogiri::HTML article['body']
-      elements.css('img').each do |image|
-        image_address = image.attributes['src'].value
-        if !image_address.starts_with?("http")
-          # Obviously needs to be fixed
-          full_url = base_url + "/" + image.attributes['src'].value
-
-          image_object = {url: full_url, caption: "", width: "", height: "", byline: ""}
-          article['images'] << image_object
-
-          article['image_urls'] << full_url
-        else
-          if(@force_https)
-            uri = Addressable::URI.parse(image_address)
-            uri.scheme = 'https'
-            image_address = uri.to_s
-          end
-
-          image_object = {url: image_address, caption: "", width: "", height: "", byline: ""}
-          article['images'] << image_object
-        end
-
-        # This is a filler for the app itself. Which will replace the text with the images 
-        # (order being the same as in the array)
-        # for versioning we put this in
-        multiple_image_version_required = 1.1
-
-        if(params["v"] && params["v"].to_f >= multiple_image_version_required)
-          image.replace("^&^&")
-        else
-          image.remove
-        end
-      end
+      extract_images article
 
       article['body'] = elements.to_html
 
@@ -423,6 +388,53 @@ class ArticlesController < ApplicationController
     end
 
     return articles
+  end
+
+  # Parses an article, extracting all <img> links, and putting them, with their range, into
+  # an array
+  def extract_images article
+
+    # Extract all image urls in the article and put them into a single array.
+    article['images'] = []
+    article['image_urls'] = []
+    elements = Nokogiri::HTML article['body']
+    elements.css('img').each do |image|
+      image_address = image.attributes['src'].value
+      range = [start: image.line, length: image.to_s.length]
+
+      if !image_address.starts_with?("http")
+        # Obviously needs to be fixed
+        full_url = base_url + "/" + image.attributes['src'].value
+
+        image_object = {url: full_url, range: range, caption: "", width: "", height: "", byline: ""}
+        article['images'] << image_object
+
+        article['image_urls'] << full_url
+        image['href'] = full_url
+      else
+        if(@force_https)
+          uri = Addressable::URI.parse(image_address)
+          uri.scheme = 'https'
+          image_address = uri.to_s
+          image['href'] = image_address
+        end
+
+        image_object = {url: image_address, range: range, caption: "", width: "", height: "", byline: ""}
+        article['images'] << image_object
+      end
+
+
+      # This is a filler for the app itself. Which will replace the text with the images 
+      # (order being the same as in the array)
+      # for versioning we put this in
+      multiple_image_version_required = 1.1
+
+      # Add gravestone
+      image['push'] = ":::"
+    end
+
+    article['body'] = elements.to_html
+
   end
 
   def format_occrp_joomla_articles articles
@@ -508,6 +520,7 @@ class ArticlesController < ApplicationController
       end
 
       item['images'] = images
+      extract_images item
 
       # There's a bug in the cins plugin that doesn't add protocols to links
       # This should fix it
