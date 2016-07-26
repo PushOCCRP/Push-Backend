@@ -400,13 +400,12 @@ class ArticlesController < ApplicationController
     elements = Nokogiri::HTML article['body']
     elements.css('img').each do |image|
       image_address = image.attributes['src'].value
-      range = [start: image.line, length: image.to_s.length]
 
       if !image_address.starts_with?("http")
         # Obviously needs to be fixed
         full_url = base_url + "/" + image.attributes['src'].value
 
-        image_object = {url: full_url, range: range, caption: "", width: "", height: "", byline: ""}
+        image_object = {url: full_url, start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
         article['images'] << image_object
 
         article['image_urls'] << full_url
@@ -419,7 +418,7 @@ class ArticlesController < ApplicationController
           image['href'] = image_address
         end
 
-        image_object = {url: image_address, range: range, caption: "", width: "", height: "", byline: ""}
+        image_object = {url: image_address, start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
         article['images'] << image_object
       end
 
