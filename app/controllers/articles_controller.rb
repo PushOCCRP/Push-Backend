@@ -512,13 +512,6 @@ class ArticlesController < ApplicationController
       date = Date.strptime(item['publish_date'], "%Y-%m-%d %H:%M:%S")
       item['publish_date'] = date.strftime("%Y%m%d")
 
-      images = []
-      item['images'].each do |image|
-        image['url'] = base_url + '/' + image['url']
-        images.push image
-      end
-
-      item['images'] = images
       extract_images item
 
       # There's a bug in the cins plugin that doesn't add protocols to links
