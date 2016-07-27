@@ -13,7 +13,7 @@ class ArticlesController < ApplicationController
       when :occrp_joomla
         @response = get_occrp_joomla_articles
       when :wordpress
-        @response = get_wordpress_articles
+        @response = Wordpress.articles(params)
         #@response['results'] = clean_up_response @response['results']
       when :newscoop
         @response = get_newscoop_articles
@@ -49,7 +49,7 @@ class ArticlesController < ApplicationController
   end
   
   def get_cins_codeigniter_articles
-    url = ENV['cins_codeigniter_url']+'api/articles.json'
+    url = ENV['cins_codeignitor_url']+'/api/articles'
     language = params['language']
     if(language.blank?)
       # Should be extracted
@@ -62,27 +62,8 @@ class ArticlesController < ApplicationController
       logger.info("aritcles are not cached, making call to newscoop server")
       response = HTTParty.get(url)
       body = JSON.parse response.body
-      formate_cins_codeigniter_response(body)
+      return format_cins_codeignitor_response(body)
     end        
-  end
-
-  def get_wordpress_articles
-    language = params['language']
-    if(!language.blank?)
-      language = "/#{language}/"
-    end
-
-    url = ENV['wordpress_url'] 
-    version = params["v"]
-
-    final_url = "#{url}#{language}?push-occrp=true&type=articles"
-
-    logger.debug("Retrieveing articles at: #{final_url}")
-    response = HTTParty.get(final_url)
-    response_json = JSON.parse(response.body)
-    response_json['results'] = clean_up_response(response_json['results'])
-
-    return response_json
   end
 
   def get_newscoop_articles
@@ -127,7 +108,7 @@ class ArticlesController < ApplicationController
       when :occrp_joomla
         @response = search_occrp_joomla
       when :wordpress
-        @response = search_wordpress
+        @response = Wordpress.search(params)
       when :newscoop
         @response = search_newscoop
       when :cins_codeigniter
@@ -172,32 +153,7 @@ class ArticlesController < ApplicationController
 
     return @response
   end
-  
-  def search_wordpress
-
-      language = params['language']
-      if(!language.blank?)
-        language = "/#{language}/"
-      end
-
-      query = params['q']
-      url = "#{ENV['wordpress_url']}#{language}?push-occrp=true&type=search&q=#{query}"
-      response = HTTParty.get(url)
-
-      body = JSON.parse response.body
     
-      search_results = clean_up_response(body['results'])
-
-      @response = {query: query,
-                 start_date: "19700101",
-                 end_date: DateTime.now.strftime("%Y%m%d"),
-                 total_results: search_results.size,
-                 page: "1",
-                 results: search_results
-                }
-      return @response
-  end
-  
   def search_newscoop
     query = params['q']
 
@@ -228,7 +184,7 @@ class ArticlesController < ApplicationController
     options = {q: params['q']}
     response = HTTParty.get(url, query: options)
     body = JSON.parse response.body
-    formate_cins_codeigniter_response(body)
+    return format_cins_codeignitor_response(body)
   end
 
   def article
@@ -236,7 +192,7 @@ class ArticlesController < ApplicationController
       when :occrp_joomla
         @response = get_occrp_joomla_article
       when :wordpress
-        @response = get_wordpress_article
+        @response = Wordpress.article(params)
       when :newscoop
         @response = get_newscoop_article
       when :cins_codeigniter
@@ -265,36 +221,6 @@ class ArticlesController < ApplicationController
     end
 
     return @response
-
-  end
-
-  def get_wordpress_article
-
-      language = params['language']
-      if(!language.blank?)
-        language = "/#{language}/"
-      end
-
-      article_id = params['id']
-      url = "#{ENV['wordpress_url']}#{language}?push-occrp=true&type=article&article_id=#{article_id}"
-
-      logger.debug("Fetching article id: article_id")
-      logger.debug(url)
-
-      response = HTTParty.get(url)
-
-      body = JSON.parse response.body
-    
-      article_results = clean_up_response(body['results'])
-
-      @response = {article_id: article_id,
-                 start_date: "19700101",
-                 end_date: DateTime.now.strftime("%Y%m%d"),
-                 total_results: article_results.size,
-                 page: "1",
-                 results: article_results
-                }
-      return @response
 
   end
 
@@ -337,13 +263,14 @@ class ArticlesController < ApplicationController
   end
 
   def get_cins_codeigniter_article
-    url = ENV['cins_codeigniter_url']+'api/article'
+
+    url = ENV['cins_codeignitor_url']+'/api/article'
     language = params['language']
     if(language.blank?)
       # Should be extracted
       language = "rs"
     end
-
+    
     version = params["v"]
     article_id = params['id']
 
@@ -352,7 +279,7 @@ class ArticlesController < ApplicationController
       logger.info("aritcles are not cached, making call to newscoop server")
       response = HTTParty.get(url, query: options)
       body = JSON.parse response.body
-      formate_cins_codeigniter_response(body)
+      return format_cins_codeignitor_response(body)
     end        
   end
 
@@ -360,16 +287,19 @@ class ArticlesController < ApplicationController
   
   def check_for_valid_cms_mode
     @cms_mode
-    cms_mode = ENV['cms_mode']
-    case cms_mode
+
+    logger.debug "Checking validity of #{ENV['cms_mode']}"
+    case ENV['cms_mode']
       when "occrp-joomla"
         @cms_mode = :occrp_joomla
       when "wordpress"
         @cms_mode = :wordpress
       when "newscoop"
         @cms_mode = :newscoop
+      when "cins-codeignitor"
+        @cms_mode = :cins_codeigniter
       else
-        raise "CMS type #{cms_type} not valid for this version of Push."
+        raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
     end
   end
 
@@ -419,42 +349,7 @@ class ArticlesController < ApplicationController
 
       article['description'] = format_description_text article['description']
 
-      # Extract all image urls in the article and put them into a single array.
-      article['images'] = []
-      article['image_urls'] = []
-      elements = Nokogiri::HTML article['body']
-      elements.css('img').each do |image|
-        image_address = image.attributes['src'].value
-        if !image_address.starts_with?("http")
-          # Obviously needs to be fixed
-          full_url = base_url + "/" + image.attributes['src'].value
-
-          image_object = {url: full_url, caption: "", width: "", height: "", byline: ""}
-          article['images'] << image_object
-
-          article['image_urls'] << full_url
-        else
-          if(@force_https)
-            uri = Addressable::URI.parse(image_address)
-            uri.scheme = 'https'
-            image_address = uri.to_s
-          end
-
-          image_object = {url: image_address, caption: "", width: "", height: "", byline: ""}
-          article['images'] << image_object
-        end
-
-        # This is a filler for the app itself. Which will replace the text with the images 
-        # (order being the same as in the array)
-        # for versioning we put this in
-        multiple_image_version_required = 1.1
-
-        if(params["v"] && params["v"].to_f >= multiple_image_version_required)
-          image.replace("^&^&")
-        else
-          image.remove
-        end
-      end
+      extract_images article
 
       article['body'] = elements.to_html
 
@@ -493,6 +388,106 @@ class ArticlesController < ApplicationController
     end
 
     return articles
+  end
+
+  # Parses an article, extracting all <img> links, and putting them, with their range, into
+  # an array
+  def extract_images article
+
+    # Extract all image urls in the article and put them into a single array.
+    if(article['images'] == nil)
+      article['images'] = []
+    end
+    
+    if(article['image_urls'] == nil)
+      article['image_urls'] = []
+    end
+
+    #Yes, i'm aware this is repetitive code.
+    article['images'].each do |image|
+      image_address = image['url']
+
+      if !image_address.starts_with?("http")
+        # build up missing parts
+        prefix = ""
+        if(image_address.starts_with?(":"))
+          prefix = 'https'
+        elsif(image_address.starts_with?("//"))
+          prefix = 'https:'
+        elsif(image_address.starts_with?("/"))
+          prefix = base_url
+        else
+          prefix = base_url + "/"
+        end  
+        # Obviously needs to be fixed
+        full_url = prefix + image_address
+
+        image['url'] = full_url
+        image['start'] = 0
+        image['length'] = 0
+
+        article['image_urls'] << full_url
+      else
+        if(@force_https)
+          uri = Addressable::URI.parse(image_address)
+          uri.scheme = 'https'
+          image_address = uri.to_s
+        end
+
+        image['url'] = full_url
+        image['start'] = 0
+        image['length'] = 0
+      end
+    end
+
+    elements = Nokogiri::HTML article['body']
+    elements.css('img').each do |image|
+      image_address = image.attributes['src'].value
+
+      if !image_address.starts_with?("http")
+        # build up missing parts
+        prefix = ""
+        if(image.attributes['src'].value.starts_with?(":"))
+          prefix = 'https'
+        elsif(image.attributes['src'].value.starts_with?("//"))
+          prefix = 'https:'
+        elsif(image.attributes['src'].value.starts_with?("/"))
+          prefix = base_url
+        else
+          prefix = base_url + "/"
+        end  
+        # Obviously needs to be fixed
+        full_url = prefix + image.attributes['src'].value
+
+        image_object = {url: full_url, start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
+        article['images'] << image_object
+
+        article['image_urls'] << full_url
+        image['href'] = full_url
+      else
+        if(@force_https)
+          uri = Addressable::URI.parse(image_address)
+          uri.scheme = 'https'
+          image_address = uri.to_s
+          image['href'] = image_address
+        end
+
+        image_object = {url: image_address, start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
+        article['images'] << image_object
+      end
+
+
+      # This is a filler for the app itself. Which will replace the text with the images 
+      # (order being the same as in the array)
+      # for versioning we put this in
+      multiple_image_version_required = 1.1
+
+      # Add gravestone
+      image['push'] = ":::"
+    end
+
+    article['body'] = elements.to_html
+
   end
 
   def format_occrp_joomla_articles articles
@@ -561,6 +556,45 @@ class ArticlesController < ApplicationController
     end
     
     return formatted_articles
+  end
+
+  def format_cins_codeignitor_response body
+    items = body['results']
+    new_items = []
+    items.each do |item|
+      logger.debug "Parsing: #{item['publish_date']}"
+      date = Date.strptime(item['publish_date'], "%Y-%m-%d %H:%M:%S")
+      item['publish_date'] = date.strftime("%Y%m%d")
+
+      extract_images item
+
+      # There's a bug in the cins plugin that doesn't add protocols to links
+      # This should fix it
+      # first determine if it's a link to CINS
+      # If it is, then add https
+
+      url = Addressable::URI.parse(base_url)
+
+      elements = Nokogiri::HTML::fragment item['body']
+      elements.css('a').each do |link|
+        uri = Addressable::URI.parse(link.attribute("href"))
+        url_host = url.host.gsub("www.", "")
+        uri_host = uri.host.gsub("www.", "")
+        if(url_host == uri_host)
+          uri.scheme = 'https'
+          link.attribute("href").value = uri.to_s
+        end
+      end
+
+      item['body'] = elements.to_html
+
+      new_items.push item
+
+
+    end
+
+    body['results'] = new_items
+    return body
   end
 
   def scrubImageTagsFromHTMLString html_string
@@ -661,10 +695,13 @@ class ArticlesController < ApplicationController
         url = ENV['wordpress_url']
       when "newscoop"
         url = ENV['newscoop_url']
+      when "cins-codeignitor"
+        url = ENV['cins_codeignitor_url']
       else
         raise "CMS type #{cms_type} not valid for this version of Push."
     end
 
+    logger.debug("parsing #{url}")
     uri = URI.parse(url)
     url = uri.scheme + "://" + uri.host
     return url

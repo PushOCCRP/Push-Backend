@@ -1,0 +1,19 @@
+<div class="container">
+	<div class="page-header col-md-12">
+			<div class="col-md-10"><span class="h1"><%= @user.email %></span></div>
+			<div class="col-md-2 vertical-center"><%= link_to "Back", :back %></div>
+	</div>
+</div>
+
+<div class="container">
+	<div class="col-md-8">
+		<div class="container">
+			<div class="col-md-4 col-xs-12">Created On: <%= @user.created_at %></div>
+		</div>
+		<div class="container">
+			<div class="col-md-4 col-xs-12"><%= link_to "Edit", edit_user_path(@user) %> | <%= link_to "Delete", user_path(@user), method: :delete, data: {confirm: "Are you sure?"} %></div>
+		</div>
+	</div>
+</div>
+
+
