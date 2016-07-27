@@ -351,7 +351,7 @@ class ArticlesController < ApplicationController
 
       extract_images article
 
-      article['body'] = elements.to_html
+      #article['body'] = elements.to_html
 
       if(@cms_mode == :wordpress)
         article['body'] = scrubWordpressTagsFromHTMLString article['body']
