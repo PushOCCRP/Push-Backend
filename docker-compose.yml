@@ -31,8 +31,8 @@ services:
 
   web:
     build: .
-    command: bundle exec rails s -p 3000 -b '0.0.0.0' --environment=production
-    #command: bundle exec rails s -p 3000 -b '0.0.0.0'
+    #command: bundle exec rails s -p 3000 -b '0.0.0.0' --environment=production
+    command: bundle exec rails s -p 3000 -b '0.0.0.0'
     volumes:
       - .:/push
     expose:
