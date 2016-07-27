@@ -28,8 +28,14 @@ class CMS < ActiveRecord::Base
       article['description'] = format_description_text article['description']
 
       # Extract all image urls in the article and put them into a single array.
-      article['images'] = []
-      article['image_urls'] = []
+      if(article['images'] == nil)
+        article['images'] = []
+      end
+      
+      if(article['image_urls'] == nil)
+        article['image_urls'] = []
+      end
+
       elements = Nokogiri::HTML article['body']
       elements.css('img').each do |image|
         image_address = image.attributes['src'].value
