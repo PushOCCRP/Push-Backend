@@ -1,0 +1,19 @@
+<div class="container">
+	<div class="page-header col-md-12">
+			<div class="col-md-10"><span class="h1">Users</span></div>
+			<div class="col-md-2 vertical-center"><%= link_to "New User", new_user_path %></div>
+	</div>
+</div>
+
+<div class="container">
+	<div class="col-md-8">
+		<% @users.each do |user| %>
+			<div class="container">
+				<div class="col-md-4 col-xs-12"><%= link_to user.email, user %></div>
+				<div class="col-md-4 col-xs-12"><%= link_to "Edit", edit_user_path(user) %> | <%= link_to "Delete", user_path(user), method: :delete, data: {confirm: "Are you sure?"} %></div>
+			</div>
+	  	<% end %>
+	</div>
+</div>
+
+
