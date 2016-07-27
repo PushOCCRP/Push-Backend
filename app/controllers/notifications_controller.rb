@@ -68,8 +68,10 @@ class NotificationsController < ApplicationController
 				})
 			else
 				device.language = params['language']
-				device.save!
 			end
+			
+			device.save!
+
 
 			@status = "SUCCESS"
     		@status_id = 0
