@@ -69,7 +69,7 @@ class NotificationsController < ApplicationController
 			else
 				device.language = params['language']
 			end
-			
+
 			device.save!
 
 
@@ -135,14 +135,16 @@ class NotificationsController < ApplicationController
 
 				device = PushDevice.new({
 					dev_id: params['dev_id'],
-					dev_token: dev_token,
-					language: params['language'],
+					dev_token: '',
+					language: '',
 					platform: params['platform']
 				})
 			else
-				device.language = params['language']
-				device.save!
+				device.language = ''
+				device.dev_token = ''
 			end
+			
+			device.save!
 
 			@status = "SUCCESS"
     		@status_id = 0
@@ -265,7 +267,7 @@ class NotificationsController < ApplicationController
     		flash[:notice] = "Successfully updated certs"
 		end
 
-		redirect_to 'cert_upload'
+		redirect_to :cert_upload
 	end
 
 	def create_apns(sandbox=false)
