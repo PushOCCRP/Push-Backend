@@ -16,10 +16,8 @@ services:
       volumes:
           #- "./.docker/nginx/dev/:/etc/nginx/:ro"                            # config for development
           - "./.docker/nginx/:/etc/nginx/:ro"                            # config
-          - "./.docker/data/secrets/:/etc/ssl/nginx/:ro"                # this is where dhparam goes; TODO maybe we should use a data container for this
-          #- "/srv/logs/gurac/:/srv/logs/gurac/"                          # logs
-          - "./.docker/data/live/:/srv/data/ssl/:ro"                           # ssl certificates/keys data, including letsencrypt-generated certs
-
+          - "./.docker/data/secrets/:/srv/data/ssl/:ro"                # dhpram and certs are here
+          - "./public/:/var/public/:ro"
   db:
     image: postgres
     volumes:
