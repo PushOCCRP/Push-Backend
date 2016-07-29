@@ -7,19 +7,14 @@ services:
   nginx:
       image: nginx
       ports:
-          #- "80:80"
-          #- "443:443"
-          - "5000:80"
-          #- "60443:443"
+          - "80:80"
+          - "443:443"
       depends_on:
           - web
       volumes:
-          - "./.docker/nginx/dev/:/etc/nginx/:ro"                            # config for development
-          #- "./.docker/nginx/:/etc/nginx/:ro"                            # config
-          - "./.docker/data/secrets/:/etc/ssl/nginx/:ro"                # this is where dhparam goes; TODO maybe we should use a data container for this
-          #- "/srv/logs/gurac/:/srv/logs/gurac/"                          # logs
-          - "./.docker/data/live/:/srv/data/ssl/:ro"                           # ssl certificates/keys data, including letsencrypt-generated certs
-
+          - "./.docker/nginx/:/etc/nginx/:ro"                            # config
+          - "./.docker/data/secrets/:/srv/data/ssl/:ro"                # dhpram and certs are here
+          - "./public/:/var/public/:ro"
   db:
     image: postgres
     volumes:
@@ -31,7 +26,6 @@ services:
 
   web:
     build: .
-    #command: bundle exec rails s -p 3000 -b '0.0.0.0' --environment=production
     command: bundle exec rails s -p 3000 -b '0.0.0.0'
     volumes:
       - .:/push
@@ -43,6 +37,8 @@ services:
       - db
     env_file:
       - ./secrets.env
+    environment:
+      - RAILS_ENV=${RAILS_ENV}
     entrypoint: /push/entrypoint.sh
 
   # uniqush itself

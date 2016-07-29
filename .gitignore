@@ -29,3 +29,5 @@ secrets.env
 /.docker/redis/*
 docker/postgres/*
 .docker/postgres/*
+secrets/certs/*
+public/assets
