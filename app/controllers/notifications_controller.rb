@@ -143,7 +143,7 @@ class NotificationsController < ApplicationController
 				device.language = ''
 				device.dev_token = ''
 			end
-			
+
 			device.save!
 
 			@status = "SUCCESS"
@@ -313,7 +313,7 @@ class NotificationsController < ApplicationController
 	def create
 		@notification = Notification.new
 		@notification.message = params[:notification][:message]
-		@notification.language = params[:notification][:language]
+		@notification.language = params[:notification][:language].downcase
 		@notification.article_id = params[:notification][:article_id]
 		@notification.save!
 
