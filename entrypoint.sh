@@ -6,12 +6,13 @@ bundle install --path vendor/bundle
 rm /push/tmp/pids/server.pid
 echo "bundle done"
 
-if [ $RAILS_ENV = "production" ]
+if [ ! -z RAILS_ENV] && [ RAILS_ENV = "production" ]
 then
 	echo "Precompiling assets..."
 	rake assets:precompile
 	echo "Done."
 else
+	RAILS_ENV=development
 	echo "Skipping precompile in development"
 fi
 #if psql -lqt | cut -d \| -f 1 | grep -qw 'development'; then
