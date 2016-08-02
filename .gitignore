@@ -31,3 +31,4 @@ docker/postgres/*
 .docker/postgres/*
 secrets/certs/*
 public/assets
+secrets.env
