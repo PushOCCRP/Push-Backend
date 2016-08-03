@@ -1,7 +1,7 @@
 class CinsCodeignitor < CMS
 
 	def self.articles params
-	    url = ENV['cins_codeignitor_url']+'/api/articles'
+	    url = get_url '/api/articles'
 	    language = params['language']
 	    if(language.blank?)
 	      # Should be extracted
@@ -14,12 +14,15 @@ class CinsCodeignitor < CMS
 	      logger.info("aritcles are not cached, making call to newscoop server")
 	      response = HTTParty.get(url)
 	      body = JSON.parse response.body
-	      return format_cins_codeignitor_response(body)
+	      return_response = format_cins_codeignitor_response(body)
+	      logger.debug(return_response)
+
+	      return return_response
 	    end        
 	end
 
 	def self.article params
-	    url = ENV['cins_codeignitor_url']+'/api/article'
+	    url = get_url '/api/article'
 	    language = params['language']
 	    if(language.blank?)
 	      # Should be extracted
@@ -39,7 +42,7 @@ class CinsCodeignitor < CMS
 	end
 
 	def self.search params
-		url = ENV['cins_codeignitor_url']+'/api/search'
+		url = get_url '/api/search'
 	    language = params['language']
 	    if(language.blank?)
 	      # Should be extracted
@@ -61,9 +64,9 @@ class CinsCodeignitor < CMS
 
 	private
 
-	def self.get_url path, language
-	    url = ENV['wordpress_url'] 
-	    return "#{url}#{language}?#{path}"
+	def self.get_url path
+	    url = ENV['cins_codeignitor_url'] 
+	    return "#{url}#{path}"
 	end
 
 	def self.get_articles url, extras = {},  version = 1
@@ -129,7 +132,6 @@ class CinsCodeignitor < CMS
 		  end
 
 		  elements.css('p').each do |tag|
-		  	logger.debug(tag.content)
 		  	if tag.content.squish.blank?
 		  		tag.remove
 		  	end
@@ -137,7 +139,6 @@ class CinsCodeignitor < CMS
 
 		  item['body'] = elements.to_html
 		  item['body'] = add_formatting_for_sidebars item['body']
-
 		  new_items.push item
 
 
@@ -157,9 +158,14 @@ class CinsCodeignitor < CMS
 				style += ";"
 			end
 
-			style += "background-color: #e6e6e6; color: #3a3a3a"
-			sidebar['style'] = style
-		end
+	        #style += "background-color: #e6e6e6; color: #3a3a3a"
+	        style += "color: #3a3a3a"
+	        sidebar['style'] = style
+	        
+	        sidebar.prepend_child("<br />—<br />")
+	        sidebar.add_child("<br />—<br />")
+	        
+	    end
 
 		return elements.to_html
 	end
