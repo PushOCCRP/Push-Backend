@@ -136,6 +136,7 @@ class CinsCodeignitor < CMS
 		  end
 
 		  item['body'] = elements.to_html
+		  item['body'] = add_formatting_for_sidebars item['body']
 
 		  new_items.push item
 
@@ -144,6 +145,23 @@ class CinsCodeignitor < CMS
 
 		body['results'] = new_items
 		return body
+	end
+
+	def self.add_formatting_for_sidebars html
+		elements = Nokogiri::HTML::fragment html
+		elements.css('div.enterfile').each do |sidebar|
+			style = sidebar['style']
+			if(style == nil)
+				style = ""
+			else
+				style += ";"
+			end
+
+			style += "background-color: #e6e6e6; color: #3a3a3a"
+			sidebar['style'] = style
+		end
+
+		return elements.to_html
 	end
 
 end
