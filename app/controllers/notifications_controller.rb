@@ -4,7 +4,7 @@ class NotificationsController < ApplicationController
 	before_action :authenticate_user!, :except => ['subscribe', 'unsubscribe']
 
 	def index
-		@notifications = Notification.all
+		@notifications = Notification.all.order(created_at: :desc)
 	end
 
 	def subscribe
