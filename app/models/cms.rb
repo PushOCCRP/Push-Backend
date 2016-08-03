@@ -99,6 +99,106 @@ class CMS < ActiveRecord::Base
     return articles
   end
 
+    # Parses an article, extracting all <img> links, and putting them, with their range, into
+  # an array
+  def self.extract_images article
+
+    # Extract all image urls in the article and put them into a single array.
+    if(article['images'] == nil)
+      article['images'] = []
+    end
+    
+    if(article['image_urls'] == nil)
+      article['image_urls'] = []
+    end
+
+    #Yes, i'm aware this is repetitive code.
+    article['images'].each do |image|
+      image_address = image['url']
+
+      if !image_address.starts_with?("http")
+        # build up missing parts
+        prefix = ""
+        if(image_address.starts_with?(":"))
+          prefix = 'https'
+        elsif(image_address.starts_with?("//"))
+          prefix = 'https:'
+        elsif(image_address.starts_with?("/"))
+          prefix = base_url
+        else
+          prefix = base_url + "/"
+        end  
+        # Obviously needs to be fixed
+        full_url = prefix + image_address
+
+        image['url'] = full_url
+        image['start'] = 0
+        image['length'] = 0
+
+        article['image_urls'] << full_url
+      else
+        if(@force_https)
+          uri = Addressable::URI.parse(image_address)
+          uri.scheme = 'https'
+          image_address = uri.to_s
+        end
+
+        image['url'] = full_url
+        image['start'] = 0
+        image['length'] = 0
+      end
+    end
+
+    elements = Nokogiri::HTML article['body']
+    elements.css('img').each do |image|
+      image_address = image.attributes['src'].value
+
+      if !image_address.starts_with?("http")
+        # build up missing parts
+        prefix = ""
+        if(image.attributes['src'].value.starts_with?(":"))
+          prefix = 'https'
+        elsif(image.attributes['src'].value.starts_with?("//"))
+          prefix = 'https:'
+        elsif(image.attributes['src'].value.starts_with?("/"))
+          prefix = base_url
+        else
+          prefix = base_url + "/"
+        end  
+        # Obviously needs to be fixed
+        full_url = prefix + image.attributes['src'].value
+
+        image_object = {url: full_url, start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
+        article['images'] << image_object
+
+        article['image_urls'] << full_url
+        image['href'] = full_url
+      else
+        if(@force_https)
+          uri = Addressable::URI.parse(image_address)
+          uri.scheme = 'https'
+          image_address = uri.to_s
+          image['href'] = image_address
+        end
+
+        image_object = {url: image_address, start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
+        article['images'] << image_object
+      end
+
+
+      # This is a filler for the app itself. Which will replace the text with the images 
+      # (order being the same as in the array)
+      # for versioning we put this in
+      multiple_image_version_required = 1.1
+
+      # Add gravestone
+      image['push'] = ":::"
+    end
+
+    article['body'] = elements.to_html
+
+  end
+
   private
 
   def self.parse_google_search_to_links response
