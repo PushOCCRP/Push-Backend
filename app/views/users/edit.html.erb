@@ -1,6 +1,6 @@
 <div class="container">
   <div class="page-header col-md-8 col-md-offset-3">
-      <div class="col-md-12"><span class="h1">New User</span></div>
+      <div class="col-md-12"><span class="h1">Edit User</span></div>
   </div>
 </div>
 
@@ -12,6 +12,19 @@
         <%= f.label :email %><br />
         <%= f.email_field :email, autofocus: true, class: "form-control" %>
       </div>
+      <div class="field">
+        <%= f.label :password %>
+        <% if @minimum_password_length %>
+        <em>(<%= @minimum_password_length %> characters minimum)</em>
+        <% end %><br />
+        <%= f.password_field :password, autocomplete: "off", class: "form-control" %>
+      </div>
+
+      <div class="field">
+        <%= f.label :password_confirmation %><br />
+        <%= f.password_field :password_confirmation, autocomplete: "off", class: "form-control" %>
+      </div>
+
       <br />
       <div class="actions">
         <%= f.submit "Edit", class:"btn btn-default" %>
