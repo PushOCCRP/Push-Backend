@@ -36,12 +36,34 @@ class UsersController < ApplicationController
 
 	def edit
 		@user = User.find(params[:id])
+
+		if(current_user != @user)
+			flash[:alert] = "You can only edit yourself. Please contact the administrator with questions."
+			redirect_to :users
+		end
 	end
 
 	def update
 		@user = User.find(params[:id])
+
+		if(current_user != @user)
+			flash[:alert] = "You can only edit yourself. Please contact the administrator with questions."
+			redirect_to :users
+		end
+
+		if(params[:user][:password] != params[:user][:password_confirmation])
+			flash[:alert] = "Passwords must match."
+			redirect_to :back
+		end
+
 		@user.email = params[:user][:email]
+		if(!params[:user][:password].blank?)
+			@user.password = params[:user][:password]
+		end
+
 		@user.save!
+
+		sign_in(@user, :bypass => true)
 
 		flash[:notice] = "Successfully updated user."
 		redirect_to @user
