@@ -40,6 +40,10 @@ services:
     environment:
       - RAILS_ENV=${RAILS_ENV}
     entrypoint: /push/entrypoint.sh
+#    extra_hosts:                            # For dev purposes only
+#      - "rise.md:213.133.100.136"
+#      - "www.rise.md:213.133.100.136"
+
 
   # uniqush itself
   uniqush:

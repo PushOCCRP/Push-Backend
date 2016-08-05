@@ -1,6 +1,5 @@
 class ArticlesController < ApplicationController
 
-  before_action :check_for_valid_cms_mode
   before_action :check_for_force_https
 
   @newscoop_access_token
@@ -229,24 +228,6 @@ class ArticlesController < ApplicationController
   end
 
   private
-  
-  def check_for_valid_cms_mode
-    @cms_mode
-
-    logger.debug "Checking validity of #{ENV['cms_mode']}"
-    case ENV['cms_mode']
-      when "occrp-joomla"
-        @cms_mode = :occrp_joomla
-      when "wordpress"
-        @cms_mode = :wordpress
-      when "newscoop"
-        @cms_mode = :newscoop
-      when "cins-codeignitor"
-        @cms_mode = :cins_codeigniter
-      else
-        raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
-    end
-  end
 
   def check_for_force_https
     @force_https
