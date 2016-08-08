@@ -50,8 +50,10 @@ class Wordpress < CMS
 			make_request url
 		end
 
-		response['post'] = 'post'
-		
+		if(response.count == 0)
+			response = {post: 'post'}
+		end
+
 		return response.keys
 	end
 
@@ -63,6 +65,10 @@ class Wordpress < CMS
 	    url = ENV['wordpress_url'] 
 	    url_string = "#{url}#{language}?#{path}"
 	    
+	    if(!ENV['wp_super_cached_donotcachepage'].blank?)
+	    	options[:donotcachepage] = ENV['wp_super_cached_donotcachepage']
+	    end
+
 	    options.keys.each do |key|
 	    	url_string += "&#{key}=#{options[key]}"
 	    end
@@ -71,6 +77,7 @@ class Wordpress < CMS
 	end
 
 	def self.make_request url
+		logger.debug("Making request to #{url}")
 		response = HTTParty.get(url)
 	    body = JSON.parse response.body
 
