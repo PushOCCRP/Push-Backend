@@ -367,7 +367,8 @@ class ArticlesController < ApplicationController
     end
 
     elements = Nokogiri::HTML article['body']
-    elements.css('img').each do |image|
+    images_array = elements.css('img')
+    images_array.each do |image|
       image_address = image.attributes['src'].value
 
       if !image_address.starts_with?("http")
@@ -389,6 +390,11 @@ class ArticlesController < ApplicationController
         article['images'] << image_object
 
         article['image_urls'] << full_url
+        
+        if(image == images_array.first)
+          image.remove
+        end
+
         image['href'] = full_url
       else
         if(@force_https)
