@@ -3,6 +3,10 @@ class ApplicationController < ActionController::Base
   # For APIs, you may want to use :null_session instead.
   protect_from_forgery with: :exception
   
+  # Set the cms mode for all controller requests
+  before_action :check_for_valid_cms_mode
+
+
   #This is just a passthrough for basic GET commands. Takes a URL, calls it, and returns the body.
   #This should conceivably cache responses at some point
   #Should also require auth token
@@ -29,4 +33,23 @@ class ApplicationController < ActionController::Base
     end
     
   end
+
+  def check_for_valid_cms_mode
+    @cms_mode
+
+    logger.debug "Checking validity of #{ENV['cms_mode']}"
+    case ENV['cms_mode']
+      when "occrp-joomla"
+        @cms_mode = :occrp_joomla
+      when "wordpress"
+        @cms_mode = :wordpress
+      when "newscoop"
+        @cms_mode = :newscoop
+      when "cins-codeignitor"
+        @cms_mode = :cins_codeigniter
+      else
+        raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
+    end
+  end
+
 end
