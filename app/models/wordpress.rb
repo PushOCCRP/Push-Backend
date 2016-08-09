@@ -1,15 +1,25 @@
 class Wordpress < CMS
 
 	def self.articles params
+
     	language = language_parameter params['language']
-	    url = get_url "push-occrp=true&type=articles", language
+    	options = {}
+
+    	categories_string = Setting.categories
+    	if(!categories_string.blank?)
+    		logger.debug("categories not blank")
+    		categories = categories_string.split('::')
+    		options[:post_types] = categories.join(',')
+    	end
+
+	    url = get_url "push-occrp=true&occrp_push_type=articles", language, options
 	    return get_articles url
 	end
 
 	def self.article params
 	  language = language_parameter params['language']
       article_id = params['id']
-      url = get_url "push-occrp=true&type=article&article_id=#{article_id}", language
+      url = get_url "push-occrp=true&occrp_push_type=article&article_id=#{article_id}", language
 
       logger.debug("Fetching article id: article_id")
 
@@ -25,32 +35,60 @@ class Wordpress < CMS
 		if(!google_search_engine_id.blank?)
 			logger.debug "Searching google with id: #{google_search_engine_id}"
 			articles_list = search_google_custom query, google_search_engine_id
-			url = get_url "push-occrp=true&type=urllookup&u=#{articles_list.join(',')}", language
+			url = get_url "push-occrp=true&occrp_push_type=urllookup&u=#{articles_list.join(',')}", language
 		else
-		    url = get_url "push-occrp=true&type=search&q=#{query}", language
+		    url = get_url "push-occrp=true&occrp_push_type=search&q=#{query}", language
 		end
 
 		return get_articles url, {query: query}
 	end
 
+	def self.categories
+	    response = Rails.cache.fetch("wordpress_categories", expires_in: 1.day) do
+			url = get_url "push-occrp=true&occrp_push_type=post_types", nil
+			logger.debug ("Fetching categories")
+			make_request url
+		end
 
+		if(response.count == 0)
+			response = {post: 'post'}
+		end
 
+		return response.keys
+	end
 
 
 
 	private
 
-	def self.get_url path, language
+	def self.get_url path, language, options = {}
 	    url = ENV['wordpress_url'] 
-	    return "#{url}#{language}?#{path}"
+	    url_string = "#{url}#{language}?#{path}"
+	    
+	    if(!ENV['wp_super_cached_donotcachepage'].blank?)
+	    	options[:donotcachepage] = ENV['wp_super_cached_donotcachepage']
+	    end
+
+	    options.keys.each do |key|
+	    	url_string += "&#{key}=#{options[key]}"
+	    end
+
+	    return url_string
+	end
+
+	def self.make_request url
+		logger.debug("Making request to #{url}")
+		response = HTTParty.get(url)
+	    body = JSON.parse response.body
+
+	    return body
 	end
 
 	def self.get_articles url, extras = {},  version = 1
 
 	    logger.debug("Calling: #{url}")
 
-		response = HTTParty.get(url)
-	    body = JSON.parse response.body
+	    body = make_request url
 
 	    if(body['results'].nil?)
 	    	body['results'] = Array.new
