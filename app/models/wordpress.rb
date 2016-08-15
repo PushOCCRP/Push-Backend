@@ -119,9 +119,10 @@ class Wordpress < CMS
 
 	def self.clean_up_for_wordpress articles	
 		articles.each do |article|
+		    article['body'] = scrubCDataTags article['body']
+   		    article['body'] = scrubScriptTagsFromHTMLString article['body']
 		    article['body'] = scrubWordpressTagsFromHTMLString article['body']
 		    article['body'] = cleanUpNewLines article['body']
-		    article['body'] = scrubScriptTagsFromHTMLString article['body']
 		    article['body'] = scrubJSCommentsFromHTMLString article['body']
 		    article['body'] = scrubSpecialCharactersFromSingleLinesInHTMLString article['body']
 		    article['body'] = scrubHTMLSpecialCharactersInHTMLString article['body']
