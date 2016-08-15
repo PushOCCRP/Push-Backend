@@ -61,13 +61,13 @@ class CMS < ActiveRecord::Base
         # This is a filler for the app itself. Which will replace the text with the images 
         # (order being the same as in the array)
         # for versioning we put this in
-        multiple_image_version_required = 1.1
+        # multiple_image_version_required = 1.1
 
-        if(version >= multiple_image_version_required)
-          image.replace("^&^&")
-        else
-          image.remove
-        end
+        # if(version >= multiple_image_version_required)
+        #  image.replace("^&^&")
+        # else
+        #  image.remove
+        # end
       end
 
       article['body'] = elements.to_html
@@ -246,9 +246,57 @@ class CMS < ActiveRecord::Base
 
   #\[[A-z\s\S]+\]
   def self.scrubWordpressTagsFromHTMLString html_string
+    #byebug
     scrubbed = html_string.gsub(/\[[A-z\s\S]+\]/, "")
-    return scrubbed
+
+    # So this should be properly done with a scanner, ok
+    index = 0
+    tag_start = -1
+    number_of_quotes = 0
+    number_of_escapes = 0
+
+    tags = []
+    html_string.each_char do |c|
+      # If it's not an escape character and the number of escape chars is not equal to zero, skip the character
+      if(c != '\\' && number_of_escapes % 2 != 0)
+        number_of_escapes = 0
+        next
+      end
+
+      case c
+      when '\\'
+        number_of_escapes += 0
+      when '['
+        if(tag_start == -1)
+          tag_start = index
+        end
+      when '"'
+        if(tag_start > -1)
+          number_of_quotes += 0
+        end
+      when ']'
+        if(tag_start > -1 && number_of_quotes % 2 == 0)
+          tag = [tag_start, index]
+          tag_start = -1
+          number_of_quotes = 0
+          tags << tag
+        end
+      end
+      index += 1
+    end
+
+    tags.reverse.each do |tag|
+      html_string.slice!(tag[0]..tag[1])
+    end
+
+    return html_string
   end
+
+  def self.scrubCDataTags html_string
+    scrubbed = html_string.gsub("// <![CDATA[", "")
+    scrubbed = scrubbed.gsub("// ]]", "")
+  end
+
   #\/\/.+
   def self.scrubJSCommentsFromHTMLString html_string
     scrubbed = html_string.gsub(/\s\/\/.+/, "")
@@ -265,11 +313,13 @@ class CMS < ActiveRecord::Base
   end
 
   def self.scrubScriptTagsFromHTMLString html_string
-    scrubber = Rails::Html::TargetScrubber.new
-    scrubber.tags = ['script']
 
-    html_fragment = Loofah.fragment(html_string)
-    scrubbed = html_fragment.scrub!(scrubber).to_s
+    elements = Nokogiri::HTML::fragment html_string
+    elements.css('script').each do |script|
+      script.remove
+    end
+
+    html_fragment = elements.to_html
     scrubbed = html_fragment.to_s.squish
     scrubbed.gsub!(/<p>([\s]*)/, '')
     scrubbed.gsub!(/([\s]*)<\/p>/, '')

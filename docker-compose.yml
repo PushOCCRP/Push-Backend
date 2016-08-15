@@ -18,7 +18,7 @@ services:
   db:
     image: postgres
     volumes:
-      - ./.docker/postgres:/data/postgres
+      - "./.docker/postgres:/data/postgres"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -40,6 +40,9 @@ services:
     environment:
       - RAILS_ENV=${RAILS_ENV}
     entrypoint: /push/entrypoint.sh
+    #tty: true
+    #stdin_open: true
+
 #    extra_hosts:                            # For dev purposes only
 #      - "rise.md:213.133.100.136"
 #      - "www.rise.md:213.133.100.136"
