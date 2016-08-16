@@ -36,7 +36,7 @@ class CMS < ActiveRecord::Base
         article['image_urls'] = []
       end
 
-      elements = Nokogiri::HTML article['body']
+      elements = Nokogiri::HTML::fragment article['body']
       elements.css('img').each do |image|
         image_address = image.attributes['src'].value
         if !image_address.starts_with?("http")
@@ -69,6 +69,8 @@ class CMS < ActiveRecord::Base
         #  image.remove
         # end
       end
+
+      elements.search('img').wrap('<p></p>')
 
       article['body'] = elements.to_html
 
@@ -321,9 +323,9 @@ class CMS < ActiveRecord::Base
 
     html_fragment = elements.to_html
     scrubbed = html_fragment.to_s.squish
-    scrubbed.gsub!(/<p>([\s]*)/, '')
-    scrubbed.gsub!(/([\s]*)<\/p>/, '')
-    scrubbed.gsub!('/p>', '/p><br />')
+    #scrubbed.gsub!(/<p>([\s]*)/, '')
+    #scrubbed.gsub!(/([\s]*)<\/p>/, '')
+    #scrubbed.gsub!('/p>', '/p><br />')
     scrubbed.squish!
 
     #put back in the spacers
