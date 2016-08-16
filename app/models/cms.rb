@@ -89,6 +89,23 @@ class CMS < ActiveRecord::Base
         published_date = DateTime.new(1970,01,01)
       end
 
+      # There's an interesting bug where the images coming back from a plugin
+      # may not be https, so if we're forcing, we'll fix that here
+      if(force_https)
+        article['images'].each do |image|
+          if(image[:url] == nil)
+            url = image["url"]
+          else
+            url = image[:url]
+          end
+
+          if(!url.starts_with? "https")
+            uri = Addressable::URI.parse(url)
+            uri.scheme = 'https'
+            image['url'] = uri.to_s
+          end
+        end
+      end
 
       # right now we only support dates on the mobile side, this will be time soon.
       article['publish_date'] = published_date.strftime("%Y%m%d")
@@ -135,7 +152,6 @@ class CMS < ActiveRecord::Base
 
         article['image_urls'] << full_url
       else
-        byebug
         if(force_https)
           uri = Addressable::URI.parse(image_address)
           uri.scheme = 'https'
@@ -245,7 +261,6 @@ class CMS < ActiveRecord::Base
 
   #\[[A-z\s\S]+\]
   def self.scrubWordpressTagsFromHTMLString html_string
-    #byebug
     scrubbed = html_string.gsub(/\[[A-z\s\S]+\]/, "")
 
     # So this should be properly done with a scanner, ok
@@ -375,7 +390,14 @@ class CMS < ActiveRecord::Base
 
     logger.debug("parsing #{url}")
     uri = URI.parse(url)
-    url = uri.scheme + "://" + uri.host
+
+    if(force_https)
+      scheme = 'https'
+    else
+      scheme = uri.scheme
+    end
+
+    url = scheme + "://" + uri.host
     return url
   end
 
