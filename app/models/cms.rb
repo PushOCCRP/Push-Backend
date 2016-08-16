@@ -9,11 +9,6 @@ class CMS < ActiveRecord::Base
     return parse_google_search_to_links response
   end
 
-
-
-
-
-
   def self.clean_up_response articles = Array.new, version = 1.0
     articles.delete_if{|article| article['headline'].blank?}
     articles.each do |article|
@@ -48,10 +43,11 @@ class CMS < ActiveRecord::Base
 
           article['image_urls'] << full_url
         else
-          if(ENV["force_https"] == "true")
+          if(force_https)
             uri = Addressable::URI.parse(image_address)
             uri.scheme = 'https'
             image_address = uri.to_s
+            image['src'] = image_address
           end
 
           image_object = {url: image_address, caption: "", width: "", height: "", byline: ""}
@@ -139,7 +135,8 @@ class CMS < ActiveRecord::Base
 
         article['image_urls'] << full_url
       else
-        if(@force_https)
+        byebug
+        if(force_https)
           uri = Addressable::URI.parse(image_address)
           uri.scheme = 'https'
           image_address = uri.to_s
@@ -176,7 +173,7 @@ class CMS < ActiveRecord::Base
         article['image_urls'] << full_url
         image['href'] = full_url
       else
-        if(@force_https)
+        if(force_https)
           uri = Addressable::URI.parse(image_address)
           uri.scheme = 'https'
           image_address = uri.to_s
@@ -380,5 +377,16 @@ class CMS < ActiveRecord::Base
     uri = URI.parse(url)
     url = uri.scheme + "://" + uri.host
     return url
+  end
+
+  def self.force_https
+    case ENV['force_https']
+    when 'true'
+      value = true
+    else
+      value = false
+    end
+
+    return value
   end
 end
