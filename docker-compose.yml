@@ -40,8 +40,8 @@ services:
     environment:
       - RAILS_ENV=${RAILS_ENV}
     entrypoint: /push/entrypoint.sh
-    #tty: true
-    #stdin_open: true
+    tty: true
+    stdin_open: true
 
 #    extra_hosts:                            # For dev purposes only
 #      - "rise.md:213.133.100.136"
