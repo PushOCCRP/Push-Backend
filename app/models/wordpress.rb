@@ -134,7 +134,7 @@ class Wordpress < CMS
 	end
 
 	def self.normalizeSpacing text
-		gravestone = ":::::::::"
+		gravestone = "mv9da0K3fP"
 
 		#Replace all /r/n with <br />
 		#replace all /r with <br />
@@ -144,18 +144,23 @@ class Wordpress < CMS
 		#replace all gravestones with <br />
 
 		text = removeHorizontalRules text
-		
+
 		text.gsub!(/\r?\n|\r/, gravestone)
 		text.gsub!('<br>', gravestone)
 		text.gsub!('<br />', gravestone)
-		text.gsub!(/<\/p>[\s]*(:::::::::)*[\s]*<p>/, gravestone)
+		text.gsub!(/<\/p>[\s]*(mv9da0K3fP)*[\s]*<p>/, gravestone)
 
 		text.gsub!('<p>', '')
 		text.gsub!('</p>', '')
 
-		# NOTE: some <p> tags may stay in, especially if there's formatting inlined on it.
+		text.gsub!(/[\s]*(mv9da0K3fP)+[\s]*/, '<br /><br />')
 
-		text.gsub!(/[\s]*(:::::::::)+[\s]*/, '<br /><br />')
+
+		# NOTE: some <p> tags may stay in, especially if there's formatting inlined on it.
+		# This removes one of the <br />s before it
+		# We can also assume they're using <p> tags, so, we should add closers, since they were removed
+		text.gsub!(/([\s]*<br \/>[\s]*)+<p/, '</p><br /><p')
+		
 		return text
 	end
 
