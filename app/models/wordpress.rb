@@ -157,9 +157,9 @@ class Wordpress < CMS
 
 
 		# NOTE: some <p> tags may stay in, especially if there's formatting inlined on it.
-		# This removes one of the <br />s before it
+		# This removes the <br />s before it
 		# We can also assume they're using <p> tags, so, we should add closers, since they were removed
-		text.gsub!(/([\s]*<br \/>[\s]*)+<p/, '</p><br /><p')
+		text.gsub!(/([\s]*<br \/>[\s]*)+<p/, '</p><p')
 		
 		return text
 	end
