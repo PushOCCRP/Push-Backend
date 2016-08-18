@@ -144,8 +144,6 @@ class Wordpress < CMS
 		#replace all gravestones with <br />
 
 		text = removeHorizontalRules text
-
-		byebug
 		
 		text.gsub!(/\r?\n|\r/, gravestone)
 		text.gsub!('<br>', gravestone)
