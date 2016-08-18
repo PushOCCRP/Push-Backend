@@ -334,15 +334,7 @@ class CMS < ActiveRecord::Base
     end
 
     html_fragment = elements.to_html
-    scrubbed = html_fragment.to_s.squish
-    #scrubbed.gsub!(/<p>([\s]*)/, '')
-    #scrubbed.gsub!(/([\s]*)<\/p>/, '')
-    #scrubbed.gsub!('/p>', '/p><br />')
-    scrubbed.squish!
-
-    #put back in the spacers
-    scrubbed.gsub!("::::", "<br /><br />")
-    return scrubbed
+    return html_fragment
   end
 
   def self.scrubTargetFromHrefLinksInHTMLString html_string
@@ -352,8 +344,9 @@ class CMS < ActiveRecord::Base
   #This adds <br /> tags if necessary, originally for KRIK from Wordpress
   #This puts in :::: as place holder while we clean the rest
   def self.cleanUpNewLines html_string
+    byebug
     cleaned = html_string
-    cleaned.gsub!("\r\n\r\n", "::::")
+    cleaned.gsub!("\r\n\r\n", "<br />")
     return cleaned
   end
   
