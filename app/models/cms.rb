@@ -64,7 +64,10 @@ class CMS < ActiveRecord::Base
         # else
         #  image.remove
         # end
+
+        image['push'] = ":::"
       end
+
 
       elements.search('img').wrap('<p></p>')
 
