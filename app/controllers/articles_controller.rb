@@ -333,6 +333,7 @@ class ArticlesController < ApplicationController
     article['images'].each do |image|
       image_address = image['url']
 
+      byebug
       if !image_address.starts_with?("http")
         # build up missing parts
         prefix = ""
@@ -425,7 +426,10 @@ class ArticlesController < ApplicationController
   def format_occrp_joomla_articles articles
     articles.each do |article|
       article['url'] = URI.join(base_url, article['id'])
+      article['body'] = CMS.normalizeSpacing article['body']
     end
+
+    CMS.clean_up_response articles
   end
   
   def format_newscoop_response body
