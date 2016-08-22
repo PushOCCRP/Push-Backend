@@ -404,6 +404,22 @@ class CMS < ActiveRecord::Base
     # We can also assume they're using <p> tags, so, we should add closers, since they were removed
     text.gsub!(/([\s]*<br \/>[\s]*)+<p/, '</p><p')
     
+    while(text.start_with?("<br>"))
+      text.slice!(0..3)
+    end
+
+    while(text.start_with?("<br />"))
+      text.slice!(0..5)
+    end
+
+    while(text.end_with?("<br>"))
+      text.slice!(text.length-3..text.length)
+    end
+
+    while(text.end_with?("<br />"))
+      text.slice!(text.length-5..text.length)
+    end
+
     return text
   end
 
