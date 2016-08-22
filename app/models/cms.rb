@@ -2,14 +2,10 @@ class CMS < ActiveRecord::Base
 
   def self.search_google_custom query, google_search_engine_ids
     # Get the search results from Google
-
-    # Google requires all searches to be in ASCII, so this will convert it
-    sanitized_query = ApplicationController.helpers.sanitized_query(query)
-
-    url = "https://www.googleapis.com/customsearch/v1?key=AIzaSyCahDlxYxTgXsPUV85L91ytd7EV1_i72pc&cx=#{google_search_engine_ids}&q=#{sanitized_query}"
+    url = "https://www.googleapis.com/customsearch/v1?key=AIzaSyCahDlxYxTgXsPUV85L91ytd7EV1_i72pc&cx=#{google_search_engine_ids}&q=#{query}"
     logger.debug("Calling google at: #{url}")
 
-    response = HTTParty.get(url)
+    response = HTTParty.get(URI.encode(url))
     return parse_google_search_to_links response
   end
 

@@ -79,7 +79,7 @@ class Wordpress < CMS
 	def self.make_request url
 
 		logger.debug("Making request to #{url}")
-		response = HTTParty.get(ApplicationController.helpers.sanitized_query(url))
+		response = HTTParty.get(URI.encode(url))
 	    body = JSON.parse response.body
 
 	    return body
