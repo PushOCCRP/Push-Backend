@@ -15,6 +15,10 @@ class CMS < ActiveRecord::Base
 
       # If there is no body (which is very prevalent in the OCCRP data for some reason)
       # this takes the intro text and makes it the body text
+      if((!article.has_key?('body') || !article['body'].nil?) && !article[:body].nil?)
+        article['body'] = article[:body]
+      end
+
       if article['body'].nil? || article['body'].empty?
         article['body'] = article['description']
       end
@@ -133,6 +137,9 @@ class CMS < ActiveRecord::Base
     #Yes, i'm aware this is repetitive code.
     article['images'].each do |image|
       image_address = image['url']
+      if(image_address.nil?)
+        image_address = image[:url]
+      end
 
       if !image_address.starts_with?("http")
         # build up missing parts
@@ -368,6 +375,46 @@ class CMS < ActiveRecord::Base
 
     return text
   end
+
+  def self.normalizeSpacing text
+    gravestone = "mv9da0K3fP"
+
+    #Replace all /r/n with <br />
+    #replace all /r with <br />
+    #replace all /n with <br />
+    #replace all <br /> with gravestones
+    #replace all </p>gravestone<p> with gravestone
+    #replace all gravestones with <br />
+
+    text = removeHorizontalRules text
+
+    text.gsub!(/\r?\n|\r/, gravestone)
+    text.gsub!('<br>', gravestone)
+    text.gsub!('<br />', gravestone)
+    text.gsub!(/<\/p>[\s]*(mv9da0K3fP)*[\s]*<p>/, gravestone)
+
+    text.gsub!('<p>', '')
+    text.gsub!('</p>', '')
+
+    text.gsub!(/[\s]*(mv9da0K3fP)+[\s]*/, '<br /><br />')
+
+
+    # NOTE: some <p> tags may stay in, especially if there's formatting inlined on it.
+    # This removes the <br />s before it
+    # We can also assume they're using <p> tags, so, we should add closers, since they were removed
+    text.gsub!(/([\s]*<br \/>[\s]*)+<p/, '</p><p')
+    
+    return text
+  end
+
+  def self.removeHorizontalRules text
+    elements = Nokogiri::HTML::fragment text
+      elements.css('hr').each do |node|
+        node.remove
+      end
+      return elements.to_html
+  end
+
   
   def self.base_url
     url = nil
