@@ -1,4 +1,5 @@
 require 'singleton'
+require 'resolv-replace'
 
 class Newscoop
   @@lock = Mutex.new

@@ -24,6 +24,9 @@ Rails.application.routes.draw do
   get 'article' => 'articles#article'
   get 'search' => 'articles#search'
   
+  get 'preferences' => 'preferences#index'
+  put 'preferences' => 'preferences#update'
+  
   get 'passthrough' => 'application#passthrough'
 
   # The priority is based upon order of creation: first created -> highest priority.
