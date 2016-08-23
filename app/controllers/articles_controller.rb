@@ -1,6 +1,5 @@
 class ArticlesController < ApplicationController
 
-  before_action :check_for_valid_cms_mode
   before_action :check_for_force_https
 
   @newscoop_access_token
@@ -229,24 +228,6 @@ class ArticlesController < ApplicationController
   end
 
   private
-  
-  def check_for_valid_cms_mode
-    @cms_mode
-
-    logger.debug "Checking validity of #{ENV['cms_mode']}"
-    case ENV['cms_mode']
-      when "occrp-joomla"
-        @cms_mode = :occrp_joomla
-      when "wordpress"
-        @cms_mode = :wordpress
-      when "newscoop"
-        @cms_mode = :newscoop
-      when "cins-codeignitor"
-        @cms_mode = :cins_codeigniter
-      else
-        raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
-    end
-  end
 
   def check_for_force_https
     @force_https
@@ -352,6 +333,7 @@ class ArticlesController < ApplicationController
     article['images'].each do |image|
       image_address = image['url']
 
+      byebug
       if !image_address.starts_with?("http")
         # build up missing parts
         prefix = ""
@@ -386,7 +368,8 @@ class ArticlesController < ApplicationController
     end
 
     elements = Nokogiri::HTML article['body']
-    elements.css('img').each do |image|
+    images_array = elements.css('img')
+    images_array.each do |image|
       image_address = image.attributes['src'].value
 
       if !image_address.starts_with?("http")
@@ -408,6 +391,11 @@ class ArticlesController < ApplicationController
         article['images'] << image_object
 
         article['image_urls'] << full_url
+        
+        if(image == images_array.first)
+          image.remove
+        end
+
         image['href'] = full_url
       else
         if(@force_https)
@@ -438,7 +426,10 @@ class ArticlesController < ApplicationController
   def format_occrp_joomla_articles articles
     articles.each do |article|
       article['url'] = URI.join(base_url, article['id'])
+      article['body'] = CMS.normalizeSpacing article['body']
     end
+
+    CMS.clean_up_response articles
   end
   
   def format_newscoop_response body
