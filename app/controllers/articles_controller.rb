@@ -333,6 +333,7 @@ class ArticlesController < ApplicationController
     article['images'].each do |image|
       image_address = image['url']
 
+      byebug
       if !image_address.starts_with?("http")
         # build up missing parts
         prefix = ""
@@ -367,7 +368,8 @@ class ArticlesController < ApplicationController
     end
 
     elements = Nokogiri::HTML article['body']
-    elements.css('img').each do |image|
+    images_array = elements.css('img')
+    images_array.each do |image|
       image_address = image.attributes['src'].value
 
       if !image_address.starts_with?("http")
@@ -389,6 +391,11 @@ class ArticlesController < ApplicationController
         article['images'] << image_object
 
         article['image_urls'] << full_url
+        
+        if(image == images_array.first)
+          image.remove
+        end
+
         image['href'] = full_url
       else
         if(@force_https)
@@ -419,7 +426,10 @@ class ArticlesController < ApplicationController
   def format_occrp_joomla_articles articles
     articles.each do |article|
       article['url'] = URI.join(base_url, article['id'])
+      article['body'] = CMS.normalizeSpacing article['body']
     end
+
+    CMS.clean_up_response articles
   end
   
   def format_newscoop_response body

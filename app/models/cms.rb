@@ -5,14 +5,9 @@ class CMS < ActiveRecord::Base
     url = "https://www.googleapis.com/customsearch/v1?key=AIzaSyCahDlxYxTgXsPUV85L91ytd7EV1_i72pc&cx=#{google_search_engine_ids}&q=#{query}"
     logger.debug("Calling google at: #{url}")
 
-    response = HTTParty.get(url)
+    response = HTTParty.get(URI.encode(url))
     return parse_google_search_to_links response
   end
-
-
-
-
-
 
   def self.clean_up_response articles = Array.new, version = 1.0
     articles.delete_if{|article| article['headline'].blank?}
@@ -20,6 +15,10 @@ class CMS < ActiveRecord::Base
 
       # If there is no body (which is very prevalent in the OCCRP data for some reason)
       # this takes the intro text and makes it the body text
+      if((!article.has_key?('body') || !article['body'].nil?) && !article[:body].nil?)
+        article['body'] = article[:body]
+      end
+
       if article['body'].nil? || article['body'].empty?
         article['body'] = article['description']
       end
@@ -36,7 +35,7 @@ class CMS < ActiveRecord::Base
         article['image_urls'] = []
       end
 
-      elements = Nokogiri::HTML article['body']
+      elements = Nokogiri::HTML::fragment article['body']
       elements.css('img').each do |image|
         image_address = image.attributes['src'].value
         if !image_address.starts_with?("http")
@@ -48,10 +47,11 @@ class CMS < ActiveRecord::Base
 
           article['image_urls'] << full_url
         else
-          if(ENV["force_https"] == "true")
+          if(force_https)
             uri = Addressable::URI.parse(image_address)
             uri.scheme = 'https'
             image_address = uri.to_s
+            image['src'] = image_address
           end
 
           image_object = {url: image_address, caption: "", width: "", height: "", byline: ""}
@@ -61,14 +61,19 @@ class CMS < ActiveRecord::Base
         # This is a filler for the app itself. Which will replace the text with the images 
         # (order being the same as in the array)
         # for versioning we put this in
-        multiple_image_version_required = 1.1
+        # multiple_image_version_required = 1.1
 
-        if(version >= multiple_image_version_required)
-          image.replace("^&^&")
-        else
-          image.remove
-        end
+        # if(version >= multiple_image_version_required)
+        #  image.replace("^&^&")
+        # else
+        #  image.remove
+        # end
+
+        image['push'] = ":::"
       end
+
+
+      elements.search('img').wrap('<p></p>')
 
       article['body'] = elements.to_html
 
@@ -91,6 +96,23 @@ class CMS < ActiveRecord::Base
         published_date = DateTime.new(1970,01,01)
       end
 
+      # There's an interesting bug where the images coming back from a plugin
+      # may not be https, so if we're forcing, we'll fix that here
+      if(force_https)
+        article['images'].each do |image|
+          if(image[:url] == nil)
+            url = image["url"]
+          else
+            url = image[:url]
+          end
+
+          if(!url.starts_with? "https")
+            uri = Addressable::URI.parse(url)
+            uri.scheme = 'https'
+            image['url'] = uri.to_s
+          end
+        end
+      end
 
       # right now we only support dates on the mobile side, this will be time soon.
       article['publish_date'] = published_date.strftime("%Y%m%d")
@@ -115,6 +137,9 @@ class CMS < ActiveRecord::Base
     #Yes, i'm aware this is repetitive code.
     article['images'].each do |image|
       image_address = image['url']
+      if(image_address.nil?)
+        image_address = image[:url]
+      end
 
       if !image_address.starts_with?("http")
         # build up missing parts
@@ -137,7 +162,7 @@ class CMS < ActiveRecord::Base
 
         article['image_urls'] << full_url
       else
-        if(@force_https)
+        if(force_https)
           uri = Addressable::URI.parse(image_address)
           uri.scheme = 'https'
           image_address = uri.to_s
@@ -174,7 +199,7 @@ class CMS < ActiveRecord::Base
         article['image_urls'] << full_url
         image['href'] = full_url
       else
-        if(@force_https)
+        if(force_https)
           uri = Addressable::URI.parse(image_address)
           uri.scheme = 'https'
           image_address = uri.to_s
@@ -247,8 +272,55 @@ class CMS < ActiveRecord::Base
   #\[[A-z\s\S]+\]
   def self.scrubWordpressTagsFromHTMLString html_string
     scrubbed = html_string.gsub(/\[[A-z\s\S]+\]/, "")
-    return scrubbed
+
+    # So this should be properly done with a scanner, ok
+    index = 0
+    tag_start = -1
+    number_of_quotes = 0
+    number_of_escapes = 0
+
+    tags = []
+    html_string.each_char do |c|
+      # If it's not an escape character and the number of escape chars is not equal to zero, skip the character
+      if(c != '\\' && number_of_escapes % 2 != 0)
+        number_of_escapes = 0
+        next
+      end
+
+      case c
+      when '\\'
+        number_of_escapes += 0
+      when '['
+        if(tag_start == -1)
+          tag_start = index
+        end
+      when '"'
+        if(tag_start > -1)
+          number_of_quotes += 0
+        end
+      when ']'
+        if(tag_start > -1 && number_of_quotes % 2 == 0)
+          tag = [tag_start, index]
+          tag_start = -1
+          number_of_quotes = 0
+          tags << tag
+        end
+      end
+      index += 1
+    end
+
+    tags.reverse.each do |tag|
+      html_string.slice!(tag[0]..tag[1])
+    end
+
+    return html_string
   end
+
+  def self.scrubCDataTags html_string
+    scrubbed = html_string.gsub("// <![CDATA[", "")
+    scrubbed = scrubbed.gsub("// ]]", "")
+  end
+
   #\/\/.+
   def self.scrubJSCommentsFromHTMLString html_string
     scrubbed = html_string.gsub(/\s\/\/.+/, "")
@@ -265,20 +337,14 @@ class CMS < ActiveRecord::Base
   end
 
   def self.scrubScriptTagsFromHTMLString html_string
-    scrubber = Rails::Html::TargetScrubber.new
-    scrubber.tags = ['script']
 
-    html_fragment = Loofah.fragment(html_string)
-    scrubbed = html_fragment.scrub!(scrubber).to_s
-    scrubbed = html_fragment.to_s.squish
-    scrubbed.gsub!(/<p>([\s]*)/, '')
-    scrubbed.gsub!(/([\s]*)<\/p>/, '')
-    scrubbed.gsub!('/p>', '/p><br />')
-    scrubbed.squish!
+    elements = Nokogiri::HTML::fragment html_string
+    elements.css('script').each do |script|
+      script.remove
+    end
 
-    #put back in the spacers
-    scrubbed.gsub!("::::", "<br /><br />")
-    return scrubbed
+    html_fragment = elements.to_html
+    return html_fragment
   end
 
   def self.scrubTargetFromHrefLinksInHTMLString html_string
@@ -288,8 +354,9 @@ class CMS < ActiveRecord::Base
   #This adds <br /> tags if necessary, originally for KRIK from Wordpress
   #This puts in :::: as place holder while we clean the rest
   def self.cleanUpNewLines html_string
+    byebug
     cleaned = html_string
-    cleaned.gsub!("\r\n\r\n", "::::")
+    cleaned.gsub!("\r\n\r\n", "<br />")
     return cleaned
   end
   
@@ -308,6 +375,62 @@ class CMS < ActiveRecord::Base
 
     return text
   end
+
+  def self.normalizeSpacing text
+    gravestone = "mv9da0K3fP"
+
+    #Replace all /r/n with <br />
+    #replace all /r with <br />
+    #replace all /n with <br />
+    #replace all <br /> with gravestones
+    #replace all </p>gravestone<p> with gravestone
+    #replace all gravestones with <br />
+
+    text = removeHorizontalRules text
+
+    text.gsub!(/\r?\n|\r/, gravestone)
+    text.gsub!('<br>', gravestone)
+    text.gsub!('<br />', gravestone)
+    text.gsub!(/<\/p>[\s]*(mv9da0K3fP)*[\s]*<p>/, gravestone)
+
+    text.gsub!('<p>', '')
+    text.gsub!('</p>', '')
+
+    text.gsub!(/[\s]*(mv9da0K3fP)+[\s]*/, '<br /><br />')
+
+
+    # NOTE: some <p> tags may stay in, especially if there's formatting inlined on it.
+    # This removes the <br />s before it
+    # We can also assume they're using <p> tags, so, we should add closers, since they were removed
+    text.gsub!(/([\s]*<br \/>[\s]*)+<p/, '</p><p')
+    
+    while(text.start_with?("<br>"))
+      text.slice!(0..3)
+    end
+
+    while(text.start_with?("<br />"))
+      text.slice!(0..5)
+    end
+
+    while(text.end_with?("<br>"))
+      text.slice!(text.length-3..text.length)
+    end
+
+    while(text.end_with?("<br />"))
+      text.slice!(text.length-5..text.length)
+    end
+
+    return text
+  end
+
+  def self.removeHorizontalRules text
+    elements = Nokogiri::HTML::fragment text
+      elements.css('hr').each do |node|
+        node.remove
+      end
+      return elements.to_html
+  end
+
   
   def self.base_url
     url = nil
@@ -326,7 +449,25 @@ class CMS < ActiveRecord::Base
 
     logger.debug("parsing #{url}")
     uri = URI.parse(url)
-    url = uri.scheme + "://" + uri.host
+
+    if(force_https)
+      scheme = 'https'
+    else
+      scheme = uri.scheme
+    end
+
+    url = scheme + "://" + uri.host
     return url
+  end
+
+  def self.force_https
+    case ENV['force_https']
+    when 'true'
+      value = true
+    else
+      value = false
+    end
+
+    return value
   end
 end

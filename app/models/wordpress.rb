@@ -77,8 +77,9 @@ class Wordpress < CMS
 	end
 
 	def self.make_request url
+
 		logger.debug("Making request to #{url}")
-		response = HTTParty.get(url)
+		response = HTTParty.get(URI.encode(url))
 	    body = JSON.parse response.body
 
 	    return body
@@ -119,10 +120,12 @@ class Wordpress < CMS
 
 	def self.clean_up_for_wordpress articles	
 		articles.each do |article|
+		    article['body'] = scrubCDataTags article['body']
+   		    article['body'] = scrubScriptTagsFromHTMLString article['body']
 		    article['body'] = scrubWordpressTagsFromHTMLString article['body']
-		    article['body'] = cleanUpNewLines article['body']
-		    article['body'] = scrubScriptTagsFromHTMLString article['body']
+		    #article['body'] = cleanUpNewLines article['body']
 		    article['body'] = scrubJSCommentsFromHTMLString article['body']
+   		    article['body'] = normalizeSpacing article['body']
 		    article['body'] = scrubSpecialCharactersFromSingleLinesInHTMLString article['body']
 		    article['body'] = scrubHTMLSpecialCharactersInHTMLString article['body']
 		    article['headline'] = HTMLEntities.new.decode(article['headline'])
@@ -130,6 +133,71 @@ class Wordpress < CMS
 
 	    return articles
 	end
+
+	def self.normalizeSpacing text
+		gravestone = "mv9da0K3fP"
+
+		#Replace all /r/n with <br />
+		#replace all /r with <br />
+		#replace all /n with <br />
+		#replace all <br /> with gravestones
+		#replace all </p>gravestone<p> with gravestone
+		#replace all gravestones with <br />
+
+		text = removeHorizontalRules text
+
+		text.gsub!(/\r?\n|\r/, gravestone)
+		text.gsub!('<br>', gravestone)
+		text.gsub!('<br />', gravestone)
+		text.gsub!(/<\/p>[\s]*(mv9da0K3fP)*[\s]*<p>/, gravestone)
+
+		text.gsub!('<p>', '')
+		text.gsub!('</p>', '')
+
+		text.gsub!(/[\s]*(mv9da0K3fP)+[\s]*/, '<br /><br />')
+
+
+		# NOTE: some <p> tags may stay in, especially if there's formatting inlined on it.
+		# This removes the <br />s before it
+		# We can also assume they're using <p> tags, so, we should add closers, since they were removed
+		text.gsub!(/([\s]*<br \/>[\s]*)+<p/, '</p><p')
+		
+		return text
+	end
+
+	def self.removeHorizontalRules text
+		elements = Nokogiri::HTML::fragment text
+	    elements.css('hr').each do |node|
+	      node.remove
+	    end
+	    return elements.to_html
+	end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 end
