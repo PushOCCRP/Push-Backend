@@ -23,7 +23,7 @@ tmp/*
 # Ignore the installed gems
 /vendor/bundle
 
-secrets.env
+secrets.env*
 /.docker/postgres/*
 /.docker/data/live/*
 /.docker/data/secrets/*
