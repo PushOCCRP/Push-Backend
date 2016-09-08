@@ -1,0 +1,16 @@
+<div class="container">
+	<div class="page-header col-md-12">
+		<div class="col-md-10"><span class="h1">Resubscribe Push Devices</span></div>
+	</div>
+</div>
+
+<div class="container">
+	<div class="col-md-8">
+		Successes: <%= @devices[:successful].count %><br>
+		Errors
+		<hr>
+		<% @devices[:error].each do |device| %>
+			<%= device.inspect %><br>
+		<% end %>
+	</div>
+</div>
