@@ -1,0 +1,27 @@
+<div class="container">
+	<div class="page-header col-md-12">
+		<div class="col-md-10"><span class="h1">Notification Admin</span></div>
+	</div>
+</div>
+
+<div class="container">
+	<div class="col-md-4">
+		<h3>Devices</h3>
+		Total Devices: <strong><%= @devices.count %></strong><br>
+		iOS Devices: <strong><%= @ios_devices.count %></strong><br>
+		Android Devices: <strong><%= @android_devices.count %></strong><br>
+		<br>
+		<%= link_to 'Resubscribe all devices', notifications_resubscribe_url %><br>
+	</div>
+	<div class="col-md-4">
+		<h3>Certificates</h3>
+		<h3><small>iOS APNS</small></h3>
+		Production: <strong><%= @status_check[:apns_prod] %></strong><br>
+		Sandbox: <strong><%= @status_check[:apns_sandbox] %></strong><br>
+		<h3><small>Android GCM</small></h3>
+		Production: <strong><%= @status_check[:gcm_prod] %></strong><br>
+		Sandbox: <strong><%= @status_check[:gcm_sandbox] %></strong><br>
+		<br>
+		<%= link_to 'Cert Uploads', notifications_cert_upload_url %><br>
+	</div>
+</div>
