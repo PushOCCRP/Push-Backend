@@ -411,8 +411,9 @@ class NotificationsController < ApplicationController
 	def admin
 		@devices = PushDevice.all
 		
-		if(@devices.nil?)
-			@devices = []
+		#Check if it's a single object, pretty edge-casey
+		if(!@devices.nil? && !@devices.respond_to?(:count))
+			@devices = [@devices]
 		end
 
 		@ios_devices = PushDevice.find_by(platform: 'ios')
