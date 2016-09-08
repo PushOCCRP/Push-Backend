@@ -413,7 +413,6 @@ class NotificationsController < ApplicationController
 		@ios_devices = PushDevice.where(platform: 'ios').count
 		@android_devices = PushDevice.where(platform: 'android').count
 
-		byebug
 		if(@ios_devices.nil?)
 			@ios_devices = []
 		end
