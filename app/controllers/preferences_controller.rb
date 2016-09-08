@@ -1,5 +1,7 @@
 class PreferencesController < ApplicationController
 
+	before_action :authenticate_user!
+
 	def index
 		#make sure the ones in settings exists
 		#split them with a delminator
