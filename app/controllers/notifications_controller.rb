@@ -410,8 +410,13 @@ class NotificationsController < ApplicationController
 
 	def admin
 		@devices = PushDevice.all
-		@ios_devices = PushDevice.find_by_platform('ios')
-		@android_devices = PushDevice.find_by_platform('android')
+		
+		if(@devices.nil?)
+			@devices = []
+		end
+
+		@ios_devices = PushDevice.find_by(platform: 'ios')
+		@android_devices = PushDevice.find_by(platform: 'android')
 
 		if(@ios_devices.nil?)
 			@ios_devices = []
