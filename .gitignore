@@ -23,7 +23,7 @@ tmp/*
 # Ignore the installed gems
 /vendor/bundle
 
-secrets.env
+secrets.env*
 /.docker/postgres/*
 /.docker/data/live/*
 /.docker/data/secrets/*
@@ -33,4 +33,5 @@ docker/postgres/*
 secrets/certs/*
 public/assets
 secrets.env
+/cookbooks/*
 .env
