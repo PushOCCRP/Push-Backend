@@ -417,8 +417,15 @@ class NotificationsController < ApplicationController
 		end
 
 		@ios_devices = PushDevice.find_by(platform: 'ios')
-		@android_devices = PushDevice.find_by(platform: 'android')
+		if(!@ios_devices.nil? && !@ios_devices.respond_to?(:count))
+			@ios_devices = [@ios_devices]
+		end
 
+		@android_devices = PushDevice.find_by(platform: 'android')
+		if(!@android_devices.nil? && !@android_devices.respond_to?(:count))
+			@android_devices = [@android_devices]
+		end
+		
 		if(@ios_devices.nil?)
 			@ios_devices = []
 		end
