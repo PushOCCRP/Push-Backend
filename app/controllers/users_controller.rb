@@ -15,7 +15,6 @@ class UsersController < ApplicationController
 	end
 
 	def create
-
 		u = User.new(:email => params[:user][:email], :password => params[:user][:password], :password_confirmation => params[:user][:password_confirmation])
 
 		if(u == false)

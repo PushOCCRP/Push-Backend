@@ -1,20 +1,22 @@
 <div class="container">
 	<div class="page-header col-md-12">
-			<div class="col-md-10"><span class="h1">Preferences</span></div>
+		<div class="col-md-10"><span class="h1">Preferences</span></div>
 	</div>
 </div>
 
 <div class="container">
 	<div class="col-md-8">
-		<%= form_tag({action: :update}, method: :put) do %>
-		  <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[0]), {include_blank: true} %><br /><br />
-		  <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[1]), {include_blank: true} %><br /><br />
-		  <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[2]), {include_blank: true} %><br /><br />
-		  <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[3]), {include_blank: true} %><br /><br />
+		<% if(!@categories.nil?) %>
+			<%= form_tag({action: :update}, method: :put) do %>
+			  <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[0]), {include_blank: true} %><br /><br />
+			  <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[1]), {include_blank: true} %><br /><br />
+			  <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[2]), {include_blank: true} %><br /><br />
+			  <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[3]), {include_blank: true} %><br /><br />
 
-		  Consolidated <%= check_box_tag 'consolidated', 'consolidated', @consolidated %><br /><br />
+			  Consolidated <%= check_box_tag 'consolidated', 'consolidated', @consolidated %><br /><br />
 
-		  <%= submit_tag "Save Categories" %>
+			  <%= submit_tag "Save Categories" %>
+			<% end %>
 		<% end %>
 	</div>
 </div>
