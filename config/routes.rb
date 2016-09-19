@@ -3,10 +3,14 @@ Rails.application.routes.draw do
   devise_for :users
   root to: "home#index"
 
+  get 'admin' => 'administration#index'
+
   get 'notifications' => 'notifications#index'
+  get 'notifications/admin' => 'notifications#admin'
 
   post 'notifications/subscribe' => 'notifications#subscribe'
   post 'notifications/unsubscribe' => 'notifications#unsubscribe'
+  get 'notifications/resubscribe' => 'notifications#resubscribe'
 
   get 'notifications/cert_upload' => 'notifications#cert_upload'
   post 'notifications/cert_upload' => 'notifications#process_cert'
