@@ -1,5 +1,9 @@
 Figaro.require_keys("cms_mode", "title")
 
+if(!ENV['proxy_images'].blank?)
+  Figaro.require_keys("host")
+end
+
 case ENV['cms_mode']
   when "occrp-joomla"
   	Figaro.require_keys("occrp_joomla_url")
