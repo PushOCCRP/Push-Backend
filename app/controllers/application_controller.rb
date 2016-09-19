@@ -12,15 +12,18 @@ class ApplicationController < ActionController::Base
   #Should also require auth token
   def passthrough
     # We only want this to be for Newscoop
-    if(ENV['newscoop_url'].blank?)
+    # Nevermind, we want it for CINS too
+    # Screw it, we'll generalize it out to an environment variable
+
+    if(ENV['proxy_images'].blank? || ENV['proxy_images'].downcase != 'true')
       return
     end
 
     url = params['url']
     link_uri = URI(url)
-    base_uri = URI(ENV['newscoop_url'])
+    base_uri = URI(cms_url)
     
-    if(link_uri.host == base_uri.host)
+    if(link_uri.host.gsub('www.', '') == base_uri.host)
       image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
         logger.info("URL requested not cached: #{url}")
         logger.info("Fetching #{url}")
@@ -52,4 +55,21 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  def cms_url
+
+    case ENV['cms_mode']
+      when "occrp-joomla"
+        url = ENV['occrp_joomla_url']
+      when "wordpress"
+        url = ENV['wordpress_url']
+      when "newscoop"
+        url = ENV['newscoop_url']
+      when "cins-codeignitor"
+        url = ENV['cins_codeignitor_url']
+      else
+        raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
+    end
+
+    return url
+  end
 end

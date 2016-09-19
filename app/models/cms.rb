@@ -210,7 +210,6 @@ class CMS < ActiveRecord::Base
         article['images'] << image_object
       end
 
-
       # This is a filler for the app itself. Which will replace the text with the images 
       # (order being the same as in the array)
       # for versioning we put this in
@@ -219,6 +218,30 @@ class CMS < ActiveRecord::Base
       # Add gravestone
       image['push'] = ":::"
     end
+
+    if(!ENV['proxy_images'].blank? && ENV['proxy_images'].downcase == 'true')
+      proxied_image_urls = []
+      
+      article['image_urls'].each do |image_url|
+        proxied_url = Rails.application.routes.url_helpers.passthrough_url(host: ENV['host']) + "?url=" + URI.escape(image_url)
+        proxied_image_urls.push proxied_url
+      end
+
+      article['image_urls'] = proxied_image_urls
+
+      article['images'].each do |image|
+        if(!image['url'].blank?)
+          image['url'] = Rails.application.routes.url_helpers.passthrough_url(host: ENV['host']) + "?url=" + URI.escape(image['url'])
+        end
+
+        if(!image[:url].blank?)
+          image[:url] = Rails.application.routes.url_helpers.passthrough_url(host: ENV['host']) + "?url=" + URI.escape(image[:url])
+        end
+      end
+
+
+    end
+
 
     article['body'] = elements.to_html
 
