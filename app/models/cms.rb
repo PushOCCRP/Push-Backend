@@ -210,6 +210,16 @@ class CMS < ActiveRecord::Base
         article['images'] << image_object
       end
 
+
+      # this is for modifying the urls in the article itself
+      # It's a mess, refactor this please
+      rewritten_url = rewrite_url_for_ssl image_address
+      if(!ENV['proxy_images'].blank? && ENV['proxy_images'].downcase == 'true')
+        rewritten_url = Rails.application.routes.url_helpers.passthrough_url(host: ENV['host']) + "?url=" + URI.escape(rewritten_url)
+        rewritten_url = rewrite_url_for_ssl(rewritten_url)
+      end
+      image.attributes['src'].value = rewritten_url
+
       # This is a filler for the app itself. Which will replace the text with the images 
       # (order being the same as in the array)
       # for versioning we put this in
@@ -218,6 +228,8 @@ class CMS < ActiveRecord::Base
       # Add gravestone
       image['push'] = ":::"
     end
+
+    article['body'] = elements.to_html
 
     if(!ENV['proxy_images'].blank? && ENV['proxy_images'].downcase == 'true')
       proxied_image_urls = []
@@ -247,10 +259,6 @@ class CMS < ActiveRecord::Base
 
 
     end
-
-
-    article['body'] = elements.to_html
-
   end
 
   private
@@ -507,6 +515,19 @@ class CMS < ActiveRecord::Base
 
     if(url.starts_with?('http:'))
       url = url.sub('http:', 'https:')
+    else
+      prefix = ""
+      if(url.starts_with?(":"))
+        prefix = 'https'
+      elsif(url.starts_with?("//"))
+        prefix = 'https:'
+      elsif(url.starts_with?("/"))
+        prefix = base_url
+      else
+        prefix = base_url + "/"
+      end 
+
+      url = prefix + url 
     end
 
     return url
