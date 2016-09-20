@@ -20,14 +20,14 @@ class ApplicationController < ActionController::Base
     end
 
     url = params['url']
-    link_uri = URI(url)
-    base_uri = URI(cms_url)
+    link_uri = Addressable::URI.parse(url)
+    base_uri = Addressable::URI.parse(cms_url)
     
     if(link_uri.host.gsub('www.', '') == base_uri.host)
       image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
         logger.info("URL requested not cached: #{url}")
         logger.info("Fetching #{url}")
-        raw_response = HTTParty.get(url)
+        raw_response = HTTParty.get(link_uri.normalize)
         image_response = {body: raw_response.body, content_type: raw_response.headers['content-type']}
         image_response
       end
