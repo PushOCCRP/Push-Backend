@@ -224,12 +224,10 @@ class CMS < ActiveRecord::Base
 
       # We need to force HTTPS, christ this is annoying
       host = ENV['host']
-      if(host.starts_with?('http:'))
-        host = host.gsub('http:', 'https:')
-      end
       
       article['image_urls'].each do |image_url|
         proxied_url = Rails.application.routes.url_helpers.passthrough_url(host: host) + "?url=" + URI.escape(image_url)
+        proxied_url = rewrite_url_for_ssl proxied_url
         proxied_image_urls.push proxied_url
       end
 
@@ -238,10 +236,12 @@ class CMS < ActiveRecord::Base
       article['images'].each do |image|
         if(!image['url'].blank?)
           image['url'] = Rails.application.routes.url_helpers.passthrough_url(host: host) + "?url=" + URI.escape(image['url'])
+          image['url'] = rewrite_url_for_ssl image['url']
         end
 
         if(!image[:url].blank?)
           image[:url] = Rails.application.routes.url_helpers.passthrough_url(host: host) + "?url=" + URI.escape(image[:url])
+          image[:url] = rewrite_url_for_ssl image[:url]
         end
       end
 
@@ -498,5 +498,17 @@ class CMS < ActiveRecord::Base
     end
 
     return value
+  end
+
+  def self.rewrite_url_for_ssl url
+    if(!ENV['force_https'])
+      return url
+    end
+
+    if(url.starts_with?('http:'))
+      url = url.sub('http:', 'https:')
+    end
+
+    return url
   end
 end
