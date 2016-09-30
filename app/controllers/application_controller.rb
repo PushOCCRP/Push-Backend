@@ -25,13 +25,13 @@ class ApplicationController < ActionController::Base
     
     logger.info("Checking for valid image proxy request #{link_uri.host.gsub('www.', '')} vs. #{base_uri.host.gsub('www.', '')}")
     if(link_uri.host.gsub('www.', '') == base_uri.host.gsub('www.', ''))
-      image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
+      #image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
         logger.info("URL requested not cached: #{url}")
         logger.info("Fetching #{url}")
         raw_response = HTTParty.get(link_uri.normalize)
         image_response = {body: raw_response.body, content_type: raw_response.headers['content-type']}
-        image_response
-      end
+        #image_response
+      #end
       
       send_data image_response[:body], type: image_response[:content_type], disposition: 'inline'
       return
