@@ -16,7 +16,7 @@ class ApplicationController < ActionController::Base
     # Screw it, we'll generalize it out to an environment variable
 
     if(ENV['proxy_images'].blank? || ENV['proxy_images'].downcase != 'true')
-      render plain: "Proxy images not enabled for this installation"
+      render plain: "Proxy images not enabled for this installation: proxy_images=#{ENV['proxy_images']}"
       return
     end
 
