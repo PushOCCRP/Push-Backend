@@ -5,16 +5,16 @@ services:
   # nginx, working as a front-end proxy for uniqush
   # we need it for only allowing certain endpoints to be available
   nginx:
-      image: nginx
-      ports:
-          - "80:80"
-          - "443:443"
-      depends_on:
-          - web
-      volumes:
-          - "./.docker/nginx/:/etc/nginx/:ro"                            # config
-          - "./.docker/data/secrets/:/srv/data/ssl/:ro"                # dhpram and certs are here
-          - "./public/:/var/public/:ro"
+    image: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - web
+    volumes:
+      - "./.docker/nginx/:/etc/nginx/:ro"                            # config
+      - "./.docker/data/secrets/:/srv/data/ssl/:ro"                # dhpram and certs are here
+      - "./public/:/var/public/:ro"
   db:
     image: postgres
     volumes:
