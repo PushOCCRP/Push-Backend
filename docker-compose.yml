@@ -39,6 +39,7 @@ services:
       - ./secrets.env
     environment:
       - RAILS_ENV=${RAILS_ENV}
+      - proxy_images=true
     entrypoint: /push/entrypoint.sh
     tty: true
     stdin_open: true
