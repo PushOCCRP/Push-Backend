@@ -214,10 +214,10 @@ class CMS < ActiveRecord::Base
       # this is for modifying the urls in the article itself
       # It's a mess, refactor this please
       rewritten_url = rewrite_url_for_ssl image_address
-      if(!ENV['proxy_images'].blank? && ENV['proxy_images'].downcase == 'true')
+      #if(!ENV['proxy_images'].blank? && ENV['proxy_images'].downcase == 'true')
         rewritten_url = Rails.application.routes.url_helpers.passthrough_url(host: ENV['host']) + "?url=" + URI.escape(rewritten_url)
         rewritten_url = rewrite_url_for_ssl(rewritten_url)
-      end
+      #end
       image.attributes['src'].value = rewritten_url
 
       # This is a filler for the app itself. Which will replace the text with the images 
