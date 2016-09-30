@@ -33,8 +33,11 @@ class ApplicationController < ActionController::Base
       end
       
       send_data image_response[:body], type: image_response[:content_type], disposition: 'inline'
+      return
+
     else
       render plain: "Error retreiving #{url}, #{link_uri.host.gsub('www.', '')} does not match #{base_uri.host.gsub('www.', '')}"
+      return
     end
     
   end
