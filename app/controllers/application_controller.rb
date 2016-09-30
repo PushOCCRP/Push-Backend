@@ -33,7 +33,7 @@ class ApplicationController < ActionController::Base
         #image_response
       #end
       
-      send_data image_response[:body], type: image_response[:content_type], disposition: 'inline'
+      send_data image_response[:body], type: image_response[:content_type], disposition: 'inline', layout: false
       return
 
     else
