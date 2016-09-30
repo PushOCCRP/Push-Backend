@@ -211,6 +211,15 @@ class CMS < ActiveRecord::Base
       end
 
 
+      # this is for modifying the urls in the article itself
+      # It's a mess, refactor this please
+      rewritten_url = rewrite_url_for_ssl image_address
+      if(!ENV['proxy_images'].blank? && ENV['proxy_images'].downcase == 'true')
+        rewritten_url = Rails.application.routes.url_helpers.passthrough_url(host: ENV['host']) + "?url=" + URI.escape(rewritten_url)
+        rewritten_url = rewrite_url_for_ssl(rewritten_url)
+      end
+      image.attributes['src'].value = rewritten_url
+
       # This is a filler for the app itself. Which will replace the text with the images 
       # (order being the same as in the array)
       # for versioning we put this in
@@ -222,6 +231,34 @@ class CMS < ActiveRecord::Base
 
     article['body'] = elements.to_html
 
+    if(!ENV['proxy_images'].blank? && ENV['proxy_images'].downcase == 'true')
+      proxied_image_urls = []
+
+      # We need to force HTTPS, christ this is annoying
+      host = ENV['host']
+      
+      article['image_urls'].each do |image_url|
+        proxied_url = Rails.application.routes.url_helpers.passthrough_url(host: host) + "?url=" + URI.escape(image_url)
+        proxied_url = rewrite_url_for_ssl proxied_url
+        proxied_image_urls.push proxied_url
+      end
+
+      article['image_urls'] = proxied_image_urls
+
+      article['images'].each do |image|
+        if(!image['url'].blank?)
+          image['url'] = Rails.application.routes.url_helpers.passthrough_url(host: host) + "?url=" + URI.escape(image['url'])
+          image['url'] = rewrite_url_for_ssl image['url']
+        end
+
+        if(!image[:url].blank?)
+          image[:url] = Rails.application.routes.url_helpers.passthrough_url(host: host) + "?url=" + URI.escape(image[:url])
+          image[:url] = rewrite_url_for_ssl image[:url]
+        end
+      end
+
+
+    end
   end
 
   private
@@ -469,5 +506,30 @@ class CMS < ActiveRecord::Base
     end
 
     return value
+  end
+
+  def self.rewrite_url_for_ssl url
+    if(!ENV['force_https'])
+      return url
+    end
+
+    if(url.starts_with?('http:'))
+      url = url.sub('http:', 'https:')
+    else
+      prefix = ""
+      if(url.starts_with?(":"))
+        prefix = 'https'
+      elsif(url.starts_with?("//"))
+        prefix = 'https:'
+      elsif(url.starts_with?("/"))
+        prefix = base_url
+      else
+        prefix = base_url + "/"
+      end 
+
+      url = prefix + url 
+    end
+
+    return url
   end
 end

@@ -1,7 +1,7 @@
 class NotificationsController < ApplicationController
 
-	skip_before_action :verify_authenticity_token, :only => ['subscribe', 'unsubscribe']
-#	before_action :authenticate_user!, :except => ['subscribe', 'unsubscribe']
+	#skip_before_action :verify_authenticity_token, :only => ['subscribe', 'unsubscribe']
+	before_action :authenticate_user!, :except => ['subscribe', 'unsubscribe']
 
 	def index
 		@notifications = Notification.all.order(created_at: :desc)
