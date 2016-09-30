@@ -23,7 +23,7 @@ class ApplicationController < ActionController::Base
     link_uri = Addressable::URI.parse(url)
     base_uri = Addressable::URI.parse(cms_url)
     
-    if(link_uri.host.gsub('www.', '') == base_uri.host)
+    if(link_uri.host.gsub('www.', '') == base_uri.host.gsub('www.', ''))
       image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
         logger.info("URL requested not cached: #{url}")
         logger.info("Fetching #{url}")
@@ -33,6 +33,8 @@ class ApplicationController < ActionController::Base
       end
       
       send_data image_response[:body], type: image_response[:content_type], disposition: 'inline'
+    else
+      render plain: "Error retreiving #{url}, #{link_uri.host.gsub('www.', '')} does not match #{base_uri.host.gsub('www.', '')}"
     end
     
   end
