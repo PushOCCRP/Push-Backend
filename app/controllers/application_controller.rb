@@ -23,6 +23,7 @@ class ApplicationController < ActionController::Base
     link_uri = Addressable::URI.parse(url)
     base_uri = Addressable::URI.parse(cms_url)
     
+    logger.info("Checking for valid image proxy request #{link_uri.host.gsub('www.', '')} vs. #{base_uri.host.gsub('www.', '')}")
     if(link_uri.host.gsub('www.', '') == base_uri.host.gsub('www.', ''))
       image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
         logger.info("URL requested not cached: #{url}")
