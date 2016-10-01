@@ -15,10 +15,10 @@ class ApplicationController < ActionController::Base
     # Nevermind, we want it for CINS too
     # Screw it, we'll generalize it out to an environment variable
 
-    #if(ENV['proxy_images'].blank? || ENV['proxy_images'].downcase != 'true' || ENV['proxy_images'] != true)
-    #  render plain: "Proxy images not enabled for this installation: proxy_images=#{ENV['proxy_images']}"
-    #  return
-    #end
+    if(ENV['proxy_images'].blank? || ENV['proxy_images'].downcase != 'true')
+      render plain: "Proxy images not enabled for this installation: proxy_images=#{ENV['proxy_images']}"
+      return
+    end
 
     url = params['url']
     link_uri = Addressable::URI.parse(url)
