@@ -1,0 +1,64 @@
+version: '2'
+services:
+
+ # Adopted from https://git.occrp.org/tech/letsencrypt/blob/master/docker-compose.yml
+  #
+  # relevant:
+  # - https://community.letsencrypt.org/t/nginx-docker-setup-for-le/2621
+  # - https://github.com/mbrugger/letsencrypt-nginx-docker
+  #
+  # nginx container config has to contain:
+  # - "/srv/data/live/letsencrypt/:/srv/data/live/letsencrypt/:ro"                       # letsencrypt verificaton webroot
+  # - "/srv/data/secrets/letsencrypt/archive/:/srv/data/secrets/letsencrypt/archive/:ro" # letsencrypt certificate store
+  # - "/srv/data/secrets/letsencrypt/live/:/srv/data/secrets/letsencrypt/live/:ro"       # letsencrypt live certificate store
+  #
+  # nginx site config -- each server for each domain handled by letsencrypt should contain this config:
+  #  location /.well-known/acme-challenge {
+  #      alias /srv/data/live/letsencrypt/;
+  #  }
+  #
+  # nginx certificate config (say, for www.example.com domain):
+  #  ssl_certificate     /srv/data/secrets/letsencrypt/live/www.example.com/fullchain.pem;
+  #  ssl_certificate_key /srv/data/secrets/letsencrypt/live/www.example.com/privkey.pem;
+  #  
+  # if using docker-compose < 1.7.0, remember to run:
+  #  export $( cat your-env-file.env )
+  # ...before running docker-compose
+  # 
+  # if running docker-compose >= 1.7.0, put your env vars in .env file
+  #
+  letsencrypt:
+       image: quay.io/letsencrypt/letsencrypt
+       # this file should contain at least two envvars defined
+       # - LETSENCRYPT_EMAIL
+       # - LETSENCRYPT_DOMAINS (comma-separated list; first domain used as the name of the cert)
+       # it might additionally contain:
+       # - LETSENCRYPT_STAGING (set to "--staging" to make the letsencrypt tool hit LE testing servers, instead of production -- for testing obviously)
+       # an example settings file is available in (surprise, surprise) settings.example file
+       ports:
+         - "80:80"
+         - "443:443"
+       volumes:
+           - "./.docker/data/secrets/keys/:/etc/letsencrypt/"                 # config, certs, etc
+           - "./.docker/data/live/letsencrypt/:/var/www/.well-known/acme-challenge/" # directory used for webroot verification
+           - "./.docker/logs/letsencrypt/:/var/log/letsencrypt/"                     # logs
+       # help available via --help all
+       #depends_on:
+         #- nginx_letsencrypt
+       entrypoint: certbot
+       command: certonly --text --authenticator standalone --webroot-path /var/www/ --keep $LETSENCRYPT_STAGING --domains "$LETSENCRYPT_DOMAINS" --email "$LETSENCRYPT_EMAIL" --agree-tos
+#   
+#   nginx_letsencrypt:
+#       image: nginx
+#       volumes:
+#         - "./.docker/nginx/letsencrypt/:/etc/nginx/:ro"
+  
+  # testing version
+  #testencrypt:
+  #    extends:
+          # using the production version
+  #        file: ./docker-compose.yml
+  #        service: letsencrypt
+  #    environment:
+          # changing the server to staging
+  #        LETSENCRYPT_STAGING: "--staging"
