@@ -73,13 +73,20 @@
 	  </div><!-- /.container-fluid -->
 	</nav>
 
-	<div class="container">
-		<div class="col-md-12">
-			<p class="class="alert alert-success"><%= notice %></div>
-			<div class="class="alert alert-danger"><%= alert %></div>
-		</div>
-	</div>
-
+  <% if notice || alert %>
+  	<div class="container">
+  		<div class="col-md-12">
+    		<% if notice %>
+    			<p class="alert alert-success"><%= notice %></div>
+    		<% end %>
+    		
+    		<% if alert %>
+    			<div class="alert alert-danger"><%= alert %></div>
+    		<% end %>
+  		</div>
+  	</div>
+  <% end %>
+  
 	<%= yield %>
 
 
