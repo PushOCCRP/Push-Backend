@@ -452,7 +452,8 @@ class ArticlesController < ApplicationController
 
         formatted_article['body'] = article['fields']['full_text']
         formatted_article['body'] = scrubImageTagsFromHTMLString formatted_article['body']
-
+        formatted_article['body'] = CMS.normalizeSpacing formatted_article['body']
+        
         if(article['authors'] && article['authors'].count > 0)
           formatted_article['author'] = article['authors'][0]['name']
         end

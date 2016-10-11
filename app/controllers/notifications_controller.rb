@@ -327,10 +327,22 @@ class NotificationsController < ApplicationController
 	end
 
 	def create
+
 		@notification = Notification.new
 		@notification.message = params[:notification][:message]
 		@notification.language = params[:notification][:language].downcase
 		@notification.article_id = params[:notification][:article_id]
+		
+  	error_message = "Message cannot be empty" if params[:notification][:message].blank?
+  	error_message = "Language cannot be empty" if params[:notification][:language].blank?
+  	error_message = "Article ID cannot be empty" if params[:notification][:article_id].blank?  	
+    
+    if !error_message.blank?
+      flash.now[:alert] = error_message
+      render :new
+      return
+    end
+
 		@notification.save!
 
 		redirect_to @notification

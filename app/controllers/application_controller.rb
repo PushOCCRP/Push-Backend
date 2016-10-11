@@ -16,6 +16,7 @@ class ApplicationController < ActionController::Base
     # Screw it, we'll generalize it out to an environment variable
 
     if(ENV['proxy_images'].blank? || ENV['proxy_images'].downcase != 'true')
+      render plain: "Proxy images not enabled for this installation: proxy_images=#{ENV['proxy_images']}"
       return
     end
 
@@ -23,7 +24,8 @@ class ApplicationController < ActionController::Base
     link_uri = Addressable::URI.parse(url)
     base_uri = Addressable::URI.parse(cms_url)
     
-    if(link_uri.host.gsub('www.', '') == base_uri.host)
+    logger.info("Checking for valid image proxy request #{link_uri.host.gsub('www.', '')} vs. #{base_uri.host.gsub('www.', '')}")
+    if(link_uri.host.gsub('www.', '') == base_uri.host.gsub('www.', ''))
       image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
         logger.info("URL requested not cached: #{url}")
         logger.info("Fetching #{url}")
@@ -32,7 +34,10 @@ class ApplicationController < ActionController::Base
         image_response
       end
       
-      send_data image_response[:body], type: image_response[:content_type], disposition: 'inline'
+      send_data image_response[:body], type: image_response[:content_type], disposition: 'inline', layout: false
+    else
+      render plain: "Error retreiving #{url}, #{link_uri.host.gsub('www.', '')} does not match #{base_uri.host.gsub('www.', '')}"
+      return
     end
     
   end

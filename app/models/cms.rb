@@ -454,7 +454,7 @@ class CMS < ActiveRecord::Base
     end
 
     while(text.end_with?("<br />"))
-      text.slice!(text.length-5..text.length)
+      text.slice!(text.length-6..text.length)
     end
 
     return text
