@@ -10,15 +10,16 @@ class CinsCodeignitor < CMS
 
 	    version = params["v"]
 
-	    @response = Rails.cache.fetch("cins_codeigniter_articles/#{language}/#{version}", expires_in: 1.hour) do
-	      logger.info("aritcles are not cached, making call to newscoop server")
+	    #@response = Rails.cache.fetch("cins_codeigniter_articles/#{language}/#{version}", expires_in: 1.hour) do
+	      logger.info("articles are not cached, making call to newscoop server")
 	      response = HTTParty.get(url)
 	      body = JSON.parse response.body
 	      return_response = format_cins_codeignitor_response(body)
+	      return_response['results'] = clean_up_response(return_response['results'])
 	      logger.debug(return_response)
-
-	      return return_response
-	    end        
+        @response = return_response
+	      #return return_response
+	    #end        
 	end
 
 	def self.article params
@@ -34,7 +35,7 @@ class CinsCodeignitor < CMS
 
 	    @response = Rails.cache.fetch("cins_codeigniter_article/#{article_id}/#{language}/#{version}", expires_in: 1.hour) do
 	      options = {id: params['id']}
-	      logger.info("aritcles are not cached, making call to newscoop server")
+	      logger.info("articles are not cached, making call to newscoop server")
 	      response = HTTParty.get(url, query: options)
 	      body = JSON.parse response.body
 	      return format_cins_codeignitor_response(body)
@@ -107,6 +108,7 @@ class CinsCodeignitor < CMS
 		items = body['results']
 		new_items = []
 		items.each do |item|
+  		item['body'] = "<strong>" + item['description'] + "</strong>" + "<br><br>" + item['body']
 		  logger.debug "Parsing: #{item['publish_date']}"
 		  date = Date.strptime(item['publish_date'], "%Y-%m-%d %H:%M:%S")
 		  item['publish_date'] = date.strftime("%Y%m%d")
