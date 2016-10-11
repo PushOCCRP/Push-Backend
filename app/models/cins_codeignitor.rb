@@ -10,16 +10,15 @@ class CinsCodeignitor < CMS
 
 	    version = params["v"]
 
-	    #@response = Rails.cache.fetch("cins_codeigniter_articles/#{language}/#{version}", expires_in: 1.hour) do
+	    @response = Rails.cache.fetch("cins_codeigniter_articles/#{language}/#{version}", expires_in: 1.hour) do
 	      logger.info("articles are not cached, making call to newscoop server")
 	      response = HTTParty.get(url)
 	      body = JSON.parse response.body
 	      return_response = format_cins_codeignitor_response(body)
 	      return_response['results'] = clean_up_response(return_response['results'])
 	      logger.debug(return_response)
-        @response = return_response
-	      #return return_response
-	    #end        
+	      return return_response
+	    end        
 	end
 
 	def self.article params
