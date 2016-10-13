@@ -116,6 +116,9 @@ class CMS < ActiveRecord::Base
 
       # right now we only support dates on the mobile side, this will be time soon.
       article['publish_date'] = published_date.strftime("%Y%m%d")
+      
+      # check for youtube links
+      article = extract_youtube_links article
     end
 
     return articles
@@ -260,6 +263,46 @@ class CMS < ActiveRecord::Base
 
     end
   end
+  
+  def self.extract_youtube_links article
+    elements = Nokogiri::HTML article['body']
+    
+    if article.key?('video')
+      videos = article['video']
+    else
+      videos = []
+    end
+    
+    elements.css('a').each do |link|
+      link_address = link.attributes['href'].value
+      uri = URI(link_address)
+      
+      if uri.host.end_with?("youtube.com")
+        youtube_id = extractYouTubeIDFromShortcode(link_address)
+        videos << {youtube_id: youtube_id}
+      end
+    end
+    
+    elements.css('iframe').each do |iframe|
+      iframe_address = iframe.attributes['src'].value
+      uri = URI(iframe_address)
+      
+      if uri.host.end_with?("youtube.com")
+        youtube_id = extractYouTubeIDFromShortcode(iframe_address)
+        videos << {youtube_id: youtube_id}
+        iframe.remove
+      end
+    end
+    
+    article['body'] = elements.to_html
+
+          
+    article['videos'] = videos
+    
+    return article
+  end
+
+
 
   private
 
@@ -281,7 +324,7 @@ class CMS < ActiveRecord::Base
 
     return links
   end
-
+  
   def self.scrubImageTagsFromHTMLString html_string
     scrubber = Rails::Html::TargetScrubber.new
     scrubber.tags = ['img', 'div']
@@ -301,6 +344,14 @@ class CMS < ActiveRecord::Base
       
       id = shortcode
       return id      
+    elsif !shortcode.index("v=").nil?
+      id_position = shortcode.index("v=") + 2
+      id = shortcode[id_position..shortcode.length]
+      return id
+    elsif !shortcode.index("/embed/").nil?
+      id_position = shortcode.index("/embed/") + 7
+      id = shortcode[id_position..shortcode.length]
+      return id
     end
     
     return nil
