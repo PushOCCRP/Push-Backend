@@ -38,15 +38,19 @@ class CMS < ActiveRecord::Base
       elements = Nokogiri::HTML::fragment article['body']
       elements.css('img').each do |image|
         image_address = image.attributes['src'].value
+        
         if !image_address.starts_with?("http")
           # Obviously needs to be fixed
           full_url = base_url + "/" + image.attributes['src'].value
+
+          full_url = rewrite_image_url_for_proxy full_url
 
           image_object = {url: full_url, caption: "", width: "", height: "", byline: ""}
           article['images'] << image_object
 
           article['image_urls'] << full_url
         else
+          image_address = rewrite_image_url_for_proxy image_address
           if(force_https)
             uri = Addressable::URI.parse(image_address)
             uri.scheme = 'https'
@@ -57,6 +61,7 @@ class CMS < ActiveRecord::Base
           image_object = {url: image_address, caption: "", width: "", height: "", byline: ""}
           article['images'] << image_object
         end
+        
 
         # This is a filler for the app itself. Which will replace the text with the images 
         # (order being the same as in the array)
@@ -119,6 +124,8 @@ class CMS < ActiveRecord::Base
       
       # check for youtube links
       article = extract_youtube_links article
+      
+      article['body'] = scrubiFramesFromHTMLString article['body']
     end
 
     return articles
@@ -218,6 +225,7 @@ class CMS < ActiveRecord::Base
       # It's a mess, refactor this please
       rewritten_url = rewrite_url_for_ssl image_address
       if(!ENV['proxy_images'].blank? && ENV['proxy_images'].downcase == 'true')
+        
         rewritten_url = Rails.application.routes.url_helpers.passthrough_url(host: ENV['host']) + "?url=" + URI.escape(rewritten_url)
         rewritten_url = rewrite_url_for_ssl(rewritten_url)
       end
@@ -434,6 +442,18 @@ class CMS < ActiveRecord::Base
     html_fragment = elements.to_html
     return html_fragment
   end
+  
+  def self.scrubiFramesFromHTMLString html_string
+    elements = Nokogiri::HTML::fragment html_string
+    elements.css('iframe').find_all.each do |element|
+      link = Nokogiri::XML::Node.new "a", elements
+      link.content = "Click to view embedded content 🔗"
+      link["href"] = element["src"]
+      
+      element.replace link
+    end
+    return elements.to_html
+  end
 
   def self.scrubTargetFromHrefLinksInHTMLString html_string
     #Fail here since its not implemented!!!!
@@ -466,6 +486,19 @@ class CMS < ActiveRecord::Base
 
   def self.normalizeSpacing text
     gravestone = "mv9da0K3fP"
+
+    elements = Nokogiri::HTML::fragment text
+    elements.css('strong').find_all.each do |element|
+      # Ruby on Rails Solution:
+      element.remove if element.content.blank?
+    end
+    
+    elements.css('div').find_all.each do |element|
+      # Ruby on Rails Solution:
+      element.remove if element.content.blank?
+    end
+    
+    text = elements.to_html
 
     #Replace all /r/n with <br />
     #replace all /r with <br />
@@ -583,4 +616,18 @@ class CMS < ActiveRecord::Base
 
     return url
   end
+  
+  def self.rewrite_image_url_for_proxy url
+    # this is for modifying the urls in the article itself
+    # It's a mess, refactor this please
+    if(!ENV['proxy_images'].blank? && ENV['proxy_images'].downcase == 'true')
+      
+      rewritten_url = rewrite_url_for_ssl url
+
+      rewritten_url = Rails.application.routes.url_helpers.passthrough_url(host: ENV['host']) + "?url=" + URI.escape(rewritten_url)
+    end
+    
+    return rewritten_url
+  end
+  
 end
