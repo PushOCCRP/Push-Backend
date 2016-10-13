@@ -125,9 +125,10 @@ class Wordpress < CMS
 		    article['body'] = scrubWordpressTagsFromHTMLString article['body']
 		    #article['body'] = cleanUpNewLines article['body']
 		    article['body'] = scrubJSCommentsFromHTMLString article['body']
-   		    article['body'] = normalizeSpacing article['body']
 		    article['body'] = scrubSpecialCharactersFromSingleLinesInHTMLString article['body']
 		    article['body'] = scrubHTMLSpecialCharactersInHTMLString article['body']
+   		  article['body'] = normalizeSpacing article['body']
+
 		    article['headline'] = HTMLEntities.new.decode(article['headline'])
 		end
 
