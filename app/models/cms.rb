@@ -285,6 +285,8 @@ class CMS < ActiveRecord::Base
       link_address = link.attributes['href'].value
       uri = URI(link_address)
       
+      next if uri.nil? || uri.host.nil?
+      
       if uri.host.end_with?("youtube.com")
         youtube_id = extractYouTubeIDFromShortcode(link_address)
         videos << {youtube_id: youtube_id}

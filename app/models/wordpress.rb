@@ -10,6 +10,9 @@ class Wordpress < CMS
     		logger.debug("categories not blank")
     		categories = categories_string.split('::')
     		options[:post_types] = categories.join(',')
+        if(!Setting.consolidated_categories)
+          options[:categorized]='true'
+        end
     	end
 
 	    url = get_url "push-occrp=true&occrp_push_type=articles", language, options
@@ -95,8 +98,16 @@ class Wordpress < CMS
 	    	body['results'] = Array.new
 	    end
 
-	    results = clean_up_response(body['results'], version)
-	    results = clean_up_for_wordpress results
+      if(body['categories'].nil?)
+  	    results = clean_up_response(body['results'], version)
+   	    results = clean_up_for_wordpress results
+  	  else
+  	    results = {}
+  	    body['categories'].each do |category|
+    	    results[category] = clean_up_response(body['results'][category], version)
+    	    results[category] = clean_up_for_wordpress results[category]
+    	  end
+  	  end
 
 	    response = {start_date: "19700101",
 	               end_date: DateTime.now.strftime("%Y%m%d"),
@@ -104,6 +115,8 @@ class Wordpress < CMS
 	               page: "1",
 	               results: results
 	              }
+	   
+	    response['categories'] = body['categories'] if !body['categories'].nil?
 
 	    # add in any extras from the call, query string etc.
 	    response = response.merge(extras)
