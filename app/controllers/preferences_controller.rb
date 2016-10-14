@@ -45,6 +45,7 @@ class PreferencesController < ApplicationController
 		# Not implemented yet
 	  when :wordpress
         response = Wordpress.categories
+        response << 'post'
         logger.debug(response)
       when :newscoop
 		# Not implemented yet
