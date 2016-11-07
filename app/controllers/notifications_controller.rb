@@ -4,7 +4,6 @@ class NotificationsController < ApplicationController
 	before_action :authenticate_user!, :except => ['subscribe', 'unsubscribe']
 
   skip_before_action :verify_authenticity_token, :only => ['subscribe', 'unsubscribe']
-
 	def index
 		@notifications = Notification.all.order(created_at: :desc)
 	end
@@ -489,7 +488,6 @@ class NotificationsController < ApplicationController
 			logger.debug("Push successful")
 			return "SUCCESS"
 		end
-
 	end
 	
 	def push_call_android_fcm options, sandbox, notification
@@ -605,7 +603,7 @@ class NotificationsController < ApplicationController
 		service_name = push_id
 		push_service_type = "apns"
 		if(platform == 'android')
-			push_service_type = 'fcm'
+			push_service_type = 'gcm'
 			service_name += "-gcm"
 		else
 			service_name += "-ios"

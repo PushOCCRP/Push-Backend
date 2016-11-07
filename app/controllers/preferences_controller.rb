@@ -89,5 +89,4 @@ class PreferencesController < ApplicationController
       return response
 	end
 
-
 end

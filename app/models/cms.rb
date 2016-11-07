@@ -194,8 +194,7 @@ class CMS < ActiveRecord::Base
     elements.css('img').each do |image|
       image_address = image.attributes['src'].value
 
-      if !image_address.starts_with?("http")
-        
+      if !image_address.starts_with?("http")        
         full_url = rewrite_url_for_ssl(rewrite_image_url_for_proxy(image.attributes['src']))
         image_object = {url: full_url, start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
         article['images'] << image_object
