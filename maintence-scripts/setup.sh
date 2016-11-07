@@ -1,5 +1,12 @@
 #!/bin/bash          
 
+function kill_docker_containers {
+  echo -e "\n\e[94mStopping any errantly running docker containers\e[0m"
+  echo -e "\e[94m---------------------------------\e[0m\n"
+  docker stop $(docker ps -a -q)
+  docker rm $(docker ps -a -q)
+}
+
 echo "Setting up a new Push server..."
  
 # Ask the email of the main user
@@ -57,23 +64,26 @@ LETSENCRYPT_STAGING=
 RAILS_ENV=production
 EOT
 
+# Stop any possible docker-compose containers that might be sticking around
+kill_docker_containers
+
 # Create the proper ssl certs
 echo -e "\n\e[94mCreating SSL certificates\e[0m"
 echo -e "\e[94m---------------------------------\e[0m\n"
 docker-compose -f letsencrypt-docker-compose.yml up
 
-echo -e "\n\e[94mStopping any errantly running docker containers\e[0m"
-echo -e "\e[94m---------------------------------\e[0m\n"
 # Stop any possible docker-compose containers that might be sticking around
-docker-compose -f letsencrypt-docker-compose.yml down
-docker-compose down
+kill_docker_containers
 
+# Migrate the database (does nothing if database already exists)
 echo -e "\n\e[94mMigrating the Push app database\e[0m"
 echo -e "\e[94m---------------------------------\e[0m\n"
-# Migrate the database (does nothing if database already exists)
 docker-compose run web rake db:create
 docker-compose run web rake db:migrate
 docker-compose run web rake db:seed
+
+# Generate the dhparam file, this happens when we bring up the nginx container
+docker-compose run -e NGINX_BOOT=false nginx
 
 echo -e "Everything should be set up properly now."
 echo -e "Try running \e[96mdocker-compose up\e[0m to make sure it works"

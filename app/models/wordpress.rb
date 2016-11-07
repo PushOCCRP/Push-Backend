@@ -6,7 +6,7 @@ class Wordpress < CMS
     	options = {}
 
     	categories_string = Setting.categories
-    	if(!categories_string.blank?)
+    	if(!categories_string.blank? && !params['categories'].blank? && params['categories']=='true')
     		logger.debug("categories not blank")
     		categories = categories_string.split('::')
     		options[:post_types] = categories.join(',')

@@ -3,20 +3,36 @@ class NotificationsController < ApplicationController
 	#skip_before_action :verify_authenticity_token, :only => ['subscribe', 'unsubscribe']
 	before_action :authenticate_user!, :except => ['subscribe', 'unsubscribe']
 
+  skip_before_action :verify_authenticity_token, :only => ['subscribe', 'unsubscribe']
+
 	def index
 		@notifications = Notification.all.order(created_at: :desc)
 	end
 
 	def subscribe
-		device = PushDevice.find_by_dev_id(params["dev_id"])
+    begin
+    	params = JSON.parse(request.body.string)
+    rescue Exception
+      params = request.request_parameters
+    end
+    
+  	if(params["dev_id"].nil? || params["platform"].nil? || params['language'].nil?)
+    	render json: {"status": "Missing required parameters"}
+    	return
+    end
+    
+		case params["platform"]
+		when 'android'
+		  #the old versions of the anroid app had 'regid'
+			dev_token = params['regid'] if params.has_key? 'regid'
+			dev_token = params['reg_id'] if params.has_key? 'reg_id'
+		when 'ios'
+			dev_token = params['dev_token']
+		end
+    
+		device = PushDevice.find_by_dev_id(params["dev_id"]) if !params["dev_id"].nil?
+		
 		if(!device)
-			case params["platform"]
-			when 'android'
-				dev_token = params['regid']
-			when 'ios'
-				dev_token = params['dev_token']
-			end
-
 			device = PushDevice.new({
 				dev_id: params['dev_id'],
 				dev_token: dev_token,
@@ -25,16 +41,24 @@ class NotificationsController < ApplicationController
 			})
 		else
 			device.language = params['language']
+			device.dev_token = dev_token
 		end
+		
+		if(params['sandbox'])
+		  device.status = PushDevice::Status::SANDBOX
+    else
+      device.status = PushDevice::Status::ACTIVE
+    end
 
 		device.save!
 
-		response = subscribe_device device, params[:sandbox]
+		response = subscribe_device device, params["sandbox"]
 		@status = response[:status]
-		@status_id = response[:status_id]
-		@uniqush_code = response[:uniqush_code]
-		@uniqush_message = response[:uniqush_message]
+    @status_id = response[:status_id]
+	  @uniqush_code = response[:uniqush_code]
+  	@uniqush_message = response[:uniqush_message]
 		@uniqush_response = response[:uniqush_response]
+		
 	end
 
 	def resubscribe
@@ -68,13 +92,13 @@ class NotificationsController < ApplicationController
 		# Build up the options
 		options = {"service": service_name,
 					"pushservicetype": push_service_type,
-					"subscriber": "#{device_id}.#{language}"
+					"subscriber": "#{device.dev_id}.#{device.language}"
 				}
 
 		# Android uses the "regid", iOS use the "devtoken"
-		case platform
+		case device.platform
 		when 'android'
-			options["regid"] = device.dev_token
+			options["regid"] = device.dev_id
 		when 'ios'
 			options["devtoken"] = device.dev_token
 		end
@@ -83,8 +107,12 @@ class NotificationsController < ApplicationController
 		# make the call!
 		response = HTTParty.post("http://uniqush:9898/subscribe?#{options.to_query}", options)
 		response_json = JSON.parse(response.body)
+		
+		logger.debug("*************************************")
+		logger.debug("Device: #{device.inspect}")
 		logger.debug("Uniqush response: #{response_json}")
-
+		logger.debug("*************************************")
+		
 		if(response_json["status"] == 1)
 			response = {status: "FAILURE", uniqush_message: response_json['details']['errorMsg'], status_id: 1}
 		else
@@ -171,13 +199,21 @@ class NotificationsController < ApplicationController
 	end
 
 	def gcm
-
+    @gcm_project_id = Setting.gcm_project_id
+    @gcm_api_key_sandbox = Setting.gcm_api_key_sandbox
+    @gcm_api_key_production = Setting.gcm_api_key_production
+    
+    @fcm_api_key_sandbox = Setting.fcm_api_key_sandbox
+    @fcm_api_key_production = Setting.fcm_api_key_production
 	end
 
 	def process_gcm
 		Setting.gcm_project_id = params["project_id"]
-		Setting.gcm_api_key_sandbox = params["api_key_sandbox"]
-		Setting.gcm_api_key_production = params["api_key_production"]
+		Setting.gcm_api_key_sandbox = params["gcm_api_key_sandbox"]
+		Setting.gcm_api_key_production = params["gcm_api_key_production"]
+
+    Setting.fcm_api_key_sandbox = params["fcm_api_key_production"]
+    Setting.fcm_api_key_production = params["fcm_api_key_production"]
 
 		response_json = create_gcm_project(false)
 
@@ -185,17 +221,48 @@ class NotificationsController < ApplicationController
 			flash[:error] = "Error updating gcm: #{response_json}"
 			redirect_to :gcm
 		else
-			response_json = create_gcm_project(true)
+			flash[:notice] = "Successfully updated gcm and fcm"
+		end
+
+		redirect_to action: :gcm
+	end
+	
+	def create_gcm_project(sandbox=false)
+    project_id = Setting.gcm_project_id
+		if(sandbox)
+			api_key = Setting.gcm_api_key_sandbox
+		else
+			api_key = Setting.gcm_api_key_production
+		end
+
+		service_name = "#{push_id}-gcm"
+		if(!sandbox)
+			service_name += "-sandbox"
+		end
+
+		options = {"service": service_name,
+			 "pushservicetype": "gcm",
+			 "projectid": project_id,
+			 "apikey": api_key
+		}
+
+		response = HTTParty.get("http://uniqush:9898/addpsp?#{options.to_query}", options)
+		response_json = JSON.parse(response.body)
+
+		logger.debug("Create_gcm response: #{response_json}")
+
 			if(response_json["status"] == 1)
-				flash[:error] = "Error updating gcm: #{response_json}"
-				redirect_to :gcm
+			raise("Error creating GCM service: #{response_json}")
+		else
+			if(sandbox)
+				Setting.gcm_name_sandbox = service_name
 			else
-				flash[:notice] = "Successfully updated gcm"
+				Setting.gcm_name_production = service_name
 			end
 		end
 
-		redirect_to 'index'
-	end
+		return response_json
+ 	end
 
 	def create_gcm_project(sandbox=false)
 		project_id = Setting.gcm_project_id
@@ -244,7 +311,6 @@ class NotificationsController < ApplicationController
 		production_cert_io = params[:production_cert]
 		production_key_io = params[:production_key]
 
-
 		filename = push_id
 
 		sandbox_cert_file_name = "secrets/certs/#{filename}-sandbox-cert.pem"
@@ -283,7 +349,7 @@ class NotificationsController < ApplicationController
 			flash[:notice] = "Successfully updated certs"
 		end
 
-		redirect_to :cert_upload
+		redirect_to action: :cert_upload
 	end
 
 	def create_apns(sandbox=false)
@@ -391,34 +457,123 @@ class NotificationsController < ApplicationController
 
 	def build_push(notification, platform, sandbox)
 		push_service_name = service_name(platform, sandbox)
-		options = options_for_push(push_service_name, notification)
-		return push_call options
+		options = options_for_push(push_service_name, platform, notification)
+		return push_call options, platform, sandbox, notification
 	end
 
-	def options_for_push(push_service_name, notification)
-		options = {"service": push_service_name,
-			 "subscriber": "*.#{notification.language}",
-			 "msg": notification.message,
-			 "sound": 'default',
-			 "article_id": notification.article_id
-			}
+	def options_for_push(push_service_name, platform, notification)
+  	
+  	#######
+  	# Set the options for either iOS or Android  	
+    options = {"service": push_service_name,
+  		 "subscriber": "*.#{notification.language}",
+       "msg": notification.message,
+       "sound": 'default',
+       "article_id": notification.article_id
+    }
+  	    
 		return options
 	end
 
-	def push_call(options)
+	def push_call(options, platform, sandbox, notification)
+    if(platform == "android")
+      push_call_android_gcm(options, sandbox, notification)
+      return push_call_android_fcm(options, sandbox, notification) 
+    else
+      return push_call_ios(options, sandbox, notification)
+    end
+	end
+	
+	def push_call_android_gcm options, sandbox, notification
+    logger.debug("Sending GCM push with options: #{options}")
+
 		response = HTTParty.post("http://uniqush:9898/push?#{options.to_query}")
 		response_json = JSON.parse(response.body)
 		
-		logger.debug("Sending push with options: #{options}")
-
+		byebug
 		if(response_json["status"] == 0)
-			logger.debug("Uniqush Error: #{response_json}")
+			logger.debug("Error: #{response_json}")
 			return "Error: " + response_json['details']['errorMsg']
 		else
 			logger.debug("Push successful")
 			return "SUCCESS"
 		end
+
 	end
+	
+	def push_call_android_fcm options, sandbox, notification
+    api_key = Setting.fcm_api_key_production
+    if(sandbox == true)
+      api_key = Setting.fcm_api_key_sandbox
+    end
+    
+    fcm = FCM.new(api_key)
+    
+    #Redo the options for FireBase
+    if(sandbox == true)
+      status = PushDevice::Status::SANDBOX
+    else 
+      status = PushDevice::Status::ACTIVE
+    end
+
+    registration_ids = PushDevice.where(platform: "android", language: notification.language, status: status).map{|device| device.dev_token}
+    
+    byebug
+    push_options = {
+      data: {message: options[:msg], article_id: options[:article_id], sound: options[:sound]},
+      priority: 'high'
+    }
+    
+ 		logger.debug("Sending FCM push with options: #{push_options}")
+    response = fcm.send(registration_ids, push_options)
+    
+    # If there's an error with anything fail out
+    if(response[:status_code] != 200)
+      logger.debug("Error: #{response}")
+      return "Error: " + response[:body]
+    end
+    
+    response_json = JSON.parse(response[:body])
+    
+
+    # Here we should go through the "results" array and check for errors, removing any that have the "error" key
+    index = 0
+    response_json["results"].each do |result|
+
+      if(result.has_key? "error")
+        #look at the regisration_ids to get the registration id that's bad
+        registration_id = registration_ids[index]
+        device = PushDevice.where(dev_id: registration_id).first
+        
+        next if device.nil?
+        
+        device.status = PushDevice::Status::DISABLED
+        
+        logger.debug("Disable #{device.id} error: #{result["error"]}")
+        device.save!
+      end
+      
+      index += 1
+    end
+
+		logger.debug("Push successful")
+		return "SUCCESS"
+  end
+  
+  def push_call_ios options, sandbox, notification
+ 		logger.debug("Sending iOS push with options: #{options}")
+
+		response = HTTParty.post("http://uniqush:9898/push?#{options.to_query}")
+		response_json = JSON.parse(response.body)
+		
+		if(response_json["status"] == 0)
+			logger.debug("Error: #{response_json}")
+			return "Error: " + response_json['details']['errorMsg']
+		else
+			logger.debug("Push successful")
+			return "SUCCESS"
+		end
+  end
 
 	def admin
 		@devices = PushDevice.all.count
@@ -460,7 +615,7 @@ class NotificationsController < ApplicationController
 		service_name = push_id
 		push_service_type = "apns"
 		if(platform == 'android')
-			push_service_type = 'gcm'
+			push_service_type = 'fcm'
 			service_name += "-gcm"
 		else
 			service_name += "-ios"

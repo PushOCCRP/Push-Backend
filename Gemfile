@@ -67,3 +67,5 @@ gem "addressable"
 gem "devise"
 
 gem "rails-settings-cached"
+
+gem "fcm"

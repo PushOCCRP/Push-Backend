@@ -5,17 +5,74 @@
 </div>
 
 <div class="container">
-	<div class="col-md-8">
+	<div class="col-md-5">
 		<% if(!@categories.nil?) %>
 			<%= form_tag({action: :update}, method: :put) do %>
-			  <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[0]), {include_blank: true} %><br /><br />
-			  <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[1]), {include_blank: true} %><br /><br />
-			  <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[2]), {include_blank: true} %><br /><br />
-			  <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[3]), {include_blank: true} %><br /><br />
+			  <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="cms_category">CMS Category</label>
+              <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[0]), {include_blank: true, class: "form-control"} %>
 
-			  Consolidated <%= check_box_tag 'consolidated', 'consolidated', @consolidated %><br /><br />
+            </div>
+          </div>
+          <div class="col-md-6">  
+            <label for="cms_category_name">CMS Category Display Name</label>
+            <%= text_field_tag 'category_name[]',"", {class: "form-control"} %>
+          </div>
+			  </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="cms_category">CMS Category</label>
+              <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[1]), {include_blank: true, class: "form-control"} %>
 
-			  <%= submit_tag "Save Categories" %>
+            </div>
+          </div>
+          <div class="col-md-6">  
+            <label for="cms_category_name">CMS Category Display Name</label>
+            <%= text_field_tag 'category_name[]',"", {class: "form-control"} %>
+          </div>
+			  </div>
+			  <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="cms_category">CMS Category</label>
+              <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[2]), {include_blank: true, class: "form-control"} %>
+
+            </div>
+          </div>
+          <div class="col-md-6">  
+            <label for="cms_category_name">CMS Category Display Name</label>
+            <%= text_field_tag 'category_name[]',"", {class: "form-control"} %>
+          </div>
+			  </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="cms_category">CMS Category</label>
+              <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[3]), {include_blank: true, class: "form-control"} %>
+
+            </div>
+          </div>
+          <div class="col-md-6">  
+            <label for="cms_category_name">CMS Category Display Name</label>
+            <%= text_field_tag 'category_name[]',"", {class: "form-control"} %>
+          </div>
+			  </div>
+
+        <div class="row">
+          <div class="col-md-5">
+            <label for="consolidated">Consolidated Categories</label>
+            <%= check_box_tag 'consolidated', 'consolidated', @consolidated, {class: "form-control"} %>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-5">
+          <%= submit_tag "Save Categories", {class: "btn btn-primary"} %>
+          </div>
+        </div>
 			<% end %>
 		<% end %>
 	</div>

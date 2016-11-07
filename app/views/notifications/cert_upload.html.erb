@@ -1,12 +1,32 @@
-<%= form_tag({action: :process_cert}, multipart: true) do %>
-  Sandbox Cert
-  <%= file_field_tag 'sandbox_cert' %><br /><br />
-  Sandbox Key
-  <%= file_field_tag 'sandbox_key' %><br /><br />
-  Production Cert
-  <%= file_field_tag 'production_cert' %><br /><br />
-  Production Key
-  <%= file_field_tag 'production_key' %>
+<div class="container">
+	<div class="page-header col-md-12">
+			<div class="col-md-10"><span class="h1">APNS Certs</span></div>
+			<div class="col-md-2 vertical-center"><%= link_to "All Notifications", "/notifications" %></div>
+	</div>
+</div>
 
-  <%= submit_tag %>
-<% end %>
+<div class="container">
+	<div class="col-md-8">
+		<%= form_tag({action: :process_cert}, multipart: true) do %>
+			<div class="form-group">
+		    <%= label_tag "Sandbox Cert" %>
+				<%= file_field_tag 'sandbox_cert', class: "form-control" %><br />
+			</div>
+		  <div class="form-group">
+		    <%= label_tag "Sandbox Key" %>
+				<%= file_field_tag 'sandbox_key', class: "form-control" %><br />
+			</div>
+			<div class="form-group">
+		  		<%= label_tag "Production Cert" %>
+		  		<%= file_field_tag 'production_cert', class: "form-control" %>
+		  </div>
+ 			<div class="form-group">
+		  		<%= label_tag "Production Key" %>
+		  		<%= file_field_tag 'production_key', class: "form-control" %>
+		  </div>
+
+			<%= submit_tag "Save", class:"btn btn-default" %>
+		<% end %>	
+	</div>
+</div>
+

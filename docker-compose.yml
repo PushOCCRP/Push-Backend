@@ -5,7 +5,7 @@ services:
   # nginx, working as a front-end proxy for uniqush
   # we need it for only allowing certain endpoints to be available
   nginx:
-    build: https://github.com/occrp/watchful-nginx.git
+    build: https://github.com/PushOCCRP/watchful-nginx.git
     ports:
       - "80:80"
       - "443:443"

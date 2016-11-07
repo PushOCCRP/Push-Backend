@@ -36,31 +36,31 @@ class CMS < ActiveRecord::Base
       end
 
       elements = Nokogiri::HTML::fragment article['body']
-      elements.css('img').each do |image|
-        image_address = image.attributes['src'].value
-        
-        if !image_address.starts_with?("http")
-          # Obviously needs to be fixed
-          full_url = base_url + "/" + image.attributes['src'].value
-
-          full_url = rewrite_image_url_for_proxy full_url
-
-          image_object = {url: full_url, caption: "", width: "", height: "", byline: ""}
-          article['images'] << image_object
-
-          article['image_urls'] << full_url
-        else
-          image_address = rewrite_image_url_for_proxy image_address
-          if(force_https)
-            uri = Addressable::URI.parse(image_address)
-            uri.scheme = 'https'
-            image_address = uri.to_s
-            image['src'] = image_address
-          end
-
-          image_object = {url: image_address, caption: "", width: "", height: "", byline: ""}
-          article['images'] << image_object
-        end
+#       elements.css('img').each do |image|
+#         image_address = image.attributes['src'].value
+#         
+#         if !image_address.starts_with?("http")
+#           # Obviously needs to be fixed
+#           full_url = base_url + "/" + image.attributes['src'].value
+# 
+#           full_url = rewrite_image_url_for_proxy full_url
+# 
+#           image_object = {url: full_url, caption: "", width: "", height: "", byline: ""}
+#           article['images'] << image_object
+# 
+#           article['image_urls'] << full_url
+#         else
+#           image_address = rewrite_image_url_for_proxy image_address
+#           if(force_https)
+#             uri = Addressable::URI.parse(image_address)
+#             uri.scheme = 'https'
+#             image_address = uri.to_s
+#             image['src'] = image_address
+#           end
+# 
+#           image_object = {url: image_address, caption: "", width: "", height: "", byline: ""}
+#           article['images'] << image_object
+#         end
         
 
         # This is a filler for the app itself. Which will replace the text with the images 
@@ -74,8 +74,8 @@ class CMS < ActiveRecord::Base
         #  image.remove
         # end
 
-        image['push'] = ":::"
-      end
+        # image['push'] = ":::"
+      # end
 
 
       elements.search('img').wrap('<p></p>')
@@ -103,22 +103,24 @@ class CMS < ActiveRecord::Base
 
       # There's an interesting bug where the images coming back from a plugin
       # may not be https, so if we're forcing, we'll fix that here
-      if(force_https)
-        article['images'].each do |image|
-          if(image[:url] == nil)
-            url = image["url"]
-          else
-            url = image[:url]
-          end
+#       if(force_https)
+#         article['images'].each do |image|
+#           if(image[:url] == nil)
+#             url = image["url"]
+#           else
+#             url = image[:url]
+#           end
+# 
+#           if(!url.starts_with? "https")
+#             uri = Addressable::URI.parse(url)
+#             uri.scheme = 'https'
+#             image['url'] = uri.to_s
+#           end
+#         end
+#       end
 
-          if(!url.starts_with? "https")
-            uri = Addressable::URI.parse(url)
-            uri.scheme = 'https'
-            image['url'] = uri.to_s
-          end
-        end
-      end
-
+      extract_images article
+      
       # right now we only support dates on the mobile side, this will be time soon.
       article['publish_date'] = published_date.strftime("%Y%m%d")
       
@@ -148,7 +150,11 @@ class CMS < ActiveRecord::Base
     article['images'].each do |image|
       image_address = image['url']
       if(image_address.nil?)
-        image_address = image[:url]
+        if(!image[:url].blank?)
+          image_address = image[:url]
+        elsif(!image['url'].blank?)
+          image_address = image['url']
+        end
       end
 
       if !image_address.starts_with?("http")
@@ -178,7 +184,7 @@ class CMS < ActiveRecord::Base
           image_address = uri.to_s
         end
 
-        image['url'] = full_url
+        image['url'] = rewrite_image_url_for_proxy image_address
         image['start'] = 0
         image['length'] = 0
       end
@@ -189,20 +195,8 @@ class CMS < ActiveRecord::Base
       image_address = image.attributes['src'].value
 
       if !image_address.starts_with?("http")
-        # build up missing parts
-        prefix = ""
-        if(image.attributes['src'].value.starts_with?(":"))
-          prefix = 'https'
-        elsif(image.attributes['src'].value.starts_with?("//"))
-          prefix = 'https:'
-        elsif(image.attributes['src'].value.starts_with?("/"))
-          prefix = base_url
-        else
-          prefix = base_url + "/"
-        end  
-        # Obviously needs to be fixed
-        full_url = prefix + image.attributes['src'].value
-
+        
+        full_url = rewrite_url_for_ssl(rewrite_image_url_for_proxy(image.attributes['src']))
         image_object = {url: full_url, start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
         article['images'] << image_object
 
@@ -212,7 +206,7 @@ class CMS < ActiveRecord::Base
         if(force_https)
           uri = Addressable::URI.parse(image_address)
           uri.scheme = 'https'
-          image_address = uri.to_s
+          image_address = rewrite_image_url_for_proxy uri.to_s 
           image['href'] = image_address
         end
 
@@ -223,12 +217,7 @@ class CMS < ActiveRecord::Base
 
       # this is for modifying the urls in the article itself
       # It's a mess, refactor this please
-      rewritten_url = rewrite_url_for_ssl image_address
-      if(!ENV['proxy_images'].blank? && ENV['proxy_images'].downcase == 'true')
-        
-        rewritten_url = Rails.application.routes.url_helpers.passthrough_url(host: ENV['host']) + "?url=" + URI.escape(rewritten_url)
-        rewritten_url = rewrite_url_for_ssl(rewritten_url)
-      end
+      rewritten_url =  image_address
       image.attributes['src'].value = rewritten_url
 
       # This is a filler for the app itself. Which will replace the text with the images 
@@ -242,34 +231,28 @@ class CMS < ActiveRecord::Base
 
     article['body'] = elements.to_html
 
-    if(!ENV['proxy_images'].blank? && ENV['proxy_images'].downcase == 'true')
-      proxied_image_urls = []
-
-      # We need to force HTTPS, christ this is annoying
-      host = ENV['host']
+    # We need to force HTTPS, christ this is annoying
+    host = ENV['host']
       
-      article['image_urls'].each do |image_url|
-        proxied_url = Rails.application.routes.url_helpers.passthrough_url(host: host) + "?url=" + URI.escape(image_url)
-        proxied_url = rewrite_url_for_ssl proxied_url
-        proxied_image_urls.push proxied_url
-      end
-
-      article['image_urls'] = proxied_image_urls
-
-      article['images'].each do |image|
-        if(!image['url'].blank?)
-          image['url'] = Rails.application.routes.url_helpers.passthrough_url(host: host) + "?url=" + URI.escape(image['url'])
-          image['url'] = rewrite_url_for_ssl image['url']
-        end
-
-        if(!image[:url].blank?)
-          image[:url] = Rails.application.routes.url_helpers.passthrough_url(host: host) + "?url=" + URI.escape(image[:url])
-          image[:url] = rewrite_url_for_ssl image[:url]
-        end
-      end
-
-
+    proxied_image_urls = []
+    article['image_urls'].each do |image_url|
+      proxied_url = rewrite_url_for_ssl proxied_url
+      proxied_image_urls.push proxied_url
     end
+
+    article['image_urls'] = proxied_image_urls
+
+#     article['images'].each do |image|
+#       if(!image['url'].blank?)
+#         image['url'] = rewrite_url_for_ssl image['url']
+#         proxied_image_urls.push image['url']
+#       end
+# 
+#       if(!image[:url].blank?)
+#         image[:url] = rewrite_url_for_ssl image[:url]
+#         proxied_image_urls.push image[:url]
+#       end
+#     end
   end
   
   def self.extract_youtube_links article
@@ -623,10 +606,7 @@ class CMS < ActiveRecord::Base
     # this is for modifying the urls in the article itself
     # It's a mess, refactor this please
     if(!ENV['proxy_images'].blank? && ENV['proxy_images'].downcase == 'true')
-      
-      rewritten_url = rewrite_url_for_ssl url
-
-      rewritten_url = Rails.application.routes.url_helpers.passthrough_url(host: ENV['host']) + "?url=" + URI.escape(rewritten_url)
+      rewritten_url = Rails.application.routes.url_helpers.passthrough_url(host: ENV['host']) + "?url=" + URI.escape(url)
     end
     
     return rewritten_url

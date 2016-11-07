@@ -1,9 +1,37 @@
-<%= form_tag({action: :process_gcm}) do %>
-  Project Id
-  <%= text_field_tag 'project_id' %><br /><br />
-  API Key - Test
-  <%= text_field_tag 'api_key_sandbox' %><br /><br />
-  API Key - Production
-  <%= text_field_tag 'api_key_production' %>
-  <%= submit_tag %>
-<% end %>
+<div class="container">
+	<div class="page-header col-md-12">
+			<div class="col-md-10"><span class="h1">GCM/FCM</span></div>
+			<div class="col-md-2 vertical-center"><%= link_to "All Notifications", "/notifications" %></div>
+	</div>
+</div>
+
+<div class="container">
+	<div class="col-md-8">
+		<%= form_tag({action: :process_gcm}) do %>
+			<div class="form-group">
+		    <%= label_tag "Project ID" %>  <a href="https://console.cloud.google.com/iam-admin/settings/project"><span class="h3 small">https://console.cloud.google.com/iam-admin/settings/project</span></a>
+				<%= text_field_tag 'project_id', @gcm_project_id, class: "form-control" %><br />
+			</div>
+		  <div class="form-group">
+		    <%= label_tag "Sandbox GCM API Key" %> <a href="https://console.cloud.google.com/apis/credentials"><span class="h3 small">https://console.cloud.google.com/apis/credentials</span></a>
+				<%= text_field_tag 'gcm_api_key_sandbox', @gcm_api_key_sandbox, class: "form-control" %><br />
+			</div>
+			<div class="form-group">
+		  		<%= label_tag "Production GCM API Key" %> <a href="https://console.cloud.google.com/apis/credentials"><span class="h3 small">https://console.cloud.google.com/apis/credentials</span></a>
+		  		<%= text_field_tag 'gcm_api_key_production', @gcm_api_key_production, class: "form-control" %>
+		  </div>
+
+		  <div class="form-group">
+		    <%= label_tag "Sandbox FCM API Key" %> <a href="https://console.cloud.google.com/apis/credentials"><span class="h3 small">https://console.cloud.google.com/apis/credentials</span></a>
+				<%= text_field_tag 'fcm_api_key_sandbox', @fcm_api_key_sandbox, class: "form-control" %><br />
+			</div>
+			<div class="form-group">
+		  		<%= label_tag "Production FCM API Key" %> <a href="https://console.cloud.google.com/apis/credentials"><span class="h3 small">https://console.cloud.google.com/apis/credentials</span></a>
+		  		<%= text_field_tag 'fcm_api_key_production', @fcm_api_key_production, class: "form-control" %>
+		  </div>
+
+			<%= submit_tag "Save", class:"btn btn-default" %>
+		<% end %>	
+	</div>
+</div>
+
