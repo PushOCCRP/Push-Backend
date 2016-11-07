@@ -107,7 +107,7 @@ class NotificationsController < ApplicationController
 		# make the call!
 		response = HTTParty.post("http://uniqush:9898/subscribe?#{options.to_query}", options)
 		response_json = JSON.parse(response.body)
-		
+				
 		logger.debug("*************************************")
 		logger.debug("Device: #{device.inspect}")
 		logger.debug("Uniqush response: #{response_json}")
@@ -165,34 +165,26 @@ class NotificationsController < ApplicationController
 			@uniqush_message = response_json['details']['errorMsg']         
 			@status_id = 1
 		else
-			# If the response is successful, save the device
-			device = PushDevice.find_by_dev_id(params["dev_id"])
-			if(!device)
-
-				case params["platform"]
-				when 'android'
-					dev_token = params['regid']
-				when 'ios'
-					dev_token = params['dev_token']
-				end
-
-
-				device = PushDevice.new({
-					dev_id: params['dev_id'],
-					dev_token: '',
-					language: '',
-					platform: params['platform']
-				})
-			else
-				device.language = ''
-				device.dev_token = ''
-			end
-
-			device.save!
-
 			@status = "SUCCESS"
 			@status_id = 0
 		end
+		
+    # Save the device
+		device = PushDevice.find_by_dev_id(params["dev_id"])
+		if(!device)
+			device = PushDevice.new({
+				dev_id: params['dev_id'],
+				dev_token: '',
+				language: '',
+				platform: params['platform']
+			})
+		end
+		
+		device.language = ''
+		device.dev_token = ''
+		device.status = PushDevice::Status::DISABLED
+
+		device.save!
 
 		@uniqush_code = response_json['details']['code']
 		@uniqush_reponse = response_json
@@ -489,8 +481,7 @@ class NotificationsController < ApplicationController
 
 		response = HTTParty.post("http://uniqush:9898/push?#{options.to_query}")
 		response_json = JSON.parse(response.body)
-		
-		byebug
+
 		if(response_json["status"] == 0)
 			logger.debug("Error: #{response_json}")
 			return "Error: " + response_json['details']['errorMsg']
@@ -518,7 +509,6 @@ class NotificationsController < ApplicationController
 
     registration_ids = PushDevice.where(platform: "android", language: notification.language, status: status).map{|device| device.dev_token}
     
-    byebug
     push_options = {
       data: {message: options[:msg], article_id: options[:article_id], sound: options[:sound]},
       priority: 'high'
