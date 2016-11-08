@@ -15,10 +15,19 @@ while true
 do
   echo -en "What is your email address? "
   read email
-  if ! echo "$email" | grep -qiP "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$" ;then
-    echo -e "\e[91mNot a valid email address. Please try again.\e[0m"
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    # MacOS uses BSD's grep, which doesn't have the -P flag
+    if ! echo "$email" | grep -qiE "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$" ;then
+      echo -e "\e[91mNot a valid email address. Please try again.\e[0m"
+    else
+      break
+    fi
   else
-    break
+    if ! echo "$email" | grep -qiP "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$" ;then
+      echo -e "\e[91mNot a valid email address. Please try again.\e[0m"
+    else
+      break
+    fi
   fi
 done
  
@@ -28,10 +37,18 @@ while true
 do
   echo -en "What is the host name for this installation (e.g. testapp.pushapp.press)? "
   read host
-  if ! echo "$host" | grep -qiP "^[A-z]*[\.]*[A-z]+[\.][A-z]+$" ;then
-    echo -e "\e[91mNot a valid URL format. Please try again.\e[0m"
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    if ! echo "$host" | grep -qiE "^[A-z]*[\.]*[A-z]+[\.][A-z]+$" ;then
+      echo -e "\e[91mNot a valid URL format. Please try again.\e[0m"
+    else
+      break
+    fi
   else
-    break
+    if ! echo "$host" | grep -qiP "^[A-z]*[\.]*[A-z]+[\.][A-z]+$" ;then
+      echo -e "\e[91mNot a valid URL format. Please try again.\e[0m"
+    else
+      break
+    fi
   fi
 done
 
