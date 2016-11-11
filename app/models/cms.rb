@@ -12,6 +12,8 @@ class CMS < ActiveRecord::Base
   def self.clean_up_response articles = Array.new, version = 1.0
     articles.delete_if{|article| article['headline'].blank?}
     articles.each do |article|
+      
+      logger.debug("images: #{article["images"].inspect}")
 
       # If there is no body (which is very prevalent in the OCCRP data for some reason)
       # this takes the intro text and makes it the body text
@@ -36,47 +38,6 @@ class CMS < ActiveRecord::Base
       end
 
       elements = Nokogiri::HTML::fragment article['body']
-#       elements.css('img').each do |image|
-#         image_address = image.attributes['src'].value
-#         
-#         if !image_address.starts_with?("http")
-#           # Obviously needs to be fixed
-#           full_url = base_url + "/" + image.attributes['src'].value
-# 
-#           full_url = rewrite_image_url_for_proxy full_url
-# 
-#           image_object = {url: full_url, caption: "", width: "", height: "", byline: ""}
-#           article['images'] << image_object
-# 
-#           article['image_urls'] << full_url
-#         else
-#           image_address = rewrite_image_url_for_proxy image_address
-#           if(force_https)
-#             uri = Addressable::URI.parse(image_address)
-#             uri.scheme = 'https'
-#             image_address = uri.to_s
-#             image['src'] = image_address
-#           end
-# 
-#           image_object = {url: image_address, caption: "", width: "", height: "", byline: ""}
-#           article['images'] << image_object
-#         end
-        
-
-        # This is a filler for the app itself. Which will replace the text with the images 
-        # (order being the same as in the array)
-        # for versioning we put this in
-        # multiple_image_version_required = 1.1
-
-        # if(version >= multiple_image_version_required)
-        #  image.replace("^&^&")
-        # else
-        #  image.remove
-        # end
-
-        # image['push'] = ":::"
-      # end
-
 
       elements.search('img').wrap('<p></p>')
 
@@ -100,24 +61,6 @@ class CMS < ActiveRecord::Base
       if(published_date.nil?)
         published_date = DateTime.new(1970,01,01)
       end
-
-      # There's an interesting bug where the images coming back from a plugin
-      # may not be https, so if we're forcing, we'll fix that here
-#       if(force_https)
-#         article['images'].each do |image|
-#           if(image[:url] == nil)
-#             url = image["url"]
-#           else
-#             url = image[:url]
-#           end
-# 
-#           if(!url.starts_with? "https")
-#             uri = Addressable::URI.parse(url)
-#             uri.scheme = 'https'
-#             image['url'] = uri.to_s
-#           end
-#         end
-#       end
 
       extract_images article
       
@@ -210,6 +153,11 @@ class CMS < ActiveRecord::Base
         end
 
         image_object = {url: image_address, start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
+        
+        # If, for some reason, there's an image in the story, but there's not one already in the Array
+        # (there should be, since the plugin should have handled it) add it so it shows up as the top image
+        article['images'] << image_object if article['images'].empty?
+        
         article['images'] << image_object
       end
 
@@ -240,18 +188,6 @@ class CMS < ActiveRecord::Base
     end
 
     article['image_urls'] = proxied_image_urls
-
-#     article['images'].each do |image|
-#       if(!image['url'].blank?)
-#         image['url'] = rewrite_url_for_ssl image['url']
-#         proxied_image_urls.push image['url']
-#       end
-# 
-#       if(!image[:url].blank?)
-#         image[:url] = rewrite_url_for_ssl image[:url]
-#         proxied_image_urls.push image[:url]
-#       end
-#     end
   end
   
   def self.extract_youtube_links article
@@ -446,7 +382,6 @@ class CMS < ActiveRecord::Base
   #This adds <br /> tags if necessary, originally for KRIK from Wordpress
   #This puts in :::: as place holder while we clean the rest
   def self.cleanUpNewLines html_string
-    byebug
     cleaned = html_string
     cleaned.gsub!("\r\n\r\n", "<br />")
     return cleaned
