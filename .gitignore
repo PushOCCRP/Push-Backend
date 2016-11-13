@@ -36,3 +36,5 @@ public/assets
 secrets.env
 /cookbooks/*
 .env
+
+data/dump.rdb
