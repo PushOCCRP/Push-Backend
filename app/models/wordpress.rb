@@ -66,7 +66,16 @@ class Wordpress < CMS
 
 	def self.get_url path, language, options = {}
 	    url = ENV['wordpress_url'] 
-	    url_string = "#{url}#{language}?#{path}"
+	    
+ 	    url_string = "#{url}?#{path}"
+
+	    # If there is more than one language specified (or any language at all for backwards compatibility)
+	    if(ENV['languages'])
+  	    languages = ENV['languages'].split(",")
+  	    if(languages.size > 1 && languages.include?(languages))
+    	    url_string = "#{url}#{language}?#{path}"
+    	  end
+  	  end
 	    
 	    if(!ENV['wp_super_cached_donotcachepage'].blank?)
 	    	options[:donotcachepage] = ENV['wp_super_cached_donotcachepage']
