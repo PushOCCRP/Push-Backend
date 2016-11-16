@@ -36,3 +36,6 @@ public/assets
 secrets.env
 /cookbooks/*
 .env
+.byebug_history
+
+data/dump.rdb
