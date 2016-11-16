@@ -57,14 +57,14 @@ class PreferencesController < ApplicationController
 
 	def get_categories
 	  case @cms_mode 
-      when :occrp_joomla
+    when :occrp_joomla
 		# Not implemented yet
 	  when :wordpress
         response = Wordpress.categories
         response << 'post'
         logger.debug(response)
       when :newscoop
-		# Not implemented yet
+        response = Newscoop.categories
       when :cins_codeigniter
 		# Not implemented yet
       end
@@ -72,21 +72,4 @@ class PreferencesController < ApplicationController
       return response
 	end
 	
-  def get_categories
-	  case @cms_mode 
-      when :occrp_joomla
-		# Not implemented yet
-	  when :wordpress
-        response = Wordpress.categories
-        response << 'post'
-        logger.debug(response)
-      when :newscoop
-		# Not implemented yet
-      when :cins_codeigniter
-		# Not implemented yet
-      end
-
-      return response
-	end
-
 end

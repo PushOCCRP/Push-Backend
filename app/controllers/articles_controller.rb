@@ -2,8 +2,6 @@ class ArticlesController < ApplicationController
 
   before_action :check_for_force_https
 
-  @newscoop_access_token
-
   def index
     
     @response = []
@@ -15,7 +13,7 @@ class ArticlesController < ApplicationController
         @response = Wordpress.articles(params)
         #@response['results'] = clean_up_response @response['results']
       when :newscoop
-        @response = get_newscoop_articles
+        @response = Newscoop.articles(params)
       when :cins_codeigniter
         @response = CinsCodeignitor.articles(params)
     end
@@ -46,44 +44,7 @@ class ArticlesController < ApplicationController
 
     return @response
   end
-  
-  def get_newscoop_articles
-    access_token = get_newscoop_auth_token
-    url = ENV['newscoop_url'] + '/api/articles.json'
-    language = params['language']
-    version = params["v"]
-
-    if(language.blank?)
-      # Should be extracted
-      language = "az"
-    end
     
-    options = {access_token: access_token, language: language, 'sort[published]' => 'desc'}
-
-    logger.info("Fetching articles")
-
-    cached = true
-    @response = Rails.cache.fetch("newscoop_articles/#{language}/#{version}", expires_in: 1.hour) do
-      logger.info("articles are not cached, making call to newscoop server")
-      cached = false
-      response = HTTParty.get(url, query: options)
-      body = JSON.parse response.body
-      format_newscoop_response(body)
-    end        
-
-    if(cached == true)
-      logger.info("Cached hit for articles")
-    else
-      logger.info("Cached missed")
-    end
-    
-    return @response
-  end
-  
-  def get_newscoop_auth_token
-    Newscoop.instance.access_token
-  end
-  
   def search
     case @cms_mode
       when :occrp_joomla
@@ -91,7 +52,7 @@ class ArticlesController < ApplicationController
       when :wordpress
         @response = Wordpress.search(params)
       when :newscoop
-        @response = search_newscoop
+        @response = Newscoop.search(params)
       when :cins_codeigniter
         @response = CinsCodeignitor.search(params)
     end 
@@ -135,23 +96,6 @@ class ArticlesController < ApplicationController
     return @response
   end
     
-  def search_newscoop
-    query = params['q']
-
-    access_token = get_newscoop_auth_token
-    url = ENV['newscoop_url'] + '/api/search/articles.json'
-    language = params['language']
-    if(language.blank?)
-      language = "az"
-    end
-    
-    options = {access_token: access_token, language: language, query: query}        
-    response = HTTParty.get(url, query: options)
-    body = JSON.parse response.body
-    
-    @response = format_newscoop_response(body)
-  end
-
   def article
     case @cms_mode
       when :occrp_joomla
@@ -159,7 +103,7 @@ class ArticlesController < ApplicationController
       when :wordpress
         @response = Wordpress.article(params)
       when :newscoop
-        @response = get_newscoop_article
+        @response = Newscoop.article(params)
       when :cins_codeigniter
         @response = CinsCodeignitor.article(params)
     end 
@@ -187,44 +131,6 @@ class ArticlesController < ApplicationController
 
     return @response
 
-  end
-
-  def get_newscoop_article
-    article_id = params['id']
-
-    access_token = get_newscoop_auth_token
-    url = ENV['newscoop_url'] + "/api/articles/#{article_id}.json"
-
-    logger.debug("Calling newscoop url: ${url}")
-
-    language = params['language']
-    version = params["v"]
-
-    if(language.blank?)
-      # Should be extracted
-      language = "az"
-    end
-    
-    options = {access_token: access_token, language: language, 'sort[published]' => 'desc'}
-
-    logger.info("Fetching article with id #{article_id}")
-
-    cached = true
-    @response = Rails.cache.fetch("newscoop_articles/#{article_id}/#{language}/#{version}", expires_in: 1.hour) do
-      logger.info("article is not cached, making call to newscoop server")
-      cached = false
-      response = HTTParty.get(url, query: options)
-      body = JSON.parse response.body
-      format_newscoop_response({'items' => [body]})
-    end        
-
-    if(cached == true)
-      logger.info("Cached hit for articles")
-    else
-      logger.info("Cached missed")
-    end
-    
-    return @response
   end
 
   private
@@ -432,69 +338,6 @@ class ArticlesController < ApplicationController
     CMS.clean_up_response articles
   end
   
-  def format_newscoop_response body
-    logger.debug("Received #{body}")
-    response = {}
-    response['start_date'] = nil
-    response['end_date'] = nil
-    response['total_items'] = body['items'].count
-    response['page'] = 1
-    response['results'] = format_newscoop_articles(body['items'])
-    return response
-  end
-  
-  def format_newscoop_articles articles
-    formatted_articles = []
-    articles.each do |article|
-        formatted_article = {}
-        formatted_article['headline'] = article['title']
-        formatted_article['description'] = format_description_text article['fields']['deck']
-
-        formatted_article['body'] = article['fields']['full_text']
-        formatted_article['body'] = scrubImageTagsFromHTMLString formatted_article['body']
-        formatted_article['body'] = CMS.normalizeSpacing formatted_article['body']
-        
-        if(article['authors'] && article['authors'].count > 0)
-          formatted_article['author'] = article['authors'][0]['name']
-        end
-      
-        formatted_article['publish_date'] = article['published'].to_time.to_formatted_s(:number_date)
-        # yes, they really call the id 'number'
-        formatted_article['id'] = article['number']
-        formatted_article['language'] = article['languageData']['RFC3066bis']
-      
-        videos = []
-        
-        if(!article['fields']['youtube_shortcode'].blank?)
-            youtube_shortcode = article['fields']['youtube_shortcode']
-            youtube_id = extractYouTubeIDFromShortcode(youtube_shortcode)
-            
-            videos << {youtube_id: youtube_id}
-        end
-              
-        formatted_article['videos'] = videos
-        
-        images = []
-        
-        if(article['renditions'].count > 0 && !article['renditions'][0]['details']['original'].blank?)
-            preview_image_url = "https://" + URI.unescape(article['renditions'][0]['details']['original']['src'])
-            passthrough_image_url = passthrough_url + "?url=" + URI.escape(preview_image_url)
-            caption = article['renditions'][0]['details']['caption']
-            width = article['renditions'][0]['details']['original']['width']
-            height = article['renditions'][0]['details']['original']['height']
-            byline = article['renditions'][0]['details']['photographer']
-            image = {url: passthrough_image_url, caption: caption, width: width, height: height, byline: byline}
-            images << image
-        end
-        
-        formatted_article['images'] = images
-        formatted_article['url'] = article['url']
-        formatted_articles << formatted_article
-    end
-    
-    return formatted_articles
-  end
-
   def scrubImageTagsFromHTMLString html_string
     scrubber = Rails::Html::TargetScrubber.new
     scrubber.tags = ['img', 'div']
