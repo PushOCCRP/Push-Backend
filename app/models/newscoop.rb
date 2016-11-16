@@ -324,8 +324,8 @@ class Newscoop < CMS
       response['results'] = formatted_items
       response['categories'] = categories
     else
-      response['total_items'] = body[:items].count
-      response['results'] = format_newscoop_articles(body[:items])
+      response['total_items'] = body['items'].count
+      response['results'] = format_newscoop_articles(body['items'])
     end
     return response
   end

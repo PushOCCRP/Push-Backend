@@ -13,35 +13,49 @@ class PreferencesController < ApplicationController
     @category_names = Setting.category_names
 		@consolidated = Setting.consolidated_categories
 
+    @category_names = [] if @category_names.nil?
+    
 		if(Setting.categories != nil)
 			@selected_categories = Setting.categories.split('::')
 		else
 			@selected_categories = {}
 		end
 		
-		byebug
+		if(Setting.category_names != nil)
+	    @category_names = Setting.category_names.split('::')
+    else
+      @category_names = {}
+    end
+		
 	end
 
 	def update
 		
-		if(params[:category].count != params[:category_name])
-  		flash[:alert] = "Each category must have a display name"
-  		redirect_to :back
-  		return
-    end
+# 		if(params[:category].count != params[:category_name].count)
+#   		flash[:alert] = "Each category must have a display name"
+#   		redirect_to :back
+#   		return
+#     end
 		
 		# We do it this way so that there's no extra blanks hanging out
 		categories = ""
+		index = 0
 		params[:category].each do |category|
 			if(categories.length != 0)
 				categories += '::'
 			end
 			categories += category
+			
+			# if there's no category name for this one, add it the params
+			#### NOTE: THIS IS BROKEN FIX NOW
+			params[:category_name][index] = category if params[:category_name][index].blank?
+			index += 1
 		end
-		
+
+
  		category_names = ""
 		params[:category_name].each do |category_name|
-  		if(category_names != 0)
+  		if(category_names.length != 0)
     		category_names += '::'
       end
       category_names += category_name
@@ -62,16 +76,16 @@ class PreferencesController < ApplicationController
     when :occrp_joomla
 		# Not implemented yet
 	  when :wordpress
-        response = Wordpress.categories
-        response << 'post'
-        logger.debug(response)
-      when :newscoop
-        response = Newscoop.categories
-      when :cins_codeigniter
+      response = Wordpress.categories
+      response << 'post'
+      logger.debug(response)
+    when :newscoop
+      response = Newscoop.categories
+    when :cins_codeigniter
 		# Not implemented yet
-      end
+    end
 
-      return response
+    return response
 	end
 	
 end
