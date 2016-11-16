@@ -18,7 +18,7 @@
           </div>
           <div class="col-md-6">  
             <label for="cms_category_name">CMS Category Display Name</label>
-            <%= text_field_tag 'category_name[]', @category_names[0], {class: "form-control"} %>
+            <%= text_field_tag 'category_name[]',@category_names[0], {class: "form-control"} %>
           </div>
 			  </div>
         <div class="row">
@@ -61,6 +61,13 @@
           </div>
 			  </div>
 
+        <div class="row">
+          <div class="col-md-5">
+            <label for="consolidated">Show Most Recent Articles Category?</label>
+            <%= check_box_tag 'show_most_recent', 'show_most_recent', @show_most_recent, {class: "form-control"} %>
+          </div>
+        </div>
+        
         <div class="row">
           <div class="col-md-5">
             <label for="consolidated">Consolidated Categories</label>

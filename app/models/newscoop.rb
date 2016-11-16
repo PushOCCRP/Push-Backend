@@ -120,7 +120,10 @@ class Newscoop < CMS
       	categories_to_include = categories_string.split('::')
       end
       
-      byebug
+      if(!Setting.show_most_recent.blank? && Setting.show_most_recent == true)
+        items[:most_recent] = most_recent_articles params
+      end
+      
       categories.each do |category|
         if(!categories_to_include.nil? && !categories_to_include.include?(category))
           next
@@ -137,13 +140,7 @@ class Newscoop < CMS
       @response = format_newscoop_response({'items': items})
       # here we need to make a new format_newscoop_response to handle categories
     else
-      @response = Rails.cache.fetch("sections/#{language}/#{version}", expires_in: 1.hour) do
-        logger.info("articles are not cached, making call to newscoop server")
-        cached = false
-        response = HTTParty.get(url, query: options)
-        body = JSON.parse response.body
-        format_newscoop_response(body)
-      end        
+      @response = most_recent_articles params
     end
 
     if(cached == true)
@@ -153,6 +150,17 @@ class Newscoop < CMS
     end
     
     return @response
+  end
+  
+  def self.most_recent_articles params
+    response = Rails.cache.fetch("sections/#{language}/#{version}", expires_in: 1.hour) do
+      logger.info("articles are not cached, making call to newscoop server")
+      cached = false
+      response = HTTParty.get(url, query: options)
+      body = JSON.parse response.body
+      format_newscoop_response(body)
+    end        
+    return response
   end
     
   def self.search params
@@ -213,6 +221,13 @@ class Newscoop < CMS
   def self.categories
     cached = true
     @response = Rails.cache.fetch("sections", expires_in: 1.hour) do
+      categories = []
+
+      if(!Setting.show_most_recent.blank? && Setting.show_most_recent == true)
+        categories << "Most Recent"
+      end
+      
+
       url = ENV['newscoop_url'] + "/api/sections.json"
       access_token = Newscoop.get_auth_token
 
@@ -233,8 +248,7 @@ class Newscoop < CMS
           break
         end
       end
-      
-      categories = []
+            
       items.each do |item|
         categories << item['title']
       end

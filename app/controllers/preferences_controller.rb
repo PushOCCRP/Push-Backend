@@ -12,6 +12,7 @@ class PreferencesController < ApplicationController
 		@categories = get_categories
     @category_names = Setting.category_names
 		@consolidated = Setting.consolidated_categories
+		@show_most_recent = Setting.show_most_recent_articles
 
     @category_names = [] if @category_names.nil?
     
@@ -21,22 +22,15 @@ class PreferencesController < ApplicationController
 			@selected_categories = {}
 		end
 		
+		
 		if(Setting.category_names != nil)
 	    @category_names = Setting.category_names.split('::')
     else
       @category_names = {}
     end
-		
 	end
 
 	def update
-		
-# 		if(params[:category].count != params[:category_name].count)
-#   		flash[:alert] = "Each category must have a display name"
-#   		redirect_to :back
-#   		return
-#     end
-		
 		# We do it this way so that there's no extra blanks hanging out
 		categories = ""
 		index = 0
@@ -52,7 +46,6 @@ class PreferencesController < ApplicationController
 			index += 1
 		end
 
-
  		category_names = ""
 		params[:category_name].each do |category_name|
   		if(category_names.length != 0)
@@ -64,7 +57,8 @@ class PreferencesController < ApplicationController
 		Setting.categories = categories
 		Setting.category_names = category_names
 		Setting.consolidated_categories = params[:consolidated]
-
+    Setting.show_most_recent_articles = params[:show_most_recent]
+    
 		flash[:notice] = "Categories successfully updated"
 		redirect_to action: :index
 	end
