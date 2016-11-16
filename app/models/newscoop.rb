@@ -110,8 +110,22 @@ class Newscoop < CMS
 
     cached = true
     items = {}
+      
     if(!categories.nil?)
+      
+      # Pull set categories, and only fetch those
+      categories_string = Setting.categories
+      if(!categories_string.blank? && !params['categories'].blank? && params['categories']=='true')
+        logger.debug("categories not blank")
+      	categories_to_include = categories_string.split('::')
+      end
+      
+      byebug
       categories.each do |category|
+        if(!categories_to_include.nil? && !categories_to_include.include?(category))
+          next
+        end
+
         @response = Rails.cache.fetch("sections/#{category}/#{language}/#{version}", expires_in: 1.hour) do
           logger.info("articles are not cached, making call to newscoop server")
           cached = false
@@ -238,6 +252,51 @@ class Newscoop < CMS
     return @response
   end
   
+  def self.topics
+    cached = true
+    @response = Rails.cache.fetch("topics", expires_in: 1.hour) do
+      url = ENV['newscoop_url'] + "/api/topics.json"
+      access_token = Newscoop.get_auth_token
+
+      options = {access_token: access_token}
+
+      logger.info("sections is not cached, making call to newscoop server")
+      cached = false
+      
+      items = []
+      while(true)
+        response = HTTParty.get(url, query: options)
+        
+        body = JSON.parse response.body
+        
+        items = items + body['items']
+        if(!body['pagination']['nextPageLink'].nil? && !body['pagination']['nextPageLink'].empty?)
+          url = body['pagination']['nextPageLink']
+          options = ""
+        else
+          break
+        end
+      end
+      
+      categories = []
+      items.each do |item|
+        categories << item['title']
+      end
+      
+      return categories
+    end        
+
+    
+    if(cached == true)
+      logger.info("Cached hit for sections")
+    else
+      logger.info("Cached missed")
+    end
+    
+    return @response
+
+  end
+  
   def self.get_auth_token
     NewscoopSingleton.instance.access_token
   end
@@ -255,7 +314,7 @@ class Newscoop < CMS
       count = 0
       categories = []
       body[:items].keys.each do |key|
-        category_title = key['title']
+        category_title = key
         categories << category_title
         articles = body[:items][key]
         formatted_items[category_title] = format_newscoop_articles(articles)

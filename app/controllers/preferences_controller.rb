@@ -19,21 +19,17 @@ class PreferencesController < ApplicationController
 			@selected_categories = {}
 		end
 		
-		if(Setting.category_names != nil)
-  		@category_names = Setting.category_names.split('::')
- 		else
- 		  @category_names = {}
- 		end
+		byebug
 	end
 
 	def update
-		#if there is no seperate name set for a category it'll just set the name to be the default
-		index = 0
-		params[:category].each do |category|
-  		params[:category_name][index] = category if !category.blank? && params[:category_name][index].blank?
-      index += 1
-    end		
-    
+		
+		if(params[:category].count != params[:category_name])
+  		flash[:alert] = "Each category must have a display name"
+  		redirect_to :back
+  		return
+    end
+		
 		# We do it this way so that there's no extra blanks hanging out
 		categories = ""
 		params[:category].each do |category|
@@ -45,7 +41,7 @@ class PreferencesController < ApplicationController
 		
  		category_names = ""
 		params[:category_name].each do |category_name|
-  		if(category_names != 0 && category_names.length != 0)
+  		if(category_names != 0)
     		category_names += '::'
       end
       category_names += category_name
