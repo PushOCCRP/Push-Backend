@@ -115,38 +115,44 @@ class Newscoop < CMS
       
     if(!categories.nil?)
       
-      # Pull set categories, and only fetch those
-      categories_string = Setting.categories
-      if(!categories_string.blank? && !params['categories'].blank? && params['categories']=='true')
-        logger.debug("categories not blank")
-      	categories_to_include = YAML.load(categories_string)
-      end
-      
-      if(!Setting.show_most_recent_articles.nil?)
-        items[translate_phrase("most_recent", language).to_sym] = most_recent_articles(params)
-      end
-      
-      categories[language].each do |category|
-        if(!categories_to_include.nil? && !categories_to_include[language].include?(category['title']))
-          next
+      @response = Rails.cache.fetch("categories_string/#{language}", expires_in: 1.hour) do
+        # Pull set categories, and only fetch those
+        categories_string = Setting.categories
+        if(!categories_string.blank? && !params['categories'].blank? && params['categories']=='true')
+          logger.debug("categories not blank")
+        	categories_to_include = YAML.load(categories_string)
         end
         
-        @response = Rails.cache.fetch("sections/#{category['title']}/#{language}/#{version}", expires_in: 1.hour) do
-                    
-          url = ENV['newscoop_url'] + "/api/sections/#{category['number']}/#{language}/articles.json"
-
-          logger.info("articles are not cached, making call to newscoop server")
-          cached = false
-          response = HTTParty.get(url, query: options)
-          body = JSON.parse response.body
-        end   
-        items[category['title']] = format_newscoop_articles(@response['items'])
+        if(!Setting.show_most_recent_articles.nil?)
+          items[translate_phrase("most_recent", language).to_sym] = most_recent_articles(params)
+        end
+        
+        categories[language].each do |category|
+          if(!categories_to_include.nil? && !categories_to_include[language].include?(category['title']))
+            next
+          end
+          
+          response = Rails.cache.fetch("sections/#{category['title']}/#{language}/#{version}", expires_in: 1.hour) do
+                      
+            url = ENV['newscoop_url'] + "/api/sections/#{category['number']}/#{language}/articles.json"
+  
+            logger.info("articles are not cached, making call to newscoop server")
+            cached = false
+            response = HTTParty.get(url, query: options)
+            body = JSON.parse response.body
+          end   
+          items[category['title']] = format_newscoop_articles(response['items'])
+        end
+        response = format_newscoop_response(items, true)
+        response['categories'] = items.keys
+        # here we need to make a new format_newscoop_response to handle categories
+        return response
       end
-      @response = format_newscoop_response(items, true)
-      @response['categories'] = items.keys
-      # here we need to make a new format_newscoop_response to handle categories
     else
-      @response = format_newscoop_response(most_recent_articles(params), true)
+      @response = Rails.cache.fetch(params.flatten, expires_in: 1.hour) do
+        cached = false
+        return format_newscoop_response(most_recent_articles(params), true)
+      end
     end
 
     if(cached == true)
@@ -195,6 +201,7 @@ class Newscoop < CMS
     response = HTTParty.get(url, query: options)
     body = JSON.parse response.body
     
+    body[:items] = body['items']
     @response = format_newscoop_response(body)
   end
 
@@ -224,7 +231,7 @@ class Newscoop < CMS
       cached = false
       response = HTTParty.get(url, query: options)
       body = JSON.parse response.body
-      format_newscoop_response({'items' => [body]})
+      format_newscoop_response({items: [body]})
     end        
 
     if(cached == true)
