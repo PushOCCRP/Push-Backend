@@ -85,6 +85,8 @@ class Newscoop < CMS
     access_token = Newscoop.get_auth_token
     url = ENV['newscoop_url'] + '/api/articles.json'
     language = params['language']
+    language = ENV['default_language'].gsub('"', '') if language.nil?
+    language = ENV['languages'].gsub('"', '').split(',')[0] if language.nil?
     version = params["v"]
 
     if(language.blank?)
@@ -99,7 +101,7 @@ class Newscoop < CMS
    	if(!params['categories'].blank? && params['categories']=='true')
      	
      	# Get all categories
-     	categories = categories()
+     	categories = categories true
      	     	
   		logger.debug("categories not blank")
       if(!Setting.consolidated_categories)
@@ -117,30 +119,34 @@ class Newscoop < CMS
       categories_string = Setting.categories
       if(!categories_string.blank? && !params['categories'].blank? && params['categories']=='true')
         logger.debug("categories not blank")
-      	categories_to_include = categories_string.split('::')
+      	categories_to_include = YAML.load(categories_string)
       end
       
-      if(!Setting.show_most_recent.blank? && Setting.show_most_recent == true)
-        items[:most_recent] = most_recent_articles params
+      if(!Setting.show_most_recent_articles.nil?)
+        items[translate_phrase("most_recent", language).to_sym] = most_recent_articles(params)
       end
       
-      categories.each do |category|
-        if(!categories_to_include.nil? && !categories_to_include.include?(category))
+      categories[language].each do |category|
+        if(!categories_to_include.nil? && !categories_to_include[language].include?(category['title']))
           next
         end
+        
+        @response = Rails.cache.fetch("sections/#{category['title']}/#{language}/#{version}", expires_in: 1.hour) do
+                    
+          url = ENV['newscoop_url'] + "/api/sections/#{category['number']}/#{language}/articles.json"
 
-        @response = Rails.cache.fetch("sections/#{category}/#{language}/#{version}", expires_in: 1.hour) do
           logger.info("articles are not cached, making call to newscoop server")
           cached = false
           response = HTTParty.get(url, query: options)
           body = JSON.parse response.body
         end   
-        items[category] = @response['items']
+        items[category['title']] = format_newscoop_articles(@response['items'])
       end
-      @response = format_newscoop_response({'items': items})
+      @response = format_newscoop_response(items, true)
+      @response['categories'] = items.keys
       # here we need to make a new format_newscoop_response to handle categories
     else
-      @response = most_recent_articles params
+      @response = format_newscoop_response(most_recent_articles(params), true)
     end
 
     if(cached == true)
@@ -153,12 +159,24 @@ class Newscoop < CMS
   end
   
   def self.most_recent_articles params
+    access_token = Newscoop.get_auth_token
+    url = ENV['newscoop_url'] + '/api/articles.json'
+    language = params['language']
+    version = params["v"]
+
+    if(language.blank?)
+      # Should be extracted
+      language = "az"
+    end
+
+    options = {access_token: access_token, language: language, 'sort[published]' => 'desc'}
+
     response = Rails.cache.fetch("sections/#{language}/#{version}", expires_in: 1.hour) do
       logger.info("articles are not cached, making call to newscoop server")
       cached = false
       response = HTTParty.get(url, query: options)
       body = JSON.parse response.body
-      format_newscoop_response(body)
+      format_newscoop_articles(body['items'])
     end        
     return response
   end
@@ -218,39 +236,60 @@ class Newscoop < CMS
     return @response
   end
 
-  def self.categories
+  def self.categories full_objects=false, languages=nil
     cached = true
-    @response = Rails.cache.fetch("sections", expires_in: 1.hour) do
-      categories = []
+    
+    if languages.nil?
+      languages = ENV['language'].gsub('"', "").split(',').map{|language_name| language_name.squish}
+    elsif !ENV['language'].split(',').include? languages
+      raise("attempting to access language not set")
+    end
+    
+    @response = Rails.cache.fetch("sections/#{languages.join(',')}", expires_in: 1.hour) do
+      categories = {}
 
-      if(!Setting.show_most_recent.blank? && Setting.show_most_recent == true)
-        categories << "Most Recent"
-      end
-      
+      items = {}
+      languages.each do |language|
+        categories[language] = []
 
-      url = ENV['newscoop_url'] + "/api/sections.json"
-      access_token = Newscoop.get_auth_token
+        if(!Setting.show_most_recent_articles.nil?)          
+          categories[language] << translate_phrase("most_recent", language)
+        end      
 
-      options = {access_token: access_token}
-
-      logger.info("sections is not cached, making call to newscoop server")
-      cached = false
-      
-      items = []
-      while(true)
-        response = HTTParty.get(url, query: options)
-        body = JSON.parse response.body
-        items = items + body['items']
-        if(!body['pagination']['nextPageLink'].nil? && !body['pagination']['nextPageLink'].empty?)
-          url = body['pagination']['nextPageLink']
-          options = ""
-        else
-          break
+        
+        items[language] = []
+        url = ENV['newscoop_url'] + "/api/sections.json?language=#{language}"
+        access_token = Newscoop.get_auth_token
+  
+        options = {access_token: access_token}
+  
+        logger.info("sections is not cached, making call to newscoop server")
+        cached = false
+        
+        while(true)
+          response = HTTParty.get(url, query: options)
+          body = JSON.parse response.body
+          begin
+            items[language] = items[language] + body['items']
+          rescue Exception => e
+            items[language] = body['items']
+          end
+          
+          if(!body['pagination']['nextPageLink'].nil? && !body['pagination']['nextPageLink'].empty?)
+            url = body['pagination']['nextPageLink']
+            options = ""
+          else
+            break
+          end
         end
       end
             
-      items.each do |item|
-        categories << item['title']
+      return items if full_objects == true
+      
+      items.keys.each do |language_items|
+        items[language_items].each do |item|
+          categories[language_items] << item['title']
+        end
       end
       
       return categories
@@ -316,31 +355,41 @@ class Newscoop < CMS
   end
   
   private  
-  def self.format_newscoop_response body
+  def self.format_newscoop_response body, preformatted=false
     logger.debug("Received #{body}")
     response = {}
     response['start_date'] = nil
     response['end_date'] = nil
     response['page'] = 1
     
-    if(body[:items].class == Hash)
-      formatted_items = {}
-      count = 0
-      categories = []
-      body[:items].keys.each do |key|
-        category_title = key
-        categories << category_title
-        articles = body[:items][key]
-        formatted_items[category_title] = format_newscoop_articles(articles)
-        count += articles.count
+    if(preformatted == false)    
+      if((!body[:items].nil? && body[:items].class == Hash) || (!body['items'].nil? && body['items'].class == Hash))
+        formatted_items = {}
+        count = 0
+        categories = []
+        body[:items].keys.each do |key|
+          category_title = key
+          categories << category_title
+          articles = body[:items][key]
+          formatted_items[category_title] = format_newscoop_articles(articles)
+          count += articles.count
+        end
+        response['total_items'] = count
+        response['results'] = formatted_items
+        response['categories'] = categories
+      else
+        response['total_items'] = body[:items].count
+        response['results'] = format_newscoop_articles(body[:items])
       end
-      response['total_items'] = count
-      response['results'] = formatted_items
-      response['categories'] = categories
     else
-      response['total_items'] = body['items'].count
-      response['results'] = format_newscoop_articles(body['items'])
+      response['results'] = body
+      if(body.class == Hash)
+        response['total_items'] = body.keys.map{|key| body[key]}.flatten.count
+      elsif(body.class == Array)
+        response['total_items'] = body.count
+      end
     end
+    
     return response
   end
   
@@ -350,7 +399,7 @@ class Newscoop < CMS
         formatted_article = {}
         formatted_article['headline'] = article['title']
         formatted_article['description'] = format_description_text article['fields']['deck']
-
+        formatted_article['description'] = format_description_text article['fields']['full_text'] if formatted_article['description'].blank?
         formatted_article['body'] = article['fields']['full_text']
         formatted_article['body'] = scrubImageTagsFromHTMLString formatted_article['body']
         formatted_article['body'] = CMS.normalizeSpacing formatted_article['body']
@@ -389,6 +438,9 @@ class Newscoop < CMS
         end
         
         formatted_article['images'] = images
+        
+        article['url'] = "" if article['url'].nil?
+        
         formatted_article['url'] = article['url']
         formatted_articles << formatted_article
     end
@@ -396,6 +448,33 @@ class Newscoop < CMS
     return formatted_articles
   end
 
-
+  def self.translate_phrase phrase, language
+    
+    most_recent = {'az': "ən son", 'en': "Most Recent", 'ru': "самые последние"}
+    
+    translated = ''
+    case phrase
+      when "most_recent"
+      translated = most_recent[language.to_sym]
+    end
+    
+    return translated
+  end
   
+  def self.format_description_text text
+    text = ActionView::Base.full_sanitizer.sanitize(text)
+    
+    if(!text.nil?)
+      text.squish!
+    
+      if text.length > 140
+        text = text.slice(0, 140) + "..."
+      end
+    else
+      text = "..."
+    end
+
+    return text
+  end
+
 end
