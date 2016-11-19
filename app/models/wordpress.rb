@@ -168,7 +168,7 @@ class Wordpress < CMS
 
 	def self.language_parameter language
 	    if(!language.blank?)
-	      language = "/#{language}/"
+	      language = language
 	    end
 
 	    return language
