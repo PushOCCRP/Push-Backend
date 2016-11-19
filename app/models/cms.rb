@@ -12,9 +12,6 @@ class CMS < ActiveRecord::Base
   def self.clean_up_response articles = Array.new, version = 1.0
     articles.delete_if{|article| article['headline'].blank?}
     articles.each do |article|
-      
-      logger.debug("images: #{article["images"].inspect}")
-
       # If there is no body (which is very prevalent in the OCCRP data for some reason)
       # this takes the intro text and makes it the body text
       if((!article.has_key?('body') || !article['body'].nil?) && !article[:body].nil?)
@@ -471,6 +468,21 @@ class CMS < ActiveRecord::Base
       return elements.to_html
   end
 
+  def self.languages
+    language_string = ENV['languages']
+    languages = language_string.split(",") if !language_string.nil?
+
+   	languages = ["en"] if languages.nil?
+   	
+   	return languages
+  end
+
+  def self.default_language
+    default_language = ENV['default_languages']
+    default_language = languages[0] if default_language.nil?
+    
+    return default_language
+  end
   
   def self.base_url
     url = nil
@@ -546,4 +558,17 @@ class CMS < ActiveRecord::Base
     return rewritten_url
   end
   
+    def self.translate_phrase phrase, language
+    
+    most_recent = {'az': "ən son", 'en': "Most Recent", 'ru': "самые последние"}
+    
+    translated = ''
+    case phrase
+      when "most_recent"
+      translated = most_recent[language.to_sym]
+    end
+    
+    return translated
+  end
+
 end

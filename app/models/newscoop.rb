@@ -146,12 +146,12 @@ class Newscoop < CMS
         response = format_newscoop_response(items, true)
         response['categories'] = items.keys
         # here we need to make a new format_newscoop_response to handle categories
-        return response
+        response
       end
     else
       @response = Rails.cache.fetch(params.flatten, expires_in: 1.hour) do
         cached = false
-        return format_newscoop_response(most_recent_articles(params), true)
+        format_newscoop_response(most_recent_articles(params), true)
       end
     end
 
@@ -290,16 +290,20 @@ class Newscoop < CMS
           end
         end
       end
-            
-      return items if full_objects == true
+          
+      to_return = items if full_objects == true
+      done = true
       
-      items.keys.each do |language_items|
-        items[language_items].each do |item|
-          categories[language_items] << item['title']
+      if(done == false)
+        items.keys.each do |language_items|
+          items[language_items].each do |item|
+            categories[language_items] << item['title']
+          end
         end
+        to_return = categories
       end
       
-      return categories
+      to_return
     end        
 
     
@@ -343,7 +347,7 @@ class Newscoop < CMS
         categories << item['title']
       end
       
-      return categories
+      categories
     end        
 
     
@@ -455,18 +459,6 @@ class Newscoop < CMS
     return formatted_articles
   end
 
-  def self.translate_phrase phrase, language
-    
-    most_recent = {'az': "ən son", 'en': "Most Recent", 'ru': "самые последние"}
-    
-    translated = ''
-    case phrase
-      when "most_recent"
-      translated = most_recent[language.to_sym]
-    end
-    
-    return translated
-  end
   
   def self.format_description_text text
     text = ActionView::Base.full_sanitizer.sanitize(text)

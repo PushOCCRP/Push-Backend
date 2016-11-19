@@ -38,7 +38,6 @@ class PreferencesController < ApplicationController
  			index = 0	
   		params[:category][language].each do |category|  			
   			# if there's no category name for this one, add it the params
-  			#### NOTE: THIS IS BROKEN FIX NOW
   			params[:category_name][language][index] = category if params[:category_name][language][index].blank?
   			index += 1
   		end
@@ -64,7 +63,6 @@ class PreferencesController < ApplicationController
 		# Not implemented yet
 	  when :wordpress
       response = Wordpress.categories
-      response << 'post'
       logger.debug(response)
     when :newscoop
       response = Newscoop.categories

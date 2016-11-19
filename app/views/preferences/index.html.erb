@@ -15,7 +15,6 @@
             <div class="col-md-6">
               <div class="form-group">
                 <label for="cms_category">CMS Category</label>
-                <%# byebug %>
                 <%= select_tag "category[#{language}][]", options_for_select(@categories[language], @selected_categories[language][0]), {include_blank: true, class: "form-control"} %>
   
               </div>
