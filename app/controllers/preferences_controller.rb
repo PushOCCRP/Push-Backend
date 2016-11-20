@@ -20,15 +20,19 @@ class PreferencesController < ApplicationController
 			@selected_categories = YAML.load(Setting.categories)
 		else
 			@selected_categories = {}
-			ENV['language'].gsub('"', '').split(',').each{|language| @selected_categories[language] = []}
 		end
+
+    CMS.languages().each{|language| @selected_categories[language] = [] if @selected_categories[language].blank?}
+
 
 		if(Setting.category_names != nil)
 	    @category_names = YAML.load(Setting.category_names)
     else
       @category_names = {}
- 			ENV['language'].gsub('"', '').split(',').each{|language| @category_names[language] = []}
     end
+    
+    CMS.languages().each{|language| @category_names[language] = [] if @category_names[language].blank?}
+
 	end
 
 	def update

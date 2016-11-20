@@ -85,14 +85,8 @@ class Newscoop < CMS
     access_token = Newscoop.get_auth_token
     url = ENV['newscoop_url'] + '/api/articles.json'
     language = params['language']
-    language = ENV['default_language'].gsub('"', '') if language.nil?
-    language = ENV['languages'].gsub('"', '').split(',')[0] if language.nil?
+    language = default_language() if language.nil?
     version = params["v"]
-
-    if(language.blank?)
-      # Should be extracted
-      language = "az"
-    end
     
     options = {access_token: access_token, language: language, 'sort[published]' => 'desc'}
 
@@ -247,8 +241,8 @@ class Newscoop < CMS
     cached = true
     
     if languages.nil?
-      languages = ENV['language'].gsub('"', "").split(',').map{|language_name| language_name.squish}
-    elsif !ENV['language'].split(',').include? languages
+      languages = languages()
+    elsif !languages().include? languages
       raise("attempting to access language not set")
     end
     
@@ -290,9 +284,10 @@ class Newscoop < CMS
           end
         end
       end
-          
+
+      done = false          
       to_return = items if full_objects == true
-      done = true
+      done = true if !to_return.nil?
       
       if(done == false)
         items.keys.each do |language_items|

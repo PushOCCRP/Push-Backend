@@ -470,7 +470,7 @@ class CMS < ActiveRecord::Base
 
   def self.languages
     language_string = ENV['languages']
-    languages = language_string.split(",") if !language_string.nil?
+    languages = language_string.gsub('"', '').split(",") if !language_string.nil?
 
    	languages = ["en"] if languages.nil?
    	
