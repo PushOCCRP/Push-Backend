@@ -33,7 +33,12 @@ class PreferencesController < ApplicationController
 
 	def update
 		# We do it this way so that there's no extra blanks hanging out
-		categories = ""
+		categories = ""    
+    
+    params[:category].keys.each do |language|
+      params[:category][language].delete_if{|category| category.blank?}
+    end
+
 		params[:category].keys.each do |language|
  			index = 0	
   		params[:category][language].each do |category|  			

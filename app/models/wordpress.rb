@@ -13,6 +13,7 @@ class Wordpress < CMS
       articles = {}
       
     	categories_string = Setting.categories
+    	most_recent_articles = nil
     	
     	if(!categories_string.blank? && !params['categories'].blank? && params['categories']=='true' && Setting.consolidated_categories.blank?)
     		categories = YAML.load(categories_string)
@@ -24,14 +25,14 @@ class Wordpress < CMS
         most_recent_articles_params = params.dup
         most_recent_articles_params['categories'] = nil
         
-        most_recent_articles = articles most_recent_articles_params
+        most_recent_articles = articles(most_recent_articles_params)[:results]
     	end
 
 	    url = get_url "push-occrp=true&occrp_push_type=articles", language, options
 	    
 	    articles = get_articles url
-  	  if(articles[:results].class == Hash && !Setting.show_most_recent_articles.nil?)
-  	    articles[:results][:most_recent] = most_recent_articles
+  	  if(!most_recent_articles.nil? && !Setting.show_most_recent_articles.nil?)
+  	    articles[:results][translate_phrase("most_recent", language)] = most_recent_articles
   	    articles["categories"].insert(0, translate_phrase("most_recent", language))
   	  end
   	  
@@ -137,19 +138,21 @@ class Wordpress < CMS
 	    if(body['results'].nil?)
 	    	body['results'] = Array.new
 	    end
-
+      
       if(body['categories'].nil?)
   	    results = clean_up_response(body['results'], version)
    	    results = clean_up_for_wordpress results
   	  else
   	    results = {}
   	    body['categories'].each do |category|
-    	    next if body['results'][category].blank?
+    	    if(body['results'][category].blank?)
+      	    results[category] = []
+      	    next
+      	  end
+
     	    results[category] = clean_up_response(body['results'][category], version)
     	    results[category] = clean_up_for_wordpress results[category]
-    	  end
-    	  
-    	  body['categories'].delete_if {|category| category.blank?}
+    	  end    	  
   	  end
 
 	    response = {start_date: "19700101",
