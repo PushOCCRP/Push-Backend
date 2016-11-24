@@ -22,7 +22,7 @@ class PreferencesController < ApplicationController
 		if(Setting.category_names != nil)
   		@category_names = Setting.category_names.split('::')
  		else
- 		  @selected_categories = {}
+ 		  @category_names = {}
  		end
 	end
 
