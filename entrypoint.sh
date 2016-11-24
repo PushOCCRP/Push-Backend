@@ -9,8 +9,12 @@ if [[ $RAILS_ENV = "development" ]]
 then
 	RAILS_ENV=development
 	echo "Skipping precompile in development"
+elif [[ $RAILS_ENV = "test" ]]
+then
+  RAILS_ENV=test
+  echo "Skipping precompile in test"
 else
-        RAILS_ENV=production
+  RAILS_ENV=production
 	echo "Precompiling assets..."
 	rake assets:precompile 
 	echo "Done."

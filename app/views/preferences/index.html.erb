@@ -5,66 +5,77 @@
 </div>
 
 <div class="container">
-	<div class="col-md-5">
+	<div class="col-md-12">
 		<% if(!@categories.nil?) %>
-			<%= form_tag({action: :update}, method: :put) do %>
-			  <div class="row">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="cms_category">CMS Category</label>
-              <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[0]), {include_blank: true, class: "form-control"} %>
+  			<%= form_tag({action: :update}, method: :put) do %>
+ 				<% @categories.keys.each do |language| %>
+  			  <div class="row">
+           <h2><%= language%></h2>
 
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="cms_category">CMS Category</label>
+                <%= select_tag "category[#{language}][]", options_for_select(@categories[language], @selected_categories[language][0]), {include_blank: true, class: "form-control"} %>
+  
+              </div>
+            </div>
+            <div class="col-md-6">  
+              <label for="cms_category_name">CMS Category Display Name</label>
+              <%= text_field_tag "category_name[#{language}][]",@category_names[language][0], {class: "form-control"} %>
+            </div>
+  			  </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="cms_category">CMS Category</label>
+                <%= select_tag "category[#{language}][]", options_for_select(@categories[language], @selected_categories[language][1]), {include_blank: true, class: "form-control"} %>
+  
+              </div>
+            </div>
+            <div class="col-md-6">  
+              <label for="cms_category_name">CMS Category Display Name</label>
+              <%= text_field_tag "category_name[#{language}][]",@category_names[language][1], {class: "form-control"} %>
+            </div>
+  			  </div>
+  			  <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="cms_category">CMS Category</label>
+                <%= select_tag "category[#{language}][]", options_for_select(@categories[language], @selected_categories[language][2]), {include_blank: true, class: "form-control"} %>
+  
+              </div>
+            </div>
+            <div class="col-md-6">  
+              <label for="cms_category_name">CMS Category Display Name</label>
+              <%= text_field_tag "category_name[#{language}][]",@category_names[language][2], {class: "form-control"} %>
+            </div>
+  			  </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="cms_category">CMS Category</label>
+                <%= select_tag "category[#{language}][]", options_for_select(@categories[language], @selected_categories[language][3]), {include_blank: true, class: "form-control"} %>
+  
+              </div>
+            </div>
+            <div class="col-md-6">  
+              <label for="cms_category_name">CMS Category Display Name</label>
+              <%= text_field_tag "category_name[#{language}][]",@category_names[language][3], {class: "form-control"} %>
             </div>
           </div>
-          <div class="col-md-6">  
-            <label for="cms_category_name">CMS Category Display Name</label>
-            <%= text_field_tag 'category_name[]', @category_names[0], {class: "form-control"} %>
-          </div>
-			  </div>
+        <% end %>
+        
         <div class="row">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="cms_category">CMS Category</label>
-              <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[1]), {include_blank: true, class: "form-control"} %>
-
-            </div>
+          <div class="col-md-5">
+            <label for="consolidated">Show Most Recent Articles Category?</label>
+            <%= check_box_tag 'show_most_recent', "1", !@show_most_recent.nil?, {class: "form-control"} %>
           </div>
-          <div class="col-md-6">  
-            <label for="cms_category_name">CMS Category Display Name</label>
-            <%= text_field_tag 'category_name[]',@category_names[1], {class: "form-control"} %>
-          </div>
-			  </div>
-			  <div class="row">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="cms_category">CMS Category</label>
-              <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[2]), {include_blank: true, class: "form-control"} %>
-
-            </div>
-          </div>
-          <div class="col-md-6">  
-            <label for="cms_category_name">CMS Category Display Name</label>
-            <%= text_field_tag 'category_name[]',@category_names[2], {class: "form-control"} %>
-          </div>
-			  </div>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="cms_category">CMS Category</label>
-              <%= select_tag 'category[]', options_for_select(@categories, @selected_categories[3]), {include_blank: true, class: "form-control"} %>
-
-            </div>
-          </div>
-          <div class="col-md-6">  
-            <label for="cms_category_name">CMS Category Display Name</label>
-            <%= text_field_tag 'category_name[]',@category_names[3], {class: "form-control"} %>
-          </div>
-			  </div>
-
+        </div>
+        
         <div class="row">
           <div class="col-md-5">
             <label for="consolidated">Consolidated Categories</label>
-            <%= check_box_tag 'consolidated', 'consolidated', @consolidated, {class: "form-control"} %>
+            <%= check_box_tag 'consolidated', "1", !@consolidated.nil?, {class: "form-control"} %>
           </div>
         </div>
         
