@@ -54,10 +54,10 @@ class Wordpress < CMS
 		end
 
 		if(response.count == 0)
-			response = {post: 'post'}
+			response = ['post']
 		end
 
-		return response.keys
+		return response
 	end
 
 
