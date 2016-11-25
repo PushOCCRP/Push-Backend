@@ -87,18 +87,23 @@ class Wordpress < CMS
 
     
 		if(response.count == 0)
-<<<<<<< HEAD
-			response = ['post']
-		end
+# <<<<<<< HEAD
+#			response = ['post']
+#		end
 
-		return response
-=======
-			categories[language] = [{post: 'post'}]
-		end
-
-		categories[language] = response.keys
-		return categories
->>>>>>> 3225a4b1385908fbd2a2e52233807f4695fad15f
+#		return response
+# =======
+ 			categories[language] = [{post: 'post'}]
+ 		end
+ 
+    if(response.class == Hash)
+   		categories[language] = response.keys
+   	else
+   	  categories[language] = response
+   	end
+   	
+ 		return categories
+# >>>>>>> 3225a4b1385908fbd2a2e52233807f4695fad15f
 	end
 
 
