@@ -571,7 +571,7 @@ class CMS < ActiveRecord::Base
       translated = most_recent[language.to_sym]
     end
     
-    translated = "Most Recent" if tranlated.blank?
+    translated = "Most Recent" if translated.blank?
     
     return translated
   end
