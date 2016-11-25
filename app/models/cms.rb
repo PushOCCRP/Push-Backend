@@ -198,6 +198,7 @@ class CMS < ActiveRecord::Base
     
     elements.css('a').each do |link|
       next if link.attributes.has_key?('href') == false
+      
       link_address = link.attributes['href'].value
       uri = URI(link_address)
       
