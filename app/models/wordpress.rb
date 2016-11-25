@@ -73,37 +73,35 @@ class Wordpress < CMS
 	end
 
 	def self.categories
+  	languages = languages();
+   	languages = ['en'] if(languages.nil? || languages.count == 0)
+
   	
-  	# This is a temp for Kyiv Post, we need to fix the languages properly though...
-	  response = Rails.cache.fetch("wordpress_categories", expires_in: 1.day) do
-			url = get_url "push-occrp=true&occrp_push_type=post_types", nil
-			logger.debug ("Fetching categories")
-			make_request url
-		end
-
-    language = default_language()
     categories = {}
-    categories[language] = nil
 
+  	languages.each do |language|
+    	# This is a temp for Kyiv Post, we need to fix the languages properly though...
+  	  response = Rails.cache.fetch("wordpress_categories_#{language}", expires_in: 1.day) do
+  			url = get_url "push-occrp=true&occrp_push_type=post_types", language
+  			logger.debug ("Fetching categories")
+  			make_request url
+  		end
+  		
+#  		byebug
+  		
+	    if(response.class == Hash)
+        categories[language] = response.keys
+      else
+   	    categories[language] = response
+   	  end
+      
+      categories[language] = ['post'] if(response.count == 0)
+    end
     
-		if(response.count == 0)
-# <<<<<<< HEAD
-#			response = ['post']
-#		end
-
-#		return response
-# =======
- 			categories[language] = [{post: 'post'}]
- 		end
  
-    if(response.class == Hash)
-   		categories[language] = response.keys
-   	else
-   	  categories[language] = response
-   	end
+    
    	
  		return categories
-# >>>>>>> 3225a4b1385908fbd2a2e52233807f4695fad15f
 	end
 
 
@@ -116,11 +114,8 @@ class Wordpress < CMS
  	    url_string = "#{url}?#{path}"
 
 	    # If there is more than one language specified (or any language at all for backwards compatibility)
-	    if(ENV['languages'])
-  	    languages = ENV['languages'].split(",")
-  	    if(languages.size > 1 && languages.include?(languages))
-    	    url_string = "#{url}#{language}?#{path}"
-    	  end
+	    if(languages().include?(language))
+   	    url_string = "#{url}/#{language}?#{path}"
   	  end
 	    
 	    if(!ENV['wp_super_cached_donotcachepage'].blank?)
