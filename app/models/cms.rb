@@ -197,7 +197,8 @@ class CMS < ActiveRecord::Base
     end
     
     elements.css('a').each do |link|
-      next if link.attributes.has_key?('href') == false
+      next if !link.attributes.has_key?('href')
+      
       link_address = link.attributes['href'].value
       uri = URI(link_address)
       
@@ -475,6 +476,7 @@ class CMS < ActiveRecord::Base
 
    	languages = ["en"] if languages.nil?
    	
+   	#byebug
    	return languages
   end
 
@@ -561,13 +563,15 @@ class CMS < ActiveRecord::Base
   
     def self.translate_phrase phrase, language
     
-    most_recent = {'az': "ən son", 'en': "Most Recent", 'ru': "самые последние", 'ro': "Cel mai recent", 'bg': "Най-скорошен", 'sr': "Najnovije"}
+    most_recent = {'az': "ən son", 'en': "Most Recent", 'ru': "самые последние", 'ro': "Cel mai recent", 'sr': "Najnovije", 'bg': "Най-скорошен"}
     
     translated = ''
     case phrase
       when "most_recent"
       translated = most_recent[language.to_sym]
     end
+    
+    translated = "Most Recent" if tranlated.blank?
     
     return translated
   end
