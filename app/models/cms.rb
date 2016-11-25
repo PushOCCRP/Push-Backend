@@ -476,6 +476,7 @@ class CMS < ActiveRecord::Base
 
    	languages = ["en"] if languages.nil?
    	
+   	#byebug
    	return languages
   end
 
@@ -562,13 +563,15 @@ class CMS < ActiveRecord::Base
   
     def self.translate_phrase phrase, language
     
-    most_recent = {'az': "ən son", 'en': "Most Recent", 'ru': "самые последние"}
+    most_recent = {'az': "ən son", 'en': "Most Recent", 'ru': "самые последние", 'ro': "Cel mai recent", 'sr': "Najnovije", 'bg': "Най-скорошен"}
     
     translated = ''
     case phrase
       when "most_recent"
       translated = most_recent[language.to_sym]
     end
+    
+    translated = "Most Recent" if translated.blank?
     
     return translated
   end

@@ -26,13 +26,13 @@ class PreferencesController < ApplicationController
 
 
 		if(Setting.category_names != nil)
+
 	    @category_names = YAML.load(Setting.category_names)
     else
       @category_names = {}
     end
     
     CMS.languages().each{|language| @category_names[language] = [] if @category_names[language].blank?}
-
 	end
 
 	def update
