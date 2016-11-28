@@ -16,8 +16,9 @@ class PreferencesController < ApplicationController
 
     @category_names = [] if @category_names.nil?
     
-		if(Setting.categories != nil)
+		if(Setting.categories.nil? == false)
 			@selected_categories = YAML.load(Setting.categories)
+			@selected_categories = {} if @selected_categories.class != Hash
 		else
 			@selected_categories = {}
 		end
