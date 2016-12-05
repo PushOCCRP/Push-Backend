@@ -13,8 +13,11 @@ class PreferencesController < ApplicationController
     @category_names = Setting.category_names
 		@consolidated = Setting.consolidated_categories
 
-		if(Setting.categories != nil)
-			@selected_categories = Setting.categories.split('::')
+    @category_names = [] if @category_names.nil?
+    
+		if(Setting.categories.nil? == false)
+			@selected_categories = YAML.load(Setting.categories)
+			@selected_categories = {} if @selected_categories.class == false
 		else
 			@selected_categories = {}
 		end
