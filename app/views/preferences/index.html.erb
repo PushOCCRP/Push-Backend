@@ -15,52 +15,61 @@
             <div class="col-md-6">
               <div class="form-group">
                 <label for="cms_category">CMS Category</label>
-                <%= select_tag "category[#{language}][]", options_for_select(@categories[language], @selected_categories[language][0]), {include_blank: true, class: "form-control"} %>
+                <% categories = @categories[language] %>
+                <% selected_categories = @selected_categories[language].nil? ? nil : @selected_categories[language][0] %>
+                <%= select_tag "category[#{language}][]", options_for_select(categories, selected_categories), {include_blank: true, class: "form-control"} %>
   
               </div>
             </div>
             <div class="col-md-6">  
               <label for="cms_category_name">CMS Category Display Name</label>
-              <%= text_field_tag "category_name[#{language}][]",@category_names[language][0], {class: "form-control"} %>
+              <% category_names = @category_names[language].nil? ? nil : @category_names[language][0] %>
+              <%= text_field_tag "category_name[#{language}][]", category_names,  {class: "form-control"} %>
             </div>
   			  </div>
           <div class="row">
             <div class="col-md-6">
               <div class="form-group">
                 <label for="cms_category">CMS Category</label>
-                <%= select_tag "category[#{language}][]", options_for_select(@categories[language], @selected_categories[language][1]), {include_blank: true, class: "form-control"} %>
+                <% selected_category = @selected_categories[language].nil? ? nil : @selected_categories[language][1] %>
+                <%= select_tag "category[#{language}][]", options_for_select(categories, selected_category), {include_blank: true, class: "form-control"} %>
   
               </div>
             </div>
             <div class="col-md-6">  
               <label for="cms_category_name">CMS Category Display Name</label>
-              <%= text_field_tag "category_name[#{language}][]",@category_names[language][1], {class: "form-control"} %>
+              <% category_names = @category_names[language].nil? ? nil : @category_names[language][1] %>
+              <%= text_field_tag "category_name[#{language}][]",category_names, {class: "form-control"} %>
             </div>
   			  </div>
   			  <div class="row">
             <div class="col-md-6">
               <div class="form-group">
                 <label for="cms_category">CMS Category</label>
-                <%= select_tag "category[#{language}][]", options_for_select(@categories[language], @selected_categories[language][2]), {include_blank: true, class: "form-control"} %>
+                <% selected_category = @selected_categories[language].nil? ? nil : @selected_categories[language][2] %>
+                <%= select_tag "category[#{language}][]", options_for_select(categories, selected_category), {include_blank: true, class: "form-control"} %>
   
               </div>
             </div>
             <div class="col-md-6">  
               <label for="cms_category_name">CMS Category Display Name</label>
-              <%= text_field_tag "category_name[#{language}][]",@category_names[language][2], {class: "form-control"} %>
+              <% category_names = @category_names[language].nil? ? nil : @category_names[language][2] %>
+              <%= text_field_tag "category_name[#{language}][]",category_names, {class: "form-control"} %>
             </div>
   			  </div>
           <div class="row">
             <div class="col-md-6">
               <div class="form-group">
                 <label for="cms_category">CMS Category</label>
-                <%= select_tag "category[#{language}][]", options_for_select(@categories[language], @selected_categories[language][3]), {include_blank: true, class: "form-control"} %>
+                <% selected_category = @selected_categories[language].nil? ? nil : @selected_categories[language][3] %>
+                <%= select_tag "category[#{language}][]", options_for_select(categories, selected_category), {include_blank: true, class: "form-control"} %>
   
               </div>
             </div>
             <div class="col-md-6">  
               <label for="cms_category_name">CMS Category Display Name</label>
-              <%= text_field_tag "category_name[#{language}][]",@category_names[language][3], {class: "form-control"} %>
+              <% category_names = @category_names[language].nil? ? nil : @category_names[language][3] %>
+              <%= text_field_tag "category_name[#{language}][]",category_names, {class: "form-control"} %>
             </div>
           </div>
         <% end %>
