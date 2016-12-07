@@ -38,13 +38,13 @@ do
   echo -en "What is the host name for this installation (e.g. testapp.pushapp.press)? "
   read host
   if [[ "$OSTYPE" == "darwin"* ]]; then
-    if ! echo "$host" | grep -qiE "^[A-z]*[\.]*[A-z]+[\.][A-z]+$" ;then
+    if ! echo "$host" | grep -qiE "^[A-z0-9]*[\.]*[A-z0-9]+[\.][A-z]{2,}+$" ;then
       echo -e "\e[91mNot a valid URL format. Please try again.\e[0m"
     else
       break
     fi
   else
-    if ! echo "$host" | grep -qiP "^[A-z]*[\.]*[A-z]+[\.][A-z]+$" ;then
+    if ! echo "$host" | grep -qiP "^[A-z0-9]*[\.]*[A-z0-9]+[\.][A-z]{2,}+$" ;then
       echo -e "\e[91mNot a valid URL format. Please try again.\e[0m"
     else
       break
