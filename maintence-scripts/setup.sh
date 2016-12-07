@@ -1,4 +1,4 @@
-#!/bin/bash          
+#!/bin/bash
 
 function kill_docker_containers {
   echo -e "\n\e[94mStopping any errantly running docker containers\e[0m"
@@ -8,7 +8,7 @@ function kill_docker_containers {
 }
 
 echo "Setting up a new Push server..."
- 
+
 # Ask the email of the main user
 
 while true
@@ -30,7 +30,7 @@ do
     fi
   fi
 done
- 
+
 # Ask the name of the site
 
 while true
@@ -87,7 +87,7 @@ kill_docker_containers
 # Create the proper ssl certs
 echo -e "\n\e[94mCreating SSL certificates\e[0m"
 echo -e "\e[94m---------------------------------\e[0m\n"
-docker-compose -f letsencrypt-docker-compose.yml up
+docker-compose -f ../letsencrypt-docker-compose.yml up
 
 # Stop any possible docker-compose containers that might be sticking around
 kill_docker_containers
