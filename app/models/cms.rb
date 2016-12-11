@@ -85,7 +85,7 @@ class CMS < ActiveRecord::Base
     if(article['image_urls'] == nil)
       article['image_urls'] = []
     end
-
+    
     #Yes, i'm aware this is repetitive code.
     article['images'].each do |image|
       image_address = image['url']
@@ -124,7 +124,12 @@ class CMS < ActiveRecord::Base
           image_address = uri.to_s
         end
 
-        image['url'] = rewrite_image_url_for_proxy image_address
+        if(!image[:url].nil?)
+          image[:url] = rewrite_image_url_for_proxy image_address
+        else
+          image['url'] = rewrite_image_url_for_proxy image_address
+        end
+        
         image['start'] = 0
         image['length'] = 0
       end
@@ -135,18 +140,18 @@ class CMS < ActiveRecord::Base
       image_address = image.attributes['src'].value
 
       if !image_address.starts_with?("http")        
-        full_url = rewrite_url_for_ssl(rewrite_image_url_for_proxy(image.attributes['src']))
+        full_url = rewrite_url_for_ssl(rewrite_image_url_for_proxy(image.attributes['src'].value))
         image_object = {url: full_url, start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
         article['images'] << image_object
 
         article['image_urls'] << full_url
-        image['href'] = full_url
+        image['src'] = full_url
       else
         if(force_https)
           uri = Addressable::URI.parse(image_address)
           uri.scheme = 'https'
           image_address = rewrite_image_url_for_proxy uri.to_s 
-          image['href'] = image_address
+          image['src'] = image_address
         end
 
         image_object = {url: image_address, start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
@@ -162,7 +167,7 @@ class CMS < ActiveRecord::Base
       # this is for modifying the urls in the article itself
       # It's a mess, refactor this please
       rewritten_url =  image_address
-      image.attributes['src'].value = rewritten_url
+      image.attributes['src'].value = rewrite_image_url_for_proxy rewritten_url
 
       # This is a filler for the app itself. Which will replace the text with the images 
       # (order being the same as in the array)
@@ -432,16 +437,24 @@ class CMS < ActiveRecord::Base
     text.gsub!('<br />', gravestone)
     text.gsub!(/<\/p>[\s]*(mv9da0K3fP)*[\s]*<p>/, gravestone)
 
+    text.gsub!(/(<br>){3,}/, gravestone)    
+
     text.gsub!('<p>', '')
     text.gsub!('</p>', '')
 
+    #byebug if text.include?("Number of pensioners")
+
     text.gsub!(/[\s]*(mv9da0K3fP)+[\s]*/, '<br /><br />')
 
-
+    text.gsub!(/(<br>){3,}/, '')
+    text.gsub!(/(<br \/>){3,}/, '')
     # NOTE: some <p> tags may stay in, especially if there's formatting inlined on it.
     # This removes the <br />s before it
     # We can also assume they're using <p> tags, so, we should add closers, since they were removed
-    text.gsub!(/([\s]*<br \/>[\s]*)+<p/, '</p><p')
+    text.gsub!(/([\s]*(<br \/>)[\s]*)+<p/, '</p><p')
+    
+    text.gsub!(/(<\/div>)(\\n)*((<br>)+|(<br \/>)+)(<div)/, '</div><div')
+  
     
     while(text.start_with?("<br>"))
       text.slice!(0..3)
@@ -554,14 +567,19 @@ class CMS < ActiveRecord::Base
   def self.rewrite_image_url_for_proxy url
     # this is for modifying the urls in the article itself
     # It's a mess, refactor this please
+    
+    rewritten_url = url
+    
     if(!ENV['proxy_images'].blank? && ENV['proxy_images'].downcase == 'true')
-      rewritten_url = Rails.application.routes.url_helpers.passthrough_url(host: ENV['host']) + "?url=" + URI.escape(url)
+      if(!url.starts_with?(Rails.application.routes.url_helpers.passthrough_url(host: ENV['host'])))
+        rewritten_url = Rails.application.routes.url_helpers.passthrough_url(host: ENV['host']) + "?url=" + URI.escape(url)
+      end
     end
     
     return rewritten_url
   end
   
-    def self.translate_phrase phrase, language
+  def self.translate_phrase phrase, language
     
     most_recent = {'az': "ən son", 'en': "Most Recent", 'ru': "самые последние", 'ro': "Cel mai recent", 'sr': "Najnovije", 'bg': "Най-скорошен"}
     

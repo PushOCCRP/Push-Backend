@@ -21,11 +21,28 @@ class ApplicationController < ActionController::Base
     end
 
     url = params['url']
+    
+    # For Newscoop, the images are returned as an API call, not a permalink. It's not smart, but it's what they do.
+    if ENV['cms_mode'] == "newscoop"
+      url += "&ImageHeight=#{params['ImageHeight']}" if !params['ImageHeight'].nil?
+      url += "&ImageWidth=#{params['ImageWidth']}" if !params['ImageWidth'].nil?
+      url += "&ImageId=#{params['ImageId']}" if !params['ImageId'].nil?
+    end
+    
     link_uri = Addressable::URI.parse(url)
     base_uri = Addressable::URI.parse(cms_url)
+
+    if(link_uri.host.nil?)        
+      link_uri.host = base_uri.host
+      link_uri.scheme = base_uri.scheme
+      url = link_uri.to_s
+    end
+
+    link_host = link_uri.host.gsub('www.', '')
+    base_host = base_uri.host.gsub('www.', '')
     
-    logger.info("Checking for valid image proxy request #{link_uri.host.gsub('www.', '')} vs. #{base_uri.host.gsub('www.', '')}")
-    if(link_uri.host.gsub('www.', '') == base_uri.host.gsub('www.', ''))
+    logger.info("Checking for valid image proxy request #{link_host} vs. #{base_host}")
+    if(link_host == base_host)
       image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
         logger.info("URL requested not cached: #{url}")
         logger.info("Fetching #{url}")

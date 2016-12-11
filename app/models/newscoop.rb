@@ -407,7 +407,7 @@ class Newscoop < CMS
         formatted_article['description'] = format_description_text article['fields']['deck']
         formatted_article['description'] = format_description_text article['fields']['full_text'] if formatted_article['description'].blank?
         formatted_article['body'] = article['fields']['full_text']
-        formatted_article['body'] = scrubImageTagsFromHTMLString formatted_article['body']
+        #formatted_article['body'] = scrubImageTagsFromHTMLString formatted_article['body']
         formatted_article['body'] = CMS.normalizeSpacing formatted_article['body']
         
         if(article['authors'] && article['authors'].count > 0)
@@ -431,7 +431,7 @@ class Newscoop < CMS
         formatted_article['videos'] = videos
         
         images = []
-        
+           
         if(article['renditions'].count > 0 && !article['renditions'][0]['details']['original'].blank?)
             preview_image_url = "https://" + URI.unescape(article['renditions'][0]['details']['original']['src'])
             passthrough_image_url = rewrite_image_url_for_proxy preview_image_url
@@ -440,18 +440,24 @@ class Newscoop < CMS
             height = article['renditions'][0]['details']['original']['height']
             byline = article['renditions'][0]['details']['photographer']
             image = {url: passthrough_image_url, caption: caption, width: width, height: height, byline: byline}
-            images << image
+            formatted_article['header_image'] = image
         end
         
         formatted_article['images'] = images
-        
+                
         article['url'] = "" if article['url'].nil?
         
         formatted_article['url'] = article['url']
         formatted_articles << formatted_article
     end
-    
-    return formatted_articles
+        
+    cleaned_up_articles = clean_up_response(formatted_articles)
+    cleaned_up_articles = formatted_articles.map {|article| 
+      article['body'] = normalizeSpacing(article['body']) 
+      article
+    }
+        
+    return cleaned_up_articles
   end
 
   
