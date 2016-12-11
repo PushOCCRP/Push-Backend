@@ -439,7 +439,11 @@ class Newscoop < CMS
             width = article['renditions'][0]['details']['original']['width']
             height = article['renditions'][0]['details']['original']['height']
             byline = article['renditions'][0]['details']['photographer']
+            # For backwards capabilities, we keep it in the main feed as well. This will be deprecated in later versions
+            # the app will take care of removing it at the moment
+            image = {url: preview_image_url, caption: caption, width: width, height: height, byline: byline}
             image = {url: passthrough_image_url, caption: caption, width: width, height: height, byline: byline}
+            images << image
             formatted_article['header_image'] = image
         end
         
