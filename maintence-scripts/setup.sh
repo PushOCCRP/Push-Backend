@@ -87,7 +87,11 @@ kill_docker_containers
 # Create the proper ssl certs
 echo -e "\n\e[94mCreating SSL certificates\e[0m"
 echo -e "\e[94m---------------------------------\e[0m\n"
-docker-compose -f ../letsencrypt-docker-compose.yml up
+if basename "$PWD" | grep 'maintence-scripts' > /dev/null; then
+  docker-compose -f ../letsencrypt-docker-compose.yml up
+else
+  docker-compose -f letsencrypt-docker-compose.yml up
+fi
 
 # Stop any possible docker-compose containers that might be sticking around
 kill_docker_containers
