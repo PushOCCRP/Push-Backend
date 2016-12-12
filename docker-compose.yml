@@ -19,6 +19,7 @@ services:
       - "./.docker/nginx/:/etc/ssl/nginx"
       - "./.docker/data/secrets/keys/:/srv/data/:ro"                # dhpram and certs are here
       #- "./.docker/data/secrets/keys/live/`ls`:/srv/data/ssl/keys:ro"
+      - "./.docker/data/secrets/keys/archive/:/etc/letsencrypt/archive:ro"
       - "./.docker/data/secrets/keys/live/$LETSENCRYPT_DOMAINS:/srv/data/ssl/keys:ro"
       - "./.docker/data/secrets/keys:/srv/data/"
       - "./public/:/var/public/:ro"
