@@ -185,7 +185,7 @@ class CMS < ActiveRecord::Base
       
     proxied_image_urls = []
     article['image_urls'].each do |image_url|
-      proxied_url = rewrite_url_for_ssl proxied_url
+      proxied_url = rewrite_url_for_ssl image_url
       proxied_image_urls.push proxied_url
     end
 
