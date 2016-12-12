@@ -1,7 +1,7 @@
 version: '2'
 services:
 
-  # 
+  #
   # nginx, working as a front-end proxy for uniqush
   # we need it for only allowing certain endpoints to be available
   nginx:
@@ -19,6 +19,7 @@ services:
       - "./.docker/nginx/:/etc/ssl/nginx"
       - "./.docker/data/secrets/keys/:/srv/data/:ro"                # dhpram and certs are here
       #- "./.docker/data/secrets/keys/live/`ls`:/srv/data/ssl/keys:ro"
+      - "./.docker/data/secrets/keys/archive/:/etc/letsencrypt/archive:ro"
       - "./.docker/data/secrets/keys/live/$LETSENCRYPT_DOMAINS:/srv/data/ssl/keys:ro"
       - "./.docker/data/secrets/keys:/srv/data/"
       - "./public/:/var/public/:ro"
@@ -59,8 +60,7 @@ services:
 
   # uniqush itself
   uniqush:
-      build:
-          context: docker-uniqush
+      build: https://github.com/beevelop/docker-uniqush.git
       environment:
           # this is the default, but let's be explicit here
           UNIQUSH_DATABASE_HOST: "redis"
@@ -82,4 +82,3 @@ services:
       volumes:
           - "./.docker/redis:/data"
       command: ["redis-server", "--appendonly", "yes"]
-  
