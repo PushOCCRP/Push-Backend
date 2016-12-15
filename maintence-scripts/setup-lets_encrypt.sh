@@ -129,7 +129,8 @@ fi
 
 error=$($command | tee /dev/tty | grep 'The following errors were reported by the server')
 
-if [[ -z "${donotcacheplugin_hash// }" ]]; then
+
+if ! [[ -z "${error// }" ]]; then
   echoc "\n-------------------------------------------------------------------------------------------------------------" $RED
   echoc "There was an error in generating your certificates.\n" $RED
   echoc "Please review the console output and submit a bug report if you think it's necessary."
