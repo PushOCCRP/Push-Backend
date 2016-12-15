@@ -33,14 +33,15 @@ else
   path='./maintence-scripts/setup-lets_encrypt.sh'
 fi
 
-exit_code=$(bash $path)
+bash $path
 
-if [ "$exit_code" = 0]; then
+if [ "$?" = 0 ]; then
   echoc '\n---------------------------------------------------------\n' $LIGHT_BLUE
   echoc "    Theoretically you\'re done!!! \n" $LIGHT_BLUE
   echoc '---------------------------------------------------------\n\n' $LIGHT_BLUE
 else
-  echoc '---------------------------------------------------------\n\n' $RED
+  echoc '\n---------------------------------------------------------' $RED
   echoc "It looks like there were some errors. I'm sorry about that, I know it can be frustrating"
   echoc "Please review any messages and post bug reports if you believe it's an inapproriate error."
+  echoc '---------------------------------------------------------' $RED  
 fi

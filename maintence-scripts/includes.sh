@@ -3,7 +3,7 @@
 # Common includes for bash scripts
 # Author: Christopher Guess
 # Date: December 15, 2016
-# Contact: cguess@gmail.gmail
+# Contact: cguess@gmail.com
 
 # To use this in your script add the following lines to the top of the script (uncommented)
 #

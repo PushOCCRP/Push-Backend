@@ -23,7 +23,7 @@ function check_host_resolution {
   #check that headers are 200, 404, 502 (maybe 500?) everything that's not 'did not resolve'
 }
 
-echoc "So I guess we're going to make your server secure with Lets Encrypt (good choice)...\n\n\n" $GREEN
+echoc "So I guess we're going to make your server secure with Lets Encrypt (good choice)...\n" $GREEN
  
 # Ask the email of the main user
 
