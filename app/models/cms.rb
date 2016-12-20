@@ -125,9 +125,9 @@ class CMS < ActiveRecord::Base
         end
 
         if(!image[:url].nil?)
-          image[:url] = rewrite_image_url_for_proxy image_address
+          image[:url] = rewrite_url_for_ssl(rewrite_image_url_for_proxy(image_address))
         else
-          image['url'] = rewrite_image_url_for_proxy image_address
+          image['url'] = rewrite_url_for_ssl(rewrite_image_url_for_proxy(image_address))
         end
         
         image['start'] = 0
@@ -153,7 +153,7 @@ class CMS < ActiveRecord::Base
           image['src'] = image_address
         end
 
-        image_object = {url: image_address, start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
+        image_object = {url: rewrite_url_for_ssl(image_address), start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
         
         # If, for some reason, there's an image in the story, but there's not one already in the Array
         # (there should be, since the plugin should have handled it) add it so it shows up as the top image
@@ -166,7 +166,7 @@ class CMS < ActiveRecord::Base
       # this is for modifying the urls in the article itself
       # It's a mess, refactor this please
       rewritten_url =  image_address
-      image.attributes['src'].value = rewrite_image_url_for_proxy rewritten_url
+      image.attributes['src'].value = rewrite_url_for_ssl(rewrite_image_url_for_proxy(rewritten_url))
 
       # This is a filler for the app itself. Which will replace the text with the images 
       # (order being the same as in the array)
