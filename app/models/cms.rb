@@ -143,7 +143,6 @@ class CMS < ActiveRecord::Base
         full_url = rewrite_url_for_ssl(rewrite_image_url_for_proxy(image.attributes['src'].value))
         image_object = {url: full_url, start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
         article['images'] << image_object
-
         article['image_urls'] << full_url
         image['src'] = full_url
       else
@@ -540,7 +539,7 @@ class CMS < ActiveRecord::Base
   end
 
   def self.rewrite_url_for_ssl url
-    if(!ENV['force_https'])
+    if(!ENV['force_https'] || url.starts_with?("https://"))
       return url
     end
 
