@@ -54,6 +54,14 @@ class CMS < ActiveRecord::Base
         rescue => error
         end
       end
+      
+      if(published_date.nil?)
+        begin
+          cleaned_date = article['publish_date'].gsub(/(nd)|(th)|(rd)/, '').gsub(/[.,]/, '')
+          published_date = DateTime.strptime(cleaned_date, '%A %B %e %Y')
+        rescue => error
+        end
+      end
 
       if(published_date.nil?)
         published_date = DateTime.new(1970,01,01)
