@@ -17,6 +17,7 @@ class Wordpress < CMS
     	
     	if(!categories_string.blank? && !params['categories'].blank? && params['categories']=='true' && Setting.consolidated_categories.blank?)
     		categories = YAML.load(categories_string)
+    		categories[language] = [] if categories[language].nil?
     		options[:post_types] = categories[language].join(',')
         if(!Setting.consolidated_categories)
           options[:categorized]='true'
@@ -32,7 +33,14 @@ class Wordpress < CMS
 	    
 	    articles = get_articles url
   	  if(!most_recent_articles.nil? && !Setting.show_most_recent_articles.nil?)
-  	    articles[:results][translate_phrase("most_recent", language)] = most_recent_articles
+        # There maybe a bug where an array is returned, even if categories are enabled
+        if(articles[:results].is_a?(Array))
+          articles[:results] = {translate_phrase("most_recent", language) => most_recent_articles}
+          articles['categories'] = []
+        else
+  	      articles[:results][translate_phrase("most_recent", language)] = most_recent_articles
+  	    end
+  	    
   	    articles["categories"].insert(0, translate_phrase("most_recent", language))
   	  end
   	  

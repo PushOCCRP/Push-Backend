@@ -588,7 +588,7 @@ class CMS < ActiveRecord::Base
   
   def self.translate_phrase phrase, language
     
-    most_recent = {'az': "ən son", 'en': "Most Recent", 'ru': "самые последние", 'ro': "Cel mai recent", 'sr': "Najnovije", 'bg': "Най-скорошен"}
+    most_recent = {'az': "ən son", 'en': "Most Recent", 'ru': "самые последние", 'ro': "Cel mai recent", 'sr': "Najnovije", 'bg': "Най-скорошен", 'bs': "Najnovije", 'ka': "უახლესი"}
     
     translated = ''
     case phrase
