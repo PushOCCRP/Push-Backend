@@ -114,7 +114,7 @@ class Wordpress < CMS
  	    url_string = "#{url}?#{path}"
 
 	    # If there is more than one language specified (or any language at all for backwards compatibility)
-	    if(languages().include?(language))
+	    if(languages().count > 1 && languages().include?(language))
    	    url_string = "#{url}/#{language}?#{path}"
   	  end
 	    
