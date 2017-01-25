@@ -23,7 +23,7 @@ class PreferencesController < ApplicationController
 			@selected_categories = {}
 		end
 
-    CMS.languages().each{|language| @selected_categories[language] = [] if @selected_categories[language].blank?}
+    CMS.languages().each{|language| @selected_categories[language] = [] if @selected_categories.has_key?(language) && @selected_categories[language].blank?}
 
 
 		if(Setting.category_names != nil)
