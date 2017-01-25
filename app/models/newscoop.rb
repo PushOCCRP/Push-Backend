@@ -120,7 +120,7 @@ class Newscoop < CMS
         if(!Setting.show_most_recent_articles.nil?)
           items[translate_phrase("most_recent", language).to_sym] = most_recent_articles(params)
         end
-        
+                        
         categories[language].each do |category|
           if(!categories_to_include.nil? && !categories_to_include[language].include?(category['title']))
             next

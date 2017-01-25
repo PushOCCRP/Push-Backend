@@ -140,6 +140,7 @@ class ApplicationController < ActionController::Base
         message += "\n----------------------\n"
       end
       
+      logger.debug message
       render plain: message, status: 503
       return
     end
