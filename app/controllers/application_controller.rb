@@ -94,4 +94,57 @@ class ApplicationController < ActionController::Base
 
     return url
   end
+  
+  def heartbeat
+    # OK, this checks a bunch of stuff
+    # Specifically we have to go through each language and call "articles" on it, that should be good enough for now
+    
+    languages = ENV['languages'].gsub('"', '').split(',')
+    
+    @response = []
+
+    #params has 'language', 'categories' (boolean)
+
+    # Run through each language, and each iteration of categories
+    
+    categories = ['true', 'false']
+    
+    begin
+      languages.each do |language|
+        categories.each do |categorized|  
+          params = {"language": language, "categories": categorized}.with_indifferent_access
+          logger.debug "*************"
+          logger.debug params
+          case @cms_mode 
+            when :occrp_joomla
+              @response = ArticlesController.get_occrp_joomla_articles
+            when :wordpress
+              @response = Wordpress.articles(params)
+              #@response['results'] = clean_up_response @response['results']
+            when :newscoop
+              @response = Newscoop.articles(params)
+            when :cins_codeigniter
+              @response = CinsCodeignitor.articles(params)
+          end
+          
+          @response.to_json
+        end
+      end
+    rescue => e
+      message = "Heartbeat failed: #{e}"
+      
+      if params.has_key?('v') && params['v'] == 'true'
+        message += "\n\nBacktrace\n"
+        message += "----------------------"
+        e.backtrace.each {|line| message += "\n#{line}" }
+        message += "\n----------------------\n"
+      end
+      
+      render plain: message, status: 503
+      return
+    end
+    
+    render plain: "Success"
+    return
+  end
 end
