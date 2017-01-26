@@ -16,15 +16,14 @@ class PreferencesController < ApplicationController
 
     @category_names = [] if @category_names.nil?
     
+    @selected_categories = {}
+    
 		if(Setting.categories.nil? == false)
 			@selected_categories = YAML.load(Setting.categories)
-			@selected_categories = {} if @selected_categories.class == false
-		else
-			@selected_categories = {}
+			@selected_categories = {} if @selected_categories.class == false.class
 		end
 
     CMS.languages().each{|language| @selected_categories[language] = [] if @selected_categories.has_key?(language) && @selected_categories[language].blank?}
-
 
 		if(Setting.category_names != nil)
 
