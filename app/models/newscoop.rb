@@ -95,9 +95,8 @@ class Newscoop < CMS
    	if(!params['categories'].blank? && params['categories']=='true')
      	
      	# Get all categories
-     	categories = categories true
-     	     	
-  		logger.debug("categories not blank")
+     	categories = self.categories(true)
+
       if(!Setting.consolidated_categories)
         options[:categorized]='true'
       end
@@ -111,26 +110,26 @@ class Newscoop < CMS
       
       @response = Rails.cache.fetch("categories_string/#{language}", expires_in: 1.hour) do
         # Pull set categories, and only fetch those
-        categories_string = Setting.categories
-        if(!categories_string.blank? && !params['categories'].blank? && params['categories']=='true')
-          logger.debug("categories not blank")
-        	categories_to_include = YAML.load(categories_string)
-        end
+        categories_to_include = YAML.load(Setting.categories)
         
         if(!Setting.show_most_recent_articles.nil?)
           items[translate_phrase("most_recent", language).to_sym] = most_recent_articles(params)
         end
                         
         categories[language].each do |category|
+
           if(!categories_to_include.nil? && !categories_to_include[language].include?(category['title']))
             next
           end
-          
+        
           response = Rails.cache.fetch("sections/#{category['title']}/#{language}/#{version}", expires_in: 1.hour) do
                       
             url = ENV['newscoop_url'] + "/api/sections/#{category['number']}/#{language}/articles.json"
   
             logger.info("articles are not cached, making call to newscoop server")
+            logger.debug "************************"
+            logger.debug("calling url: #{url}")
+            logger.debug "************************"
             cached = false
             response = HTTParty.get(url, query: options)
             body = JSON.parse response.body
