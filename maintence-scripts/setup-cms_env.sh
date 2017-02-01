@@ -1,4 +1,4 @@
-#!/bin/bash          
+#!/bin/bash
 DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/includes.sh"
@@ -18,6 +18,14 @@ function generate_secret_key {
   dd if=/dev/random bs=64 count=1 2>/dev/null | od -An -tx1 | tr -d ' \t\n'
 }
 
+
+
+# Checks the prerequisites
+echoc "Checking prerequisites..."
+command -v docker >/dev/null 2>&1 || { echoc "This script requires docker to continue. Aborting." $RED >&2; exit 1; }
+command -v docker-compose >/dev/null 2>&1 || { echoc "This script requires docker-compose to continue. Aborting." $RED >&2; exit 1; }
+echoc "Everything needed for this wizard to run is available. Continuing with the process..."
+echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
 
 echoc "Here we'll be creating all the settings that lets your server talk to your CMS..."
 echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
@@ -109,7 +117,7 @@ echoc "if there's a Google logo you probably do.\n"
 google_search=$(askyn "Do you use Google Search?" $google_search)
 
 # If they use google search ask for the google search id
-if [ "$google_search" = true ]; then 
+if [ "$google_search" = true ]; then
   echo "Since you use Google search for your CMS, we need the search engine id."
   if [[ $cms == 'Wordpress' ]]; then
     echo "You can probably find this in the settings in your Wordpress search plugin."
@@ -120,7 +128,7 @@ if [ "$google_search" = true ]; then
   do
     echo -en "What is the Google Search Engine ID? "
     read google_search_engine_id
-    
+
     if [[ -z "${google_search_engine_id// }" ]]; then
       echoc "Please type in a Google Search Engine ID."
     else
@@ -132,27 +140,27 @@ fi
 # If wordpress
 if [[ $cms == 'Wordpress' ]]; then
 
-  # If they use the wp_super_cached_donotcachepage plugin (it's rare) 
+  # If they use the wp_super_cached_donotcachepage plugin (it's rare)
   echo "Does your Wordpress installation use the WP Super Cache plugin?"
   echo "There will be an entry underneathe your Wordpress's 'Settings' menu."
   echo "You can find more information about this in the README.md appendix section."
 
   supercache=$(askyn 'Does your Wordpress plugin use the WP Super Cache Plugin?')
 
-  if [ "$supercache" = true ]; then 
+  if [ "$supercache" = true ]; then
     # If wordpress && supercache
 
-    # If they use the wp_super_cached_donotcachepage plugin (it's rare) 
+    # If they use the wp_super_cached_donotcachepage plugin (it's rare)
     echo "Does your Wordpress Super Cache installation use 'donotcache' feature?"
     # Check out Bivol's installation
     echo "It is a feature that must be enabled under the do not cache page."
 
     donotcacheplugin=$(askyn 'Does your Wordpress Super Cache installation use 'donotcache' feature?')
 
-    if [ "$donotcacheplugin" = true ]; then 
+    if [ "$donotcacheplugin" = true ]; then
       # If wordpress && supercache && wordpress_super_cache_donotcachepage
 
-      # If they use the wp_super_cached_donotcachepage plugin (it's rare) 
+      # If they use the wp_super_cached_donotcachepage plugin (it's rare)
       echo "What is the hash key for the donotcache feature?"
       # Check out Bivol's installation
       echo "There will be an entry underneathe your Wordpress's 'Settings' menu."
@@ -162,7 +170,7 @@ if [[ $cms == 'Wordpress' ]]; then
       do
         echo -en "What is the the donotcache hash key? "
         read donotcacheplugin_hash
-        
+
         if [[ -z "${donotcacheplugin_hash// }" ]]; then
           echoc "Please type in a Do Not Cache hash key."
         else
@@ -235,8 +243,8 @@ do
       esac
   done
 
-  if [ "$finish" = true ]; then 
-    if [[ ${#languages[@]} == 0 ]] ; then  
+  if [ "$finish" = true ]; then
+    if [[ ${#languages[@]} == 0 ]] ; then
       echoc "\nPlease choose at least one language for your app.\n" $RED
     else
       break
@@ -267,7 +275,7 @@ else
     default_language=$opt
     break
   done
-fi  
+fi
 
 
 # join the language strings Here
