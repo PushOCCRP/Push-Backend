@@ -310,6 +310,30 @@ touch $path
 echoc "Creating secrets.env file" $GREEN
 
 cms_mode=$(echo "$cms" | tr '[:upper:]' '[:lower:]')
+if basename "$PWD" | grep 'maintence-scripts' > /dev/null; then
+cat <<EOT >> ../secrets.env
+#########################################
+#
+# Configuration for the Push Backend
+# This file was automatically generated
+#
+#########################################
+
+title="$title"
+cms_mode=$cms_mode
+$(echo "$cms_mode")_url=$cms_address
+force_https=true
+google_search_engine_id=$google_search_engine_id
+DEVISE_SECRET_KEY=$(generate_secret_key)
+SECRET_KEY_BASE=$(generate_secret_key)
+wp_super_cached_donotcachepage=$wp_super_cached_donotcachepage
+proxy_images=true
+host=$host
+languages="$languages"
+default_language=$default_language
+EOT
+
+else
 cat <<EOT >> secrets.env
 #########################################
 #
@@ -332,5 +356,7 @@ languages="$languages"
 default_language=$default_language
 
 EOT
+
+fi
 
 echo "Finished! If they're already running, please restart your docker containers to update them."
