@@ -21,23 +21,26 @@ function generate_secret_key {
 
 
 # Checks the prerequisites
+echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
 echoc "Checking prerequisites..."
 command -v docker >/dev/null 2>&1 || { echoc "This script requires docker to continue. Aborting." $RED >&2; exit 1; }
 command -v docker-compose >/dev/null 2>&1 || { echoc "This script requires docker-compose to continue. Aborting." $RED >&2; exit 1; }
-echoc "Everything needed for this wizard to run is available. Continuing with the process..."
+echoc "Everything needed for this wizard to run is available. Continuing with the process..." $LIGHT_BLUE
 echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
 
+
+echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
 echoc "Here we'll be creating all the settings that lets your server talk to your CMS..."
 echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
 
 echoc "First, what type of CMS do you have?\n"
 # bash options list?
 PS3='Please enter your choice: '
-options=("Wordpress" "Newscoop" "Joomla" "Codeignitor")
+options=("WordPress" "Newscoop" "Joomla!" "Codeignitor")
 select opt in "${options[@]}"
 do
     case $opt in
-        "Wordpress")
+        "WordPress")
             cms='Wordpress';
             break
             ;;
@@ -45,7 +48,7 @@ do
             cms='Newscoop';
             break
             ;;
-        "Joomla")
+        "Joomla!")
             cms='Joomla';
             break
             ;;
@@ -285,22 +288,22 @@ echo $languages
 if basename "$PWD" | grep 'maintence-scripts' > /dev/null; then
   path='../secrets.env'
 else
-  path='./secrets.env'
+  path='secrets.env'
 fi
 
 if [ ! -f $path ]; then
-    echoc "No .env file found, creating it." $YELLOW
+    echoc "No secrets.env file found, creating it." $YELLOW
 else
   replace_env=$(askyn "Found current secrets.env file. Should I replace it?")
   if [ "$replace_env" = true ]; then
-    echoc "Removing current .env file" $YELLOW
+    echoc "Removing current secrets.env file" $YELLOW
     rm $path
   else
     exit
   fi
 fi
 
-echoc "Creating new .env file" $YELLOW
+echoc "Creating new secrets.env file" $YELLOW
 touch $path
 
 # Write the secrets.env file
