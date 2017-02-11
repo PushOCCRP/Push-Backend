@@ -3,16 +3,6 @@ DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/includes.sh"
 
-# This is the setup script for Lets Encrypt on a new Push Backend Server.
-
-function kill_docker_containers {
-  echoc "\n-------------------------------------------------------------------------------------------------------------\n" $BLUE
-  echoc "Stopping any errantly running docker containers" $BLUE
-  echoc "\n-------------------------------------------------------------------------------------------------------------\n" $BLUE
-  docker stop $(docker ps -a -q)
-  docker rm $(docker ps -a -q)
-}
-
 # I have no idea how to pass in variables to a bash function, figure that out.
 # This will just stub otherwise
 function check_host_resolution {
@@ -86,7 +76,7 @@ else
 fi
 
 if [ ! -f $path ]; then
-    echoc "No .env file found, creating it." $YELLOW
+  echoc "No .env file found, creating it." $YELLOW
 else
   echoc "Removing current .env file" $YELLOW
   rm $path

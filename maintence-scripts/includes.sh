@@ -77,3 +77,13 @@ function askyn {
 #     join_by / var local tmp #var/local/tmp
 #     join_by , "${FOO[@]}" #a,b,c
 function join_by { local d=$1; shift; echo -n "$1"; shift; printf "%s" "${@/#/$d}"; }
+
+# This is the setup script for Lets Encrypt on a new Push Backend Server.
+
+function kill_docker_containers {
+  echoc "\n-------------------------------------------------------------------------------------------------------------\n" $BLUE
+  echoc "Stopping any errantly running docker containers" $BLUE
+  echoc "\n-------------------------------------------------------------------------------------------------------------\n" $BLUE
+  docker stop $(docker ps -a -q)
+  docker rm $(docker ps -a -q)
+}
