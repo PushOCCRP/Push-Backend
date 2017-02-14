@@ -162,16 +162,20 @@ class ArticlesController < ApplicationController
     consumer.save!
     
     event = ConsumerEvent.new(consumer: consumer)
+    event.language = (params.key?('language') && !params['language'].empty?) ? params['language'] : CMS.default_language
     event.event_type_id = case params['action']
     when 'index'
       ConsumerEvent::EventType::ARTICLES_LIST
     when 'article'
+      event.article_id = params['id'] if params.key?('id') && !params['id'].empty?
       ConsumerEvent::EventType::ARTICLE_VIEW
     when 'search'
+      event.search_phrase = params['q'] if params.key?('q') && !params['q'].empty?
       ConsumerEvent::EventType::SEARCH
     else
       return
     end
+    
     event.save!
   end
   

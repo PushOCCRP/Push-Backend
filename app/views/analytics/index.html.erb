@@ -5,51 +5,67 @@
 </div>
 
 <div class="container">
-	<div class="col-md-4">
-  	<div class="row">
-    	<div class="col-md-12">
-        <span class="h3">Consumers</span> <span class="h5 small">since <%= @earliest_consumer_date.strftime('%B %y, %Y %H:%M %Z') %></span>
-        <table class="table table-striped">
-          <tr>
-            <td>Active Users In the Last Day:</td>
-            <td><strong><%= @consumer_count_last_day %></strong></td>
-          </tr>
-          <tr>
-            <td>Active Users In the Last Week:</td>
-            <td><strong><%= @consumer_count_last_week %></strong></td>
-          </tr>
-          <tr>
-            <td>Active Users In the Last Month:</td>
-            <td><strong><%= @consumer_count_last_month %></strong></td>
-          </tr>
-          <tr>
-            <td>Total Users All Time:</td>
-            <td><strong><%= @consumer_count %></strong></td>
-          </tr>
-        </table>
-    	</div>
-  	</div>    	
-	</div>
-		<div class="col-md-5">
-  	<div class="row">
-    	<div class="col-md-12">
-        <span class="h3">Types of Requests</span> <span class="h5 small">since <%= @earliest_consumer_date.strftime('%B %y, %Y %H:%M %Z') %></span>
-        <table class="table table-striped">
-          <tr>
-            <td>Articles Load/Reload (last day):</td>
-            <td><strong><%= @articles_request_count_last_day %></strong></td>
-          </tr>
-          <tr>
-            <td>Articles Load/Reload (last week):</td>
-            <td><strong><%= @articles_request_count_last_week %></strong></td>
-          </tr>
-          <tr>
-            <td>Articles Load/Reload (last month):</td>
-            <td><strong><%= @articles_request_count_last_month %></strong></td>
-          </tr>
-        </table>
-    	</div>
-  	</div>    	
-	</div>
-
+  <div class="row">
+  	<div class="col-md-4">
+    	<div class="row">
+      	<div class="col-md-12">
+          <span class="h3">Consumers</span> <span class="h5 small">since <%= @earliest_consumer_date.strftime('%B %y, %Y %H:%M %Z') %></span>
+          <table class="table table-striped">
+            <tr>
+              <td>Active Users In the Last Day:</td>
+              <td><strong><%= @consumer_count_last_day %></strong></td>
+            </tr>
+            <tr>
+              <td>Active Users In the Last Week:</td>
+              <td><strong><%= @consumer_count_last_week %></strong></td>
+            </tr>
+            <tr>
+              <td>Active Users In the Last Month:</td>
+              <td><strong><%= @consumer_count_last_month %></strong></td>
+            </tr>
+            <tr>
+              <td>Total Users All Time:</td>
+              <td><strong><%= @consumer_count %></strong></td>
+            </tr>
+          </table>
+      	</div>
+    	</div>    	
+  	</div>
+  		<div class="col-md-5">
+    	<div class="row">
+      	<div class="col-md-12">
+          <span class="h3">Types of Requests</span> <span class="h5 small">since <%= @earliest_consumer_date.strftime('%B %y, %Y %H:%M %Z') %></span>
+          <table class="table table-striped">
+            <tr>
+              <td>Articles Load/Reload (last day):</td>
+              <td><strong><%= @articles_request_count_last_day %></strong></td>
+            </tr>
+            <tr>
+              <td>Articles Load/Reload (last week):</td>
+              <td><strong><%= @articles_request_count_last_week %></strong></td>
+            </tr>
+            <tr>
+              <td>Articles Load/Reload (last month):</td>
+              <td><strong><%= @articles_request_count_last_month %></strong></td>
+            </tr>
+          </table>
+      	</div>
+    	</div>    	
+  	</div>
+  </div>
+  <div class="row">
+    <div class="col-md-4">
+    	<div class="row">
+      	<div class="col-md-12">
+          <span class="h3">Recent Searches</span> <span class="h5 small">since <%= @earliest_consumer_date.strftime('%B %y, %Y %H:%M %Z') %></span>
+          <table class="table table-striped">
+            <% @most_recent_search_phrases.each do |search| %>
+            <tr>
+              <td><%= link_to search.search_phrase, controller: 'articles', action: 'search', format: 'json', language: search.language, q: search.search_phrase %></td>
+            </tr>
+            <% end %>
+          </table>
+      	</div>
+    	</div>    	
+  </div>
 </div>
