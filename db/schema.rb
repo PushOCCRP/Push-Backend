@@ -11,10 +11,37 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161104181227) do
+ActiveRecord::Schema.define(version: 20170213220839) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "consumer_events", force: :cascade do |t|
+    t.integer  "consumer_id",     null: false
+    t.integer  "event_type_id",   null: false
+    t.integer  "article_id"
+    t.integer  "notification_id"
+    t.string   "language"
+    t.string   "search_phrase"
+    t.integer  "length"
+    t.datetime "created_at",      null: false
+    t.datetime "updated_at",      null: false
+  end
+
+  add_index "consumer_events", ["article_id"], name: "index_consumer_events_on_article_id", using: :btree
+  add_index "consumer_events", ["consumer_id"], name: "index_consumer_events_on_consumer_id", using: :btree
+  add_index "consumer_events", ["event_type_id"], name: "index_consumer_events_on_event_type_id", using: :btree
+  add_index "consumer_events", ["notification_id"], name: "index_consumer_events_on_notification_id", using: :btree
+
+  create_table "consumers", force: :cascade do |t|
+    t.string   "uuid",                   null: false
+    t.datetime "last_seen",              null: false
+    t.integer  "times_seen", default: 0, null: false
+    t.datetime "created_at",             null: false
+    t.datetime "updated_at",             null: false
+  end
+
+  add_index "consumers", ["uuid"], name: "index_consumers_on_uuid", unique: true, using: :btree
 
   create_table "notifications", force: :cascade do |t|
     t.text     "message"

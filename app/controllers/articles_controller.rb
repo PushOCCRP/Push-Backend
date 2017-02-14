@@ -1,7 +1,8 @@
 class ArticlesController < ApplicationController
 
   before_action :check_for_force_https
-
+  before_action :register_consumer_event
+  
   def index
     
     @response = []
@@ -149,6 +150,29 @@ class ArticlesController < ApplicationController
     else
       @force_https = false
     end
+  end
+  
+  def register_consumer_event
+    return if request.env['HTTP_USER_AGENT'].include? 'ApacheBench'
+    return if !params.key? 'installation_uuid'  
+      
+    # Save this record to our analytic tracking  
+    consumer = Consumer.find_or_create_by(uuid: params['installation_uuid'])
+    consumer.times_seen += 1
+    consumer.save!
+    
+    event = ConsumerEvent.new(consumer: consumer)
+    event.event_type_id = case params['action']
+    when 'index'
+      ConsumerEvent::EventType::ARTICLES_LIST
+    when 'article'
+      ConsumerEvent::EventType::ARTICLE_VIEW
+    when 'search'
+      ConsumerEvent::EventType::SEARCH
+    else
+      return
+    end
+    event.save!
   end
   
   def get_cookie

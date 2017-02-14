@@ -52,7 +52,7 @@ services:
     entrypoint: /push/entrypoint.sh
     tty: true
     stdin_open: true
-
+    
 #    extra_hosts:                            # For dev purposes only
 #      - "rise.md:213.133.100.136"
 #      - "www.rise.md:213.133.100.136"
