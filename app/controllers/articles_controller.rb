@@ -153,7 +153,7 @@ class ArticlesController < ApplicationController
   end
   
   def register_consumer_event
-    return if request.env['HTTP_USER_AGENT'].include? 'ApacheBench'
+    return if !request.env['HTTP_USER_AGENT'].blank? && request.env['HTTP_USER_AGENT'].include? 'ApacheBench'
     return if !params.key? 'installation_uuid'  
       
     # Save this record to our analytic tracking  
