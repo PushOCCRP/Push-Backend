@@ -18,8 +18,6 @@ function generate_secret_key {
   dd if=/dev/random bs=64 count=1 2>/dev/null | od -An -tx1 | tr -d ' \t\n'
 }
 
-
-
 # Checks the prerequisites
 echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
 echoc "Checking prerequisites..."
@@ -27,7 +25,6 @@ command -v docker >/dev/null 2>&1 || { echoc "This script requires docker to con
 command -v docker-compose >/dev/null 2>&1 || { echoc "This script requires docker-compose to continue. Aborting." $RED >&2; exit 1; }
 echoc "Everything needed for this wizard to run is available. Continuing with the process..." $LIGHT_BLUE
 echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
-
 
 echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
 echoc "Here we'll be creating all the settings that lets your server talk to your CMS..."
@@ -116,7 +113,6 @@ done
 echoc "\nDoes your CMS use Google to handle its search functionality [yN]?"
 echoc "The answer is probably no, but if your unsure do a search on your site,"
 echoc "if there's a Google logo you probably do.\n"
-
 google_search=$(askyn "Do you use Google Search?" $google_search)
 
 # If they use google search ask for the google search id
@@ -157,7 +153,6 @@ if [[ $cms == 'Wordpress' ]]; then
     echo "Does your Wordpress Super Cache installation use 'donotcache' feature?"
     # Check out Bivol's installation
     echo "It is a feature that must be enabled under the do not cache page."
-
     donotcacheplugin=$(askyn 'Does your Wordpress Super Cache installation use 'donotcache' feature?')
 
     if [ "$donotcacheplugin" = true ]; then

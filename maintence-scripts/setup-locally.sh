@@ -1,23 +1,16 @@
 #!/bin/bash
 
-# A script to spin up Push servers on a local server (without relying on AWS), in a multiple instance
-# server setup.
 # Author: Aleksandar Todorović
-# Date: January 25th, 2017
 # Contact: aleksandar@r3bl.me
+
+# ----------------------------------------------------------------------------------
+# -- A script to spin up Push servers on a local server (without relying on AWS), --
+# -- in a multiple instance server setup.                                         --
+# ----------------------------------------------------------------------------------
 
 DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/includes.sh"
-
-# This would break a lot of things in the multi-website hosting scenario
-
-#function kill_docker_containers {
-#  echo -e "\n\e[94mStopping any errantly running docker containers\e[0m"
-#  echo -e "\e[94m---------------------------------\e[0m\n"
-#  docker stop $(docker ps -a -q)
-#  docker rm $(docker ps -a -q)
-#}
 
 echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
 echoc "Setting up a new Push server..." $LIGHT_BLUE
@@ -29,12 +22,22 @@ else
   path='./maintence-scripts/cms_cleaner.sh'
 fi
 
+if basename "$PWD" | grep 'maintence-scripts' > /dev/null; then
+  cp docker-compose-files/docker-compose-no-nginx.yml ../docker-compose.yml
+else
+  cp maintence-scripts/docker-compose-files/docker-compose-no-nginx.yml docker-compose.yml
+fi
+
 bash $path
 
 if [ "$?" = 0 ]; then
   echoc '\n---------------------------------------------------------\n' $LIGHT_BLUE
   echoc "    Theoretically you\'re done!!!\n" $LIGHT_BLUE
-  echoc "Run \"docker-compose -f ../docker-compose-no-nginx.yml up\" to make sure everything's fine. \n" $LIGHT_BLUE
+  if basename "$PWD" | grep 'maintence-scripts' > /dev/null; then
+    echoc "Run \"docker-compose -f ../docker-compose.yml up\" to make sure everything's fine. \n" $LIGHT_BLUE
+  else
+    echoc "Run \"docker-compose up\" to make sure everything's fine. \n" $LIGHT_BLUE
+  fi
   echoc '\n---------------------------------------------------------\n' $LIGHT_BLUE
 else
   echoc '\n---------------------------------------------------------' $RED
