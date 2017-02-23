@@ -30,6 +30,14 @@ fi
 
 bash $path
 
+
+echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
+echoc "Creating databases..." $LIGHT_BLUE
+echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
+docker-compose run -d web rake db:create
+docker-compose run -d web rake db:migrate
+docker-compose run -d web rake db:seed
+
 if [ "$?" = 0 ]; then
   echoc '\n---------------------------------------------------------\n' $LIGHT_BLUE
   echoc "    Theoretically you\'re done!!!\n" $LIGHT_BLUE
