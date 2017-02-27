@@ -141,7 +141,7 @@ class ApplicationController < ActionController::Base
 
     case @cms_mode
     when :occrp_joomla
-      response = ArticlesController.get_occrp_joomla_articles
+      response = ArticlesController.new.get_occrp_joomla_articles(params)
     when :wordpress
       response = Wordpress.articles(params)
       # @response['results'] = clean_up_response @response['results']

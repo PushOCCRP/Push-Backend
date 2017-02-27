@@ -9,7 +9,7 @@ class ArticlesController < ApplicationController
 
     case @cms_mode 
       when :occrp_joomla
-        @response = get_occrp_joomla_articles
+        @response = get_occrp_joomla_articles(params)
       when :wordpress
         @response = Wordpress.articles(params)
         #@response['results'] = clean_up_response @response['results']
@@ -25,7 +25,7 @@ class ArticlesController < ApplicationController
 
   end
 
-  def get_occrp_joomla_articles
+  def get_occrp_joomla_articles(params)
     url = ENV['occrp_joomla_url'] + "&view=articles"
 
     version = params["v"]
@@ -35,7 +35,6 @@ class ArticlesController < ApplicationController
     # At the moment it makes the call twice. We need to cache this.
     @response = Rails.cache.fetch("joomla_articles#{version}", expires_in: 1.hour) do
       request_response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
-      body = response.body
 
       body = JSON.parse(request_response.body)
       articles = clean_up_response(body['results'])
