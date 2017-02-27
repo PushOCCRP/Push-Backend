@@ -39,3 +39,9 @@ secrets.env
 .byebug_history
 
 data/dump.rdb
+
+/.docker/logs/*
+
+# Backups
+/.docker/backups/*
+!/.docker/backups/.keep
