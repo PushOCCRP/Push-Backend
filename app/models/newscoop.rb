@@ -110,7 +110,14 @@ class Newscoop < CMS
       
       @response = Rails.cache.fetch("categories_string/#{language}", expires_in: 1.hour) do
         # Pull set categories, and only fetch those
-        categories_to_include = YAML.load(Setting.categories)
+        begin
+          categories_to_include = YAML.load(Setting.categories)
+        rescue => exception
+          categories_to_include = {}
+        end
+        
+        categories_to_include = {} unless categories_to_include.class == ActionController::Parameters
+        
         
         if(!Setting.show_most_recent_articles.nil?)
           items[translate_phrase("most_recent", language).to_sym] = most_recent_articles(params)
@@ -118,7 +125,7 @@ class Newscoop < CMS
                         
         categories[language].each do |category|
 
-          if(!categories_to_include.nil? && !categories_to_include[language].include?(category['title']))
+          if(!categories_to_include.nil? && categories_to_include.include?(language) && !categories_to_include[language].include?(category['title']))
             next
           end
         
