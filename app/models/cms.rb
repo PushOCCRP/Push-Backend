@@ -212,7 +212,12 @@ class CMS < ActiveRecord::Base
       next if link.attributes.has_key?('href') == false
       
       link_address = link.attributes['href'].value
-      uri = URI(link_address)
+
+      begin
+        uri = URI(link_address)
+      rescue => exception
+        next        
+      end
       
       next if uri.nil? || uri.host.nil?
       
