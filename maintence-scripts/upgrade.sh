@@ -42,25 +42,25 @@ else
   echoc "\n-------------------------------------------------------------------------------------------------------------\n\n" $LIGHT_BLUE
 fi
 
-# # Stop the cert docker-compose containers
-# kill_docker_containers
+# Stop the cert docker-compose containers
+kill_docker_containers
 
-# if basename "$PWD" | grep 'maintence-scripts' > /dev/null; then
-#   command='docker-compose -f ../docker-compose.yml up -d'
-# else
-#   command='docker-compose -f docker-compose.yml up -d'
-# fi
+if basename "$PWD" | grep 'maintence-scripts' > /dev/null; then
+  command='docker-compose -f ../docker-compose.yml up -d'
+else
+  command='docker-compose -f docker-compose.yml up -d'
+fi
 
-# error=$($command | tee /dev/tty | grep 'The following errors were reported by the server')
+error=$($command | tee /dev/tty | grep 'The following errors were reported by the server')
 
-# if ! [[ -z "${error// }" ]]; then
-#   echoc "\n-------------------------------------------------------------------------------------------------------------" $RED
-#   echoc "There was an error in restarting your production containers.\n" $RED
-#   echoc "Please review the console output and submit a bug report if you think it's necessary."
-#   echoc "\n-------------------------------------------------------------------------------------------------------------" $RED
-#   exit 100
-# else
-#   echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
-#   echoc "Successfully booted up the production servers!" $LIGHT_BLUE
-#   echoc "\n-------------------------------------------------------------------------------------------------------------\n\n" $LIGHT_BLUE
-# fi
+if ! [[ -z "${error// }" ]]; then
+  echoc "\n-------------------------------------------------------------------------------------------------------------" $RED
+  echoc "There was an error in restarting your production containers.\n" $RED
+  echoc "Please review the console output and submit a bug report if you think it's necessary."
+  echoc "\n-------------------------------------------------------------------------------------------------------------" $RED
+  exit 100
+else
+  echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
+  echoc "Successfully booted up the production servers!" $LIGHT_BLUE
+  echoc "\n-------------------------------------------------------------------------------------------------------------\n\n" $LIGHT_BLUE
+fi
