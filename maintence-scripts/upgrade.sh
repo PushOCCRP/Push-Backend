@@ -6,21 +6,6 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 # This script will pull the newest version of Push from the git repository.
 # If Push wasn't set up with git this will break pretty fantastically.
 
-# if basename "$PWD" | grep 'maintence-scripts' > /dev/null; then
-#   path='../.env'
-# else
-#   path='./.env'
-# fi
-
-# if [ ! -f $path ]; then
-#   echoc "No .env file found, please run the 'setup-lets_encrypt.sh' script first." $YELLOW
-#   exit
-# fi
-
-
-# Stop the production docker-compose containers
-# kill_docker_containers
-
 check_if_docker_is_running
 
 # Pull the Git repository
