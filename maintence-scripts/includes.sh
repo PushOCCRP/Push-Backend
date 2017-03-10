@@ -84,8 +84,10 @@ function kill_docker_containers {
   echoc "\n-------------------------------------------------------------------------------------------------------------\n" $BLUE
   echoc "Stopping any errantly running docker containers" $BLUE
   echoc "\n-------------------------------------------------------------------------------------------------------------\n" $BLUE
-  docker stop $(docker ps -a -q)
-  docker rm $(docker ps -a -q)
+  if [ -n "$(docker ps -a -q)" ]; then
+    docker stop $(docker ps -a -q)
+    docker rm $(docker ps -a -q)
+  fi
 }
 
 function check_if_docker_is_running {
