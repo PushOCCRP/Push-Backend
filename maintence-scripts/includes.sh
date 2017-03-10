@@ -87,3 +87,13 @@ function kill_docker_containers {
   docker stop $(docker ps -a -q)
   docker rm $(docker ps -a -q)
 }
+
+function check_if_docker_is_running {
+  if [ ! "$(docker ps)" ]; then
+    echoc "\n-------------------------------------------------------------------------------------------------------------" $RED
+    echoc "ERROR: The Docker engine doesn't seem to be running.\n" $RED
+    echoc "Please review the console output and submit a bug report if you think it's necessary."
+    echoc "\n-------------------------------------------------------------------------------------------------------------" $RED
+    exit 100
+  fi
+}
