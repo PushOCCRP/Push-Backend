@@ -32,7 +32,7 @@ echoc "\n-----------------------------------------------------------------------
 
 # if ! [[ -z "${error// }" ]]; then
 
-if ! [ "$(git pull --rebase)"]; then
+if ! [ "$(git pull --rebase)" ]; then
   echoc "\n-------------------------------------------------------------------------------------------------------------" $RED
   echoc "There was an error in upgrading from Git.\n" $RED
   echoc "Please review the console output and submit a bug report if you think it's necessary."
