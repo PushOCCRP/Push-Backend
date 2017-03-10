@@ -28,9 +28,11 @@ echoc "\n-----------------------------------------------------------------------
 echoc "Updating the Push software from the git repository" $GREEN
 echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
 
-error=$(git pull --rebase | tee /dev/tty | grep 'files modified')
+# error=$(git pull --rebase | tee /dev/tty | grep 'error')
 
-if ! [[ -z "${error// }" ]]; then
+# if ! [[ -z "${error// }" ]]; then
+
+if ! [ "$(git pull --rebase)"]; then
   echoc "\n-------------------------------------------------------------------------------------------------------------" $RED
   echoc "There was an error in upgrading from Git.\n" $RED
   echoc "Please review the console output and submit a bug report if you think it's necessary."
