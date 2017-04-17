@@ -40,6 +40,10 @@ function echoc {
   printf "$2$1${NC}\n"
 }
 
+function timestamp {
+  date +"%Y%m%d-%H:%M:%S"
+}
+
 # asks a yes or no question, echos 'true' for yes, 'false' for no
 # ex: answer=$(askyn 'Are you a god?')
 # ex: askyn 'Are you a god?' $answer
