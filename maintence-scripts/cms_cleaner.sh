@@ -95,13 +95,13 @@ do
   echo -en "What is the host name for this installation (e.g. testapp.pushapp.press)? "
   read host
   if [[ "$OSTYPE" == "darwin"* ]]; then
-    if ! echo "$host" | egrep -qiE "^[A-z0-9]*[\.]*[A-z0-9]+[\.][A-z]{2,}$" ;then
+    if ! echo "$host" | egrep -qiE "^([A-z0-9_-]+[\.])+[A-z0-9_-]+[\.][A-z]{2,}$" ;then
       echoc "Sorry, I can't seem to parse your url because it's not a valid URL format. Please try again." $RED
     else
       break
     fi
   else
-    if ! echo "$host" | grep -qiP "^[A-z0-9]*[\.]*[A-z0-9]+[\.][A-z]{2,}$" ;then
+    if ! echo "$host" | grep -qiP "^([A-z0-9_-]+[\.])+[A-z0-9_-]+[\.][A-z]{2,}$" ;then
       echoc "Sorry, I can't seem to parse your url because it's not a valid URL format. Please try again." $RED
     else
       break
