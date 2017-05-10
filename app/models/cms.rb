@@ -521,8 +521,8 @@ class CMS < ActiveRecord::Base
         url = ENV['wordpress_url']
       when "newscoop"
         url = ENV['newscoop_url']
-      when "cins-codeignitor"
-        url = ENV['cins_codeignitor_url']
+      when "cins-codeigniter"
+        url = ENV['codeigniter_url']
       else
         raise "CMS type #{cms_type} not valid for this version of Push."
     end

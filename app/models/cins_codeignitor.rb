@@ -1,4 +1,4 @@
-class CinsCodeignitor < CMS
+class CinsCodeigniter < CMS
 
 	def self.articles params
 	    url = get_url '/api/articles'
@@ -14,7 +14,7 @@ class CinsCodeignitor < CMS
 	      logger.info("articles are not cached, making call to newscoop server")
 	      response = HTTParty.get(url)
 	      body = JSON.parse response.body
-	      return_response = format_cins_codeignitor_response(body)
+	      return_response = format_cins_codeigniter_response(body)
 	      return_response['results'] = clean_up_response(return_response['results'])
 	      logger.debug(return_response)
 	      return return_response
@@ -37,7 +37,7 @@ class CinsCodeignitor < CMS
 	      logger.info("articles are not cached, making call to newscoop server")
 	      response = HTTParty.get(url, query: options)
 	      body = JSON.parse response.body
-	      return format_cins_codeignitor_response(body)
+	      return format_cins_codeigniter_response(body)
 	    end        
 	end
 
@@ -54,7 +54,7 @@ class CinsCodeignitor < CMS
 	    options = {q: params['q']}
 	    response = HTTParty.get(url, query: options)
 	    body = JSON.parse response.body
-	    return format_cins_codeignitor_response(body)
+	    return format_cins_codeigniter_response(body)
 	end
 
 
@@ -65,7 +65,7 @@ class CinsCodeignitor < CMS
 	private
 
 	def self.get_url path
-	    url = ENV['cins_codeignitor_url'] 
+	    url = ENV['codeigniter_url'] 
 	    return "#{url}#{path}"
 	end
 
@@ -103,7 +103,7 @@ class CinsCodeignitor < CMS
 	    return language
 	end
 
-	def self.format_cins_codeignitor_response body
+	def self.format_cins_codeigniter_response body
 		items = body['results']
 		new_items = []
 		items.each do |item|
