@@ -16,7 +16,7 @@ class ArticlesController < ApplicationController
       when :newscoop
         @response = Newscoop.articles(params)
       when :cins_codeigniter
-        @response = CinsCodeignitor.articles(params)
+        @response = CinsCodeigniter.articles(params)
     end
     
     respond_to do |format|
@@ -54,7 +54,7 @@ class ArticlesController < ApplicationController
       when :newscoop
         @response = Newscoop.search(params)
       when :cins_codeigniter
-        @response = CinsCodeignitor.search(params)
+        @response = CinsCodeigniter.search(params)
     end 
     
     respond_to do |format|
@@ -105,7 +105,7 @@ class ArticlesController < ApplicationController
       when :newscoop
         @response = Newscoop.article(params)
       when :cins_codeigniter
-        @response = CinsCodeignitor.article(params)
+        @response = CinsCodeigniter.article(params)
     end 
     
     respond_to do |format|
@@ -463,8 +463,8 @@ class ArticlesController < ApplicationController
         url = ENV['wordpress_url']
       when "newscoop"
         url = ENV['newscoop_url']
-      when "cins-codeignitor"
-        url = ENV['cins_codeignitor_url']
+      when "cins-codeigniter"
+        url = ENV['codeigniter_url']
       else
         raise "CMS type #{cms_type} not valid for this version of Push."
     end
