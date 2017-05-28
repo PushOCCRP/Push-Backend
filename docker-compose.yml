@@ -12,6 +12,12 @@ services:
     depends_on:
       - web
 #      - letsencrypt
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     env_file:
       - ./secrets.env
     volumes:
@@ -32,6 +38,12 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - PGDATA=/data/postgres
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 
   web:
     build: .
@@ -53,7 +65,12 @@ services:
     entrypoint: /push/entrypoint.sh
     tty: true
     stdin_open: true
-    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 #    extra_hosts:                            # For dev purposes only
 #      - "rise.md:213.133.100.136"
 #      - "www.rise.md:213.133.100.136"
@@ -76,6 +93,11 @@ services:
       volumes:
           - "./secrets:/secrets"
           #- "/srv/logs/gurac/:/srv/logs/gurac/"
+      logging:
+        driver: "json-file"
+        options:
+          max-size: "10m"
+          max-file: "3"
 
   # the redis db server
   redis:
@@ -83,3 +105,19 @@ services:
       volumes:
           - "./.docker/redis:/data"
       command: ["redis-server", "--appendonly", "yes"]
+      logging:
+        driver: "json-file"
+        options:
+          max-size: "10m"
+          max-file: "3"
+
+  logrotate:
+    image: blacklabelops/logrotate
+    volumes:
+      - ./log:/logs
+    environment:
+      - LOGS_DIRECTORIES=/logs
+      - LOGROTATE_SIZE=5M
+      - LOGROTATE_CRONSCHEDULE=0 0 * * * *
+      - LOGROTATE_COMPRESSION=compress
+      - LOGROTATE_COPIES=5
