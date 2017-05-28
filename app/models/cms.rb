@@ -508,7 +508,8 @@ class CMS < ActiveRecord::Base
   def self.default_language
     default_language = ENV['default_languages']
     default_language = languages[0] if default_language.nil?
-    
+    default_language = 'en' if default_language.nil?
+
     return default_language
   end
   

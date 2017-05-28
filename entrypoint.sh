@@ -2,6 +2,19 @@
 bundle config build.nokogiri --use-system-libraries
 bundle install --path vendor/bundle
 
+# Write the logrotate file
+cat >/etc/logrotate.conf <<EOL
+/push/log/*.log {
+  daily
+  missingok
+  rotate 7
+  compress
+  delaycompress
+  notifempty
+  copytruncate
+}
+EOL
+
 # make sure the last run is cleared
 rm /push/tmp/pids/server.pid
 
