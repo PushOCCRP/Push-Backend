@@ -70,7 +70,7 @@ class ApplicationController < ActionController::Base
         @cms_mode = :wordpress
       when "newscoop"
         @cms_mode = :newscoop
-      when "cins-codeignitor"
+      when "cins-codeigniter"
         @cms_mode = :cins_codeigniter
       else
         raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
@@ -85,8 +85,8 @@ class ApplicationController < ActionController::Base
       url = ENV['wordpress_url']
     when "newscoop"
       url = ENV['newscoop_url']
-    when "cins-codeignitor"
-      url = ENV['cins_codeignitor_url']
+    when "cins-codeigniter"
+      url = ENV['codeigniter_url']
     else
       raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
     end
@@ -148,7 +148,7 @@ class ApplicationController < ActionController::Base
     when :newscoop
       response = Newscoop.articles(params)
     when :cins_codeigniter
-      response = CinsCodeignitor.articles(params)
+      response = CinsCodeigniter.articles(params)
     end
 
     response.to_json
