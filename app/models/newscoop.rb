@@ -407,6 +407,9 @@ class Newscoop < CMS
   
   def self.format_newscoop_articles articles
     formatted_articles = []
+
+    articles = [] if articles.nil?
+
     articles.each do |article|
         formatted_article = {}
         formatted_article['headline'] = article['title']
