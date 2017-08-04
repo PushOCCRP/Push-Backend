@@ -226,13 +226,13 @@ class Newscoop < CMS
     logger.info("Fetching article with id #{article_id}")
 
     cached = true
-    @response = Rails.cache.fetch("newscoop_articles/#{article_id}/#{language}/#{version}", expires_in: 1.hour) do
+    #@response = Rails.cache.fetch("newscoop_articles/#{article_id}/#{language}/#{version}", expires_in: 1.hour) do
       logger.info("article is not cached, making call to newscoop server")
       cached = false
       response = HTTParty.get(url, query: options)
       body = JSON.parse response.body
-      format_newscoop_response({items: [body]})
-    end        
+      @response = format_newscoop_response({items: [body]})
+    #end        
 
     if(cached == true)
       logger.info("Cached hit for articles")
@@ -437,7 +437,7 @@ class Newscoop < CMS
             videos << {youtube_id: youtube_id}
         end
               
-        formatted_article['videos'] = videos
+        formatted_article['video'] = videos
         
         images = []
            
