@@ -139,8 +139,18 @@ class Wordpress < CMS
 
 	def self.make_request url
 		logger.debug("Making request to #{url}")
-		response = HTTParty.get(URI.encode(url))
-	  body = JSON.parse response.body
+  		response = HTTParty.get(URI.encode(url))
+    
+    begin
+	    body = JSON.parse response.body
+	  rescue => exception
+      logger.debug "Exception parsing JSON from CMS"
+      logger.debug "Statement returned"
+      logger.debug "---------------------------------------"
+      logger.debug response.body
+      logger.debug "---------------------------------------"
+      raise
+    end
 	  return body
 	end
 
