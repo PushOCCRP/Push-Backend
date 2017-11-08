@@ -11,7 +11,7 @@ services:
       - "443:443"
     depends_on:
       - web
-#      - letsencrypt
+#     - letsencrypt
     logging:
       driver: "json-file"
       options:
@@ -22,12 +22,12 @@ services:
       - ./secrets.env
     volumes:
       - "./.docker/nginx/:/etc/nginx/:ro"                            # config
-      - "./.docker/nginx/:/etc/ssl/nginx"
-      - "./.docker/data/secrets/keys/:/srv/data/:ro"                # dhpram and certs are here
+      - "./.docker/nginx/:/etc/ssl/nginx:ro"
+      - "./.docker/data/secrets/keys:/srv/data:ro"                # dhpram and certs are here
       #- "./.docker/data/secrets/keys/live/`ls`:/srv/data/ssl/keys:ro"
       - "./.docker/data/secrets/keys/archive/:/etc/letsencrypt/archive:ro"
       - "./.docker/data/secrets/keys/live/$LETSENCRYPT_DOMAINS:/srv/data/ssl/keys:ro"
-      - "./.docker/data/secrets/keys:/srv/data/"
+      - "./.docker/data/secrets/keys:/srv/data/:ro"
       - "./public/:/var/public/:ro"
   db:
     image: postgres
