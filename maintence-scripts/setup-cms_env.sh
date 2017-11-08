@@ -248,7 +248,6 @@ do
         echo "$language"
         if [ "$language" = "$opt" ]; then
             unset language_options[$index]
-            echo "language_options is now: ${language_options[@]}"
             break
         fi
         let index++
