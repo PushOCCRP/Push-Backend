@@ -2,7 +2,6 @@ ruby '2.4.2'
 
 source 'https://rubygems.org'
 
-
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '5.1.4'
 # Use sqlite3 as the database for Active Record
@@ -28,6 +27,7 @@ gem 'sdoc'
 #gem 'thin'
 
 gem 'pg'
+gem 'rake'
 
 # Use ActiveModel has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
