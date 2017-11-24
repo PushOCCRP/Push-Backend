@@ -6,6 +6,7 @@ services:
   # we need it for only allowing certain endpoints to be available
   nginx:
     build: https://github.com/PushOCCRP/watchful-nginx.git
+    restart: always
     ports:
       - "80:80"
       - "443:443"
@@ -31,6 +32,7 @@ services:
       - "./public/:/var/public/:ro"
   db:
     image: postgres
+    restart: always
     volumes:
       - "./.docker/postgres:/data/postgres"
       - "./.docker/backups:/data/backups"
@@ -48,6 +50,7 @@ services:
   web:
     build: .
     command: bundle exec rails s -p 3000 -b '0.0.0.0'
+    restart: always
     volumes:
       - .:/push
     expose:
@@ -79,6 +82,7 @@ services:
   # uniqush itself
   uniqush:
       build: https://github.com/beevelop/docker-uniqush.git
+      restart: always
       environment:
           # this is the default, but let's be explicit here
           UNIQUSH_DATABASE_HOST: "redis"
@@ -102,6 +106,7 @@ services:
   # the redis db server
   redis:
       image: redis
+      restart: always      
       volumes:
           - "./.docker/redis:/data"
       command: ["redis-server", "--appendonly", "yes"]
@@ -113,6 +118,7 @@ services:
 
   logrotate:
     image: blacklabelops/logrotate
+    restart: always
     volumes:
       - ./log:/logs
     environment:
