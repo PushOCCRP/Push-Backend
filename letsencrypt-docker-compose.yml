@@ -48,6 +48,19 @@ services:
        entrypoint: certbot
        command: certonly --text --authenticator standalone --webroot-path /var/www/ --keep $LETSENCRYPT_STAGING --domains "$LETSENCRYPT_DOMAINS" --email "$LETSENCRYPT_EMAIL" --agree-tos
 
+  nginx:
+    build: https://github.com/PushOCCRP/watchful-nginx.git
+    env_file:
+      - ./secrets.env
+    volumes:
+      - "./.docker/nginx/:/etc/nginx/"                            # config
+      - "./.docker/nginx/:/etc/ssl/nginx"
+      - "./.docker/data/secrets/keys:/srv/data"                # dhpram and certs are here
+      - "./.docker/data/secrets/keys/archive/:/etc/letsencrypt/archive"
+      - "./.docker/data/secrets/keys/live/$LETSENCRYPT_DOMAINS:/srv/data/ssl/keys"
+      - "./.docker/data/secrets/keys:/srv/data/"
+      - "./public/:/var/public/"
+
   devencrypt:
       image: paulczar/omgwtfssl
       volumes:
