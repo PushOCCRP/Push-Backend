@@ -145,7 +145,7 @@ docker-compose run web rake db:migrate
 docker-compose run web rake db:seed
 
 # Generate the dhparam file, this happens when we bring up the nginx container
-docker-compose run -e NGINX_BOOT=false nginx
+docker-compose -f letsencrypt-docker-compose.yml run -e NGINX_BOOT=false nginx
 
 
 echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE

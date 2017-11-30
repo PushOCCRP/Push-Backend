@@ -23,7 +23,7 @@ services:
       - ./secrets.env
     volumes:
       - "./.docker/nginx/:/etc/nginx/:ro"                            # config
-      - "./.docker/nginx/:/etc/ssl/nginx"
+      - "./.docker/nginx/:/etc/ssl/nginx:ro"
       - "./.docker/data/secrets/keys:/srv/data:ro"                # dhpram and certs are here
       #- "./.docker/data/secrets/keys/live/`ls`:/srv/data/ssl/keys:ro"
       - "./.docker/data/secrets/keys/archive/:/etc/letsencrypt/archive:ro"
