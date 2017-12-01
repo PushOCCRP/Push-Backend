@@ -62,12 +62,13 @@ gem 'nokogiri'
 gem 'puma'
 gem 'dalli'
 gem 'memcachier'
-gem "mini_magick"
+gem 'mini_magick'
 gem 'htmlentities'
 
-gem "addressable"
-gem "devise"
+gem 'addressable'
+gem 'devise'
 
-gem "rails-settings-cached"
+gem 'rails-settings-cached'
 
-gem "fcm"
+gem 'fcm'
+gem 'webpacker'

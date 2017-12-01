@@ -1,0 +1,13 @@
+current directory: /push/vendor/cache/ruby/2.4.0/gems/json-1.8.6/ext/json
+/usr/local/bin/ruby -r ./siteconf20171109-96-2bv447.rb extconf.rb
+creating Makefile
+
+current directory: /push/vendor/cache/ruby/2.4.0/gems/json-1.8.6/ext/json
+make "DESTDIR=" clean
+
+current directory: /push/vendor/cache/ruby/2.4.0/gems/json-1.8.6/ext/json
+make "DESTDIR="
+make: Nothing to be done for 'all'.
+
+current directory: /push/vendor/cache/ruby/2.4.0/gems/json-1.8.6/ext/json
+make "DESTDIR=" install

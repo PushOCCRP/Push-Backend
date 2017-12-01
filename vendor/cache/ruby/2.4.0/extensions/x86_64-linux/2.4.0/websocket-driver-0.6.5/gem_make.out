@@ -1,0 +1,15 @@
+current directory: /push/vendor/cache/ruby/2.4.0/gems/websocket-driver-0.6.5/ext/websocket-driver
+/usr/local/bin/ruby -r ./siteconf20171109-96-fd8sz4.rb extconf.rb
+creating Makefile
+
+current directory: /push/vendor/cache/ruby/2.4.0/gems/websocket-driver-0.6.5/ext/websocket-driver
+make "DESTDIR=" clean
+
+current directory: /push/vendor/cache/ruby/2.4.0/gems/websocket-driver-0.6.5/ext/websocket-driver
+make "DESTDIR="
+compiling websocket_mask.c
+linking shared-object websocket_mask.so
+
+current directory: /push/vendor/cache/ruby/2.4.0/gems/websocket-driver-0.6.5/ext/websocket-driver
+make "DESTDIR=" install
+/usr/bin/install -c -m 0755 websocket_mask.so ./.gem.20171109-96-9q2uwf

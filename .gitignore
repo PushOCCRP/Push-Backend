@@ -45,3 +45,6 @@ data/dump.rdb
 # Backups
 /.docker/backups/*
 !/.docker/backups/.keep
+/public/packs
+/public/packs-test
+/node_modules
