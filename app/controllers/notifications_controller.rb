@@ -30,7 +30,6 @@ class NotificationsController < ApplicationController
 		end
     
 		device = PushDevice.find_by_dev_id(params["dev_id"]) if !params["dev_id"].nil?
-		
 		if(!device)
 			device = PushDevice.new({
 				dev_id: params['dev_id'],
@@ -73,7 +72,7 @@ class NotificationsController < ApplicationController
 		end
 	end
 
-	def subscribe_device device, sandbox = true
+	def subscribe_device device, sandbox = "true"
 		# build up the service name based on the platform, and if we're in the sandbox
 		service_name = push_id
 		push_service_type = "apns"
@@ -82,10 +81,7 @@ class NotificationsController < ApplicationController
 			service_name += "-gcm"
 		else
 			service_name += "-ios"
-		end
-
-		if(sandbox == "true")
-			service_name += "-sandbox"
+			service_name += "-sandbox" if sandbox == "true"
 		end
 
 		# Build up the options
@@ -95,9 +91,15 @@ class NotificationsController < ApplicationController
 				}
 
 		# Android uses the "regid", iOS use the "devtoken"
+		# This seems to have changed
 		case device.platform
 		when 'android'
-			options["regid"] = device.dev_id
+			options["regid"] = device.dev_token
+			
+			# For Android, since there's not a built in sandbox, we just segregate it
+			if(sandbox == "true")
+  			options[:subscriber] = options[:subscriber] + ".sandbox"
+  		end
 		when 'ios'
 			options["devtoken"] = device.dev_token
 		end
@@ -191,8 +193,7 @@ class NotificationsController < ApplicationController
 
 	def gcm
     @gcm_project_id = Setting.gcm_project_id
-    @gcm_api_key_sandbox = Setting.gcm_api_key_sandbox
-    @gcm_api_key_production = Setting.gcm_api_key_production
+    @gcm_api_key = Setting.gcm_api_key
     
     @fcm_api_key_sandbox = Setting.fcm_api_key_sandbox
     @fcm_api_key_production = Setting.fcm_api_key_production
@@ -200,13 +201,12 @@ class NotificationsController < ApplicationController
 
 	def process_gcm
 		Setting.gcm_project_id = params["project_id"]
-		Setting.gcm_api_key_sandbox = params["gcm_api_key_sandbox"]
-		Setting.gcm_api_key_production = params["gcm_api_key_production"]
+		Setting.gcm_api_key = params["gcm_api_key"]
 
     Setting.fcm_api_key_sandbox = params["fcm_api_key_production"]
     Setting.fcm_api_key_production = params["fcm_api_key_production"]
 
-		response_json = create_gcm_project(false)
+		response_json = create_gcm_project
 
 		if(response_json["status"] == 1)
 			flash[:error] = "Error updating gcm: #{response_json}"
@@ -218,18 +218,11 @@ class NotificationsController < ApplicationController
 		redirect_to action: :gcm
 	end
 	
-	def create_gcm_project(sandbox=false)
+	def create_gcm_project
     project_id = Setting.gcm_project_id
-		if(sandbox)
-			api_key = Setting.gcm_api_key_sandbox
-		else
-			api_key = Setting.gcm_api_key_production
-		end
+    api_key = Setting.gcm_api_key
 
 		service_name = "#{push_id}-gcm"
-		if(!sandbox)
-			service_name += "-sandbox"
-		end
 
 		options = {"service": service_name,
 			 "pushservicetype": "gcm",
@@ -242,56 +235,14 @@ class NotificationsController < ApplicationController
 
 		logger.debug("Create_gcm response: #{response_json}")
 
-			if(response_json["status"] == 1)
+    if(response_json["status"] == 1)
 			raise("Error creating GCM service: #{response_json}")
 		else
-			if(sandbox)
-				Setting.gcm_name_sandbox = service_name
-			else
-				Setting.gcm_name_production = service_name
-			end
+			Setting.gcm_name = service_name
 		end
 
 		return response_json
  	end
-
-	def create_gcm_project(sandbox=false)
-		project_id = Setting.gcm_project_id
-		if(sandbox)
-			api_key = Setting.gcm_api_key_sandbox
-		else
-			api_key = Setting.gcm_api_key_production
-		end
-
-		service_name = "#{push_id}-gcm"
-		if(!sandbox)
-			service_name += "-sandbox"
-		end
-
-		options = {"service": service_name,
-			 "pushservicetype": "gcm",
-			 "projectid": project_id,
-			 "apikey": api_key
-		}
-
-		response = HTTParty.get("http://uniqush:9898/addpsp?#{options.to_query}", options)
-		response_json = JSON.parse(response.body)
-
-		logger.debug("Create_gcm response: #{response_json}")
-
-			if(response_json["status"] == 1)
-			raise("Error creating GCM service: #{response_json}")
-		else
-			if(sandbox)
-				Setting.gcm_name_sandbox = service_name
-			else
-				Setting.gcm_name_production = service_name
-			end
-		end
-
-		return response_json
-
-	end
 
 	def cert_upload
 	end
@@ -304,10 +255,10 @@ class NotificationsController < ApplicationController
 
 		filename = push_id
 
-		sandbox_cert_file_name = "secrets/certs/#{filename}-sandbox-cert.pem"
-		sandbox_key_file_name = "secrets/certs/#{filename}-sandbox-key.pem"
-		production_cert_file_name = "secrets/certs/#{filename}-production-cert.pem"
-		production_key_file_name = "secrets/certs/#{filename}-production-key.pem"
+		sandbox_cert_file_name = "/secrets/certs/#{filename}-sandbox-cert.pem"
+		sandbox_key_file_name = "/secrets/certs/#{filename}-sandbox-key.pem"
+		production_cert_file_name = "/secrets/certs/#{filename}-production-cert.pem"
+		production_key_file_name = "/secrets/certs/#{filename}-production-key.pem"
 
 		File.open("/push/#{sandbox_cert_file_name}", 'wb') do |file|
 			file.write(sandbox_cert_io.read)
@@ -331,8 +282,12 @@ class NotificationsController < ApplicationController
 		Setting.production_cert = production_cert_file_name
 		Setting.production_key = production_key_file_name
 
-		response_json = create_apns(true)
-		response_json = create_apns(false)
+    begin
+  		response_json = create_apns(true)
+      response_json = create_apns(false)
+    rescue
+ 			flash[:error] = "Error updating certs: #{@uniqush_message}"
+    end
 
 		if(response_json["status"] == 1)
 			flash[:error] = "Error updating certs: #{@uniqush_message}"
@@ -369,7 +324,7 @@ class NotificationsController < ApplicationController
 
 		logger.debug("Create_apns response: #{response_json}")
 
-			if(response_json["status"] == 1)
+		if(response_json["status"] == 1)
 			raise("Error creating APNS service: #{response_json}")
 		else
 			Setting.apns_name_production = push_id
@@ -448,11 +403,13 @@ class NotificationsController < ApplicationController
 
 	def build_push(notification, platform, sandbox)
 		push_service_name = service_name(platform, sandbox)
-		options = options_for_push(push_service_name, platform, notification)
+		
+  	options = options_for_push(push_service_name, platform, notification, sandbox)
+    
 		return push_call options, platform, sandbox, notification
 	end
 
-	def options_for_push(push_service_name, platform, notification)
+	def options_for_push(push_service_name, platform, notification, sandbox=false)
   	
   	#######
   	# Set the options for either iOS or Android  	
@@ -462,14 +419,18 @@ class NotificationsController < ApplicationController
        "sound": 'default',
        "article_id": notification.article_id
     }
+    
+    if(platform == "android") 
+      options[:subscriber] = options[:subscriber] + ".sandbox" if sandbox == true
+    end
   	    
 		return options
 	end
 
 	def push_call(options, platform, sandbox, notification)
     if(platform == "android")
-      push_call_android_gcm(options, sandbox, notification)
-      return push_call_android_fcm(options, sandbox, notification) 
+      return push_call_android_gcm(options, sandbox, notification)
+      #return push_call_android_fcm(options, sandbox, notification) 
     else
       return push_call_ios(options, sandbox, notification)
     end
@@ -480,7 +441,8 @@ class NotificationsController < ApplicationController
 
 		response = HTTParty.post("http://uniqush:9898/push?#{options.to_query}")
 		response_json = JSON.parse(response.body)
-
+		
+		logger.debug("Uniqush response: #{response_json}")
 		if(response_json["status"] == 0)
 			logger.debug("Error: #{response_json}")
 			return "Error: " + response_json['details']['errorMsg']
@@ -554,6 +516,8 @@ class NotificationsController < ApplicationController
 		response = HTTParty.post("http://uniqush:9898/push?#{options.to_query}")
 		response_json = JSON.parse(response.body)
 		
+		logger.debug("Uniqush response: #{response_json}")
+		
 		if(response_json["status"] == 0)
 			logger.debug("Error: #{response_json}")
 			return "Error: " + response_json['details']['errorMsg']
@@ -607,10 +571,7 @@ class NotificationsController < ApplicationController
 			service_name += "-gcm"
 		else
 			service_name += "-ios"
-		end
-
-		if(params["sandbox"])
-			service_name += "-sandbox"
+			service_name += "-sandbox" if sandbox == true
 		end
 
 		return service_name
@@ -625,7 +586,7 @@ class NotificationsController < ApplicationController
 	end
 
 	def check_push_status
-		statuses = {apns_prod: false, apns_sandbox: false, gcm_prod: false, gcm_sandbox: false}
+		statuses = {apns_prod: false, apns_sandbox: false, gcm_legacy: false, gcm_firebase: false}
 		# Make a call to Uniqush to get stuff
 		response = HTTParty.post("http://uniqush:9898/psps")
 		response_json = JSON.parse(response.body)
@@ -655,12 +616,10 @@ class NotificationsController < ApplicationController
 
 		#check android
 		if(services.has_key?('push_app-gcm') && services['push_app-gcm'].size > 0)
-			statuses[:gcm_prod] = check_push_android_status(services['push_app-gcm'].first)
+			statuses[:gcm_legacy] = check_push_android_status(services['push_app-gcm'].first)
 		end
 
-		if(services.has_key?('push_app-gcm-sandbox') && services['push_app-gcm-sandbox'].size > 0)
-			statuses[:gcm_sandbox] = check_push_android_status(services['push_app-gcm-sandbox'].first)
-		end
+    # Populate the Firebase as well
 
 		return statuses
 	end

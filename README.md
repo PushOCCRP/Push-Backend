@@ -66,6 +66,10 @@ After following the steps above, ```docker-compose up -d``` should be all you ne
 
 - If you're having troubles connecting from your browser, make sure that you have port 443 open to incoming traffic on the server.
 
+# Setting Up Push Notifiations
+
+TBD, this is annoyingly complicated.
+
 # Notes
 
 ### DNS HOST
