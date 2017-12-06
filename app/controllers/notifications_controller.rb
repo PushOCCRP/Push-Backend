@@ -96,6 +96,7 @@ class NotificationsController < ApplicationController
 		when 'android'
 			options["regid"] = device.dev_token
 			
+			options[:subscriber] += ".#{device.language}"
 			# For Android, since there's not a built in sandbox, we just segregate it
 			if(sandbox == "true")
   			options[:subscriber] = options[:subscriber] + ".sandbox"
