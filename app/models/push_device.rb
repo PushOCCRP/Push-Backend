@@ -14,7 +14,7 @@ class PushDevice < ActiveRecord::Base
   	IOS = 'ios'
   end
 
-  def this.service_name platform, sandbox = false
+  def self.service_name platform, sandbox = false
   	service_name = this.push_id()
 		
 		if(this.platform == 'android')
@@ -28,7 +28,7 @@ class PushDevice < ActiveRecord::Base
 
   end
 
-	def this.push_id
+	def self.push_id
 		push_id = ENV['push_id']
 		if(!push_id || push_id.length == 0)
 			push_id = 'push_app'
