@@ -145,7 +145,7 @@ class NotificationsController < ApplicationController
 
 			# This makes the call to subscribe and stores the device in a box or not
 			# It returns a structure so that we can evaluate what went wrong too.
-			response = subscribe_device device, is_sandboxed
+			response = device.subscribe_to_push is_sandboxed
 			case response[:status]
 				when 0 then @devices[:successful] << {device: device, response: response}
 				when 1 then @devices[:error] << {device: device, response: response}
@@ -325,9 +325,9 @@ class NotificationsController < ApplicationController
 
 	def process_cert
 
-		flash[:error] = "No file selected for the cert" if params[:cert].empty?
-		flash[:error] = "No file selected for the key" if params[:key].empty?
-		redirect_to action: :cert_upload unless flash[:error].empty?
+		flash[:error] = "No file selected for the cert" if params[:cert].nil?
+		flash[:error] = "No file selected for the key" if params[:key].nil?
+		redirect_to action: :cert_upload unless flash[:error].blank?
 
 		cert_io = params[:cert]
 		key_io = params[:key]
@@ -389,8 +389,11 @@ class NotificationsController < ApplicationController
     # Make the call and create it all.
 		response = HTTParty.get("http://uniqush:9898/addpsp?#{options.to_query}", options)
 		response_json = JSON.parse(response.body)
-
+    
+    logger.debug("*************************************")
 		logger.debug("Create_apns response: #{response_json}")
+		logger.debug("*************************************")
+
 
 		# Parse the response, if we're good, save it all
 		if(response_json["status"] == 1)

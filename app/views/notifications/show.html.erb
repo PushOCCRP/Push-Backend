@@ -9,7 +9,7 @@
 <div class="container">
 	<div class="col-md-8">
 		<span class="h5">Message:</span> <%= @notification.message %><br />
-		<span class="h5">Language:</span> <%= @notification.language %><br />
+		<span class="h5">Language:</span> <%= display_name_for_language @notification.language %><br />
 		<span class="h5">Article ID:</span> <%= @notification.article_id %>
 	</div>
 	<div class="col-md-4">
