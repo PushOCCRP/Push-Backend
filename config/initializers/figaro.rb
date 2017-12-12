@@ -18,11 +18,13 @@ case ENV['cms_mode']
   when "blox"
     Figaro.require_keys("blox_url")
     Figaro.require_keys("blox_publication_name")
-    Figaro.require_keys("blox_key")
-    Figaro.require_keys("blox_secret")
+    Figaro.require_keys("blox_eedition_key")
+    Figaro.require_keys("blox_eedition_secret")
+    Figaro.require_keys("blox_editorial_key")
+    Figaro.require_keys("blox_editorial_secret")
 
     # Blox seems to only support one language at a time.
-    languages = ENV['language'].delete('"').split(',')
+    languages = ENV['languages'].delete('"').split(',')
     raise "Blox only supports one language at a time right now" if languages.count > 1
 
   else

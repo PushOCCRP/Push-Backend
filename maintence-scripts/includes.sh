@@ -68,7 +68,6 @@ function askyn {
   esac
 
   if [[ "$__resultvar" ]]; then
-    echo "hahaha"
     eval $__resultvar=$answer
   else
     echo $answer

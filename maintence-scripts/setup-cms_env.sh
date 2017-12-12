@@ -25,7 +25,7 @@ echoc "\n-----------------------------------------------------------------------
 echoc "First, what type of CMS do you have?\n"
 # bash options list?
 PS3='Please enter your choice: '
-options=("Wordpress" "Newscoop" "Joomla" "Codeigniter")
+options=("Wordpress" "Newscoop" "Joomla" "Codeigniter" "Blox")
 select opt in "${options[@]}"
 do
     case $opt in
@@ -43,6 +43,10 @@ do
             ;;
         "Codeigniter")
             cms='Codeigniter';
+            break
+            ;;
+        "Blox")
+            cms='Blox';
             break
             ;;
         *) echo invalid option;;
@@ -172,6 +176,82 @@ if [[ $cms == 'Wordpress' ]]; then
 
     fi
   fi
+fi
+
+# If Blox
+if [[ $cms == 'Blox' ]]; then
+
+  echoc "\nFor Blox we need to know the \"Publication Name\" we're going to work with."
+  echoc "You probably have on created already, but steps 1 and 2 here will show"
+  echoc "how to find the name. Please use the words under \"Publication\".\n"
+  echoc "https://help.bloxcms.com/knowledge-base/applications/editorial/e-editions/tasks/article_4cdcf908-6939-11e5-9de0-ff4540da429f.html\n"
+  
+  while true
+  do
+    echo -en "\"Publication\" name? "
+    read blox_publication_name
+    
+    if [[ -z "${blox_publication_name// }" ]]; then
+      echoc "Please enter a valid \"Publication\" name."
+    else
+      break
+    fi
+  done
+
+   
+  echoc "\nFor Blox we need two types of API authentication keys."
+  echoc "You need to make an \"eedition\" and an \"editorial\" key/secret set.\n"
+  echoc "Instructions to do that are at https://help.bloxcms.com/knowledge-base/applications/settings/webservice_keys/workspace/article_a73d51da-2bd7-11e5-8dfd-e7325582d658.html\n"
+  
+  # eedition and editorial both require a "key" and a "secret"
+
+  while true
+  do
+    echo -en "\"eedition\" key? "
+    read blox_eedition_key
+    
+    if [[ -z "${blox_eedition_key// }" ]]; then
+      echoc "Please enter a valid \"eedition\" key."
+    else
+      break
+    fi
+  done
+  
+  while true
+  do
+    echo -en "\"eedition\" secret? "
+    read blox_eedition_secret
+    
+    if [[ -z "${blox_eedition_secret// }" ]]; then
+      echoc "Please enter a valid \"eedition\" secret."
+    else
+      break
+    fi
+  done
+  
+  while true
+  do
+    echo -en "\"editorial\" key? "
+    read blox_editorial_key
+    
+    if [[ -z "${blox_editorial_key// }" ]]; then
+      echoc "Please enter a valid \"eedition\" key."
+    else
+      break
+    fi
+  done
+  
+  while true
+  do
+    echo -en "\"editorial\" secret? "
+    read blox_editorial_secret
+    
+    if [[ -z "${blox_editorial_secret// }" ]]; then
+      echoc "Please enter a valid \"editorial\" secret."
+    else
+      break
+    fi
+  done
 fi
 
 # Ask for languages
@@ -309,6 +389,7 @@ cat <<EOT >> secrets.env
 title="$title"
 cms_mode=$cms_mode
 $(echo "$cms_mode")_url=$cms_address
+
 force_https=true
 google_search_engine_id=$google_search_engine_id
 DEVISE_SECRET_KEY=$(generate_secret_key)
@@ -321,4 +402,23 @@ default_language=$default_language
 
 EOT
 
+if [[ $cms == 'Blox' ]]; then
+cat <<EOT >> secrets.env
+#########################################
+#
+# TownNews BLOX API access variables
+# Instructions to generate these at 
+# https://help.bloxcms.com/knowledge-base/applications/settings/webservice_keys/workspace/article_a73d51da-2bd7-11e5-8dfd-e7325582d658.html
+# 
+#########################################
+
+blox_publication_name=$blox_publication_name
+blox_eedition_key=$blox_eedition_key
+blox_eedition_secret=$blox_eedition_secret
+blox_editorial_key=$blox_editorial_key
+blox_editorial_secret=$blox_editorial_secret
+
+EOT
+
+fi
 echo "Finished! If they're already running, please restart your docker containers to update them."
