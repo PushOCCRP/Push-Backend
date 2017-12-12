@@ -17,6 +17,8 @@ class ArticlesController < ApplicationController
         @response = Newscoop.articles(params)
       when :cins_codeigniter
         @response = CinsCodeigniter.articles(params)
+      when :blox
+        @response = Blox.articles(params)
     end
     
     respond_to do |format|
@@ -55,6 +57,8 @@ class ArticlesController < ApplicationController
         @response = Newscoop.search(params)
       when :cins_codeigniter
         @response = CinsCodeigniter.search(params)
+      when :blox
+        @response = Blox.search(params)
     end 
     
     respond_to do |format|
@@ -106,6 +110,8 @@ class ArticlesController < ApplicationController
         @response = Newscoop.article(params)
       when :cins_codeigniter
         @response = CinsCodeigniter.article(params)
+      when :blox
+        @response = Blox.article(params)
     end 
     
     respond_to do |format|

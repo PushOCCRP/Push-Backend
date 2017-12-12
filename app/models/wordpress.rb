@@ -48,7 +48,7 @@ class Wordpress < CMS
     end
     
     logger.debug("/articles.json #{params.to_s} Cache hit") if cache == true
-    logger.debug("/articles.json #{params.to_s} Cache missed") if cache == true
+    logger.debug("/articles.json #{params.to_s} Cache missed") if cache == false
   
 	  return cached_articles
 	end

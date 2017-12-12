@@ -72,6 +72,8 @@ class ApplicationController < ActionController::Base
         @cms_mode = :newscoop
       when "cins-codeigniter"
         @cms_mode = :cins_codeigniter
+      when "blox"
+        @cms_mode = :blox
       else
         raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
     end
@@ -87,6 +89,8 @@ class ApplicationController < ActionController::Base
       url = ENV['newscoop_url']
     when "cins-codeigniter"
       url = ENV['codeigniter_url']
+    when "blox"
+      url = ENV['blox_url']
     else
       raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
     end

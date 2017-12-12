@@ -81,7 +81,7 @@ class CMS < ActiveRecord::Base
     return articles
   end
 
-    # Parses an article, extracting all <img> links, and putting them, with their range, into
+  # Parses an article, extracting all <img> links, and putting them, with their range, into
   # an array
   def self.extract_images article
 
@@ -145,7 +145,11 @@ class CMS < ActiveRecord::Base
 
     elements = Nokogiri::HTML article['body']
     elements.css('img').each do |image|
-      image_address = image.attributes['src'].value
+      begin
+        image_address = image.attributes['src'].value
+      rescue
+        next
+      end
 
       if !image_address.starts_with?("http")        
         full_url = rewrite_url_for_ssl(rewrite_image_url_for_proxy(image.attributes['src'].value))

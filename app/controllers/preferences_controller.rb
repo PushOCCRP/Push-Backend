@@ -76,7 +76,9 @@ class PreferencesController < ApplicationController
     when :newscoop
       response = Newscoop.categories
     when :cins_codeigniter
-		# Not implemented yet
+			# Not implemented yet
+		when :blox
+			# not implemented yet
     end
 
     return response
