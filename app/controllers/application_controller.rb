@@ -29,31 +29,18 @@ class ApplicationController < ActionController::Base
       url += "&ImageId=#{params['ImageId']}" if !params['ImageId'].nil?
     end
     
-    link_uri = Addressable::URI.parse(url)
-    base_uri = Addressable::URI.parse(cms_url)
-
-    if(link_uri.host.nil?)        
-      link_uri.host = base_uri.host
-      link_uri.scheme = base_uri.scheme
-      url = link_uri.to_s
-    end
-
-    link_host = link_uri.host.gsub('www.', '')
-    base_host = base_uri.host.gsub('www.', '')
-    
-    logger.info("Checking for valid image proxy request #{link_host} vs. #{base_host}")
-    if(link_host == base_host)
+    if(allow_to_proxy?(url))
       image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
         logger.info("URL requested not cached: #{url}")
         logger.info("Fetching #{url}")
-        raw_response = HTTParty.get(link_uri.normalize)
+        raw_response = HTTParty.get(url)
         image_response = {body: raw_response.body, content_type: raw_response.headers['content-type']}
         image_response
       end
       
       send_data image_response[:body], type: image_response[:content_type], disposition: 'inline', layout: false
     else
-      render plain: "Error retreiving #{url}, #{link_uri.host.gsub('www.', '')} does not match #{base_uri.host.gsub('www.', '')}"
+      render plain: "Error retreiving #{url}, the host does not match any allowed uris."
       return
     end
     
@@ -96,6 +83,42 @@ class ApplicationController < ActionController::Base
     end
 
     url
+  end
+  
+  def allow_to_proxy? url
+    link_uri = Addressable::URI.parse(url)
+    base_uri = Addressable::URI.parse(cms_url)
+
+    if(link_uri.host.nil?)        
+      link_uri.host = base_uri.host
+      link_uri.scheme = base_uri.scheme
+      url = link_uri.to_s
+    end
+
+    link_host = link_uri.host.gsub('www.', '')
+    base_host = base_uri.host.gsub('www.', '')
+    
+    logger.info("Checking for valid image proxy request #{link_host} vs. #{base_host}")
+    if(link_host == base_host)
+      return true
+    end
+    
+    # We check if there's optional urls listed in the secret.env file
+    
+    return true if allowed_proxy_hosts().include?(link_host)
+    return false
+  end
+  
+  def allowed_proxy_hosts
+    return [] unless ENV.has_key? 'allowed_proxy_subdomains'
+    
+    allowed_proxy_subdomains = ENV['allowed_proxy_subdomains']
+    allowed_proxy_subdomains = allowed_proxy_subdomains.gsub('[', '')
+    allowed_proxy_subdomains = allowed_proxy_subdomains.gsub(']', '')
+    allowed_hosts = allowed_proxy_subdomains.split(',')
+    allowed_hosts.map!{|host| host.gsub('"', '')}
+
+    return allowed_hosts
   end
 
   def heartbeat
@@ -157,4 +180,5 @@ class ApplicationController < ActionController::Base
 
     response.to_json
   end
+  
 end
