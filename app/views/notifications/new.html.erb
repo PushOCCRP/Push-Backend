@@ -14,14 +14,11 @@
 				<%= f.text_area :message, size: "60x5", class: "form-control" %><br />
 			</div>
 		  	<div class="form-group">
-          <%= f.label :language_for_notification %><br>
-  		  	<% options = []
-    		  	 @languages.each{|language| options << [display_name_for_language(language), language]} %>
-  		  	<%= f.select :language, options_for_select=(options) %>
+		  		<%= f.label :language %>
+				<%= f.text_field :language, class: "form-control" %><br />
 			</div>
 			<div class="form-group">
 		  		<%= f.label :article_id %>
-		  		The article id from your CMS.
 		  		<%= f.text_field :article_id, class: "form-control" %>
 		  	</div>
 

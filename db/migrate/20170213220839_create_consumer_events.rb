@@ -1,4 +1,4 @@
-class CreateConsumerEvents < ActiveRecord::Migration[4.2]
+class CreateConsumerEvents < ActiveRecord::Migration
   def change
     create_table :consumer_events do |t|
       t.integer   :consumer_id,     null: false

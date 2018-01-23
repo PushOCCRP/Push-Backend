@@ -16,7 +16,6 @@ class AnalyticsController < ApplicationController
         @earliest_consumer_event_date = ConsumerEvent.first.nil? ? Time.now : ConsumerEvent.first.created_at
         
         @most_recent_search_phrases = ConsumerEvent.where("event_type_id = #{ConsumerEvent::EventType::SEARCH} AND search_phrase <> ''").order(:created_at).limit(10)
-
 	end
 
 end

@@ -22,7 +22,6 @@ tmp/*
 
 # Ignore the installed gems
 /vendor/bundle
-/vendor/cache
 
 secrets.env*
 /.docker/postgres/*
@@ -38,21 +37,6 @@ secrets.env
 /cookbooks/*
 .env
 .byebug_history
-
-node_modules/
-/actionview/log
-
-/activerecord/sqlnet.log
-
-/activemodel/test/fixtures/fixture_database.sqlite3
-/activesupport/test/fixtures/isolation_test
-/activestorage/test/service/configurations.yml
-/railties/test/500.html
-/railties/test/fixtures/tmp
-/railties/test/initializer/root/log
-/railties/doc
-/railties/tmp
-/guides/output
 
 data/dump.rdb
 
