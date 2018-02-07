@@ -86,11 +86,13 @@ function join_by { local d=$1; shift; echo -n "$1"; shift; printf "%s" "${@/#/$d
 
 function kill_docker_containers {
   echoc "\n-------------------------------------------------------------------------------------------------------------\n" $BLUE
-  echoc "Stopping any errantly running docker containers" $BLUE
+  echoc "Stopping any errantly running docker containers from this compose file" $BLUE
   echoc "\n-------------------------------------------------------------------------------------------------------------\n" $BLUE
   if [ -n "$(docker ps -a -q)" ]; then
-    docker stop $(docker ps -a -q)
-    docker rm $(docker ps -a -q)
+    docker-compose stop
+    docker-compose rm
+    # docker stop $(docker ps -a -q)
+    # docker rm $(docker ps -a -q)
   fi
 }
 
