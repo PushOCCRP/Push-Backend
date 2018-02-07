@@ -1,7 +1,8 @@
 class Blox < CMS
 
 	def self.articles params
-
+		byebug
+		return get_articles
 	end
 
 	def self.article params
