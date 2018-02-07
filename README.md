@@ -25,7 +25,7 @@ Theres a few different ways to set this up (and if you're familiar with Docker p
 
 
 ## Setup From Scratch 
-#### (Skip to next section if you're using the AWS setup [scripts}(https://github.com/PushOCCRP/Push-AWS-Launcher)
+#### (Skip to next section if you're using the AWS setup [scripts](https://github.com/PushOCCRP/Push-AWS-Launcher)
 
 #### Some Notes
 - This will assume you're setting up on a Debian-based Linux system (Debian/Ubuntu etc.)
@@ -81,3 +81,124 @@ Since every host is different If you don't know how to do this it's best to ask 
 WP Super Cache is a plugin for Wordpress that makes your site sometimes load much faster. It's totally fine if you use it. Howver, our server does its own caching so it needs to be able to get around the cache. It does this by using a specially crafter 'key'. You can generate it from the settings page on your Wordpress installation.
 
 Steps to get key forthcoming here...
+
+# Development
+
+## Adding Support For New CMS
+
+#### Model
+
+For every CMS backend that Push supports there is a corresponding model that inherets from the ```CMS``` class found in ```/app/models/cms.rb```.
+
+There are three methods that have to be implemented:
+
+- ```def self.articles params```
+- ```def self.article params```
+- ```def self.search params```
+
+If you implement categories you must also implement
+
+- ```def self.categories```
+
+How you decided to implement these is mostly up to you, since every CMS does it differently. There are formatting helpers and standard HTML/CSS/JS cleaners in the ```CMS``` class. I would recommend looking at the various other implementations of cms models to get a feel for how they work.
+
+#### Controller
+
+For every CMS you need to add a switch so that the controller knows which model to use. Right now that's here:
+
+- ```def index```
+- ```def search```
+- ```def article```
+
+There are some leftover stuff from Joomla in the Controller but you can ignore it for implementation purposes.
+
+#### Environment Variables
+
+Push uses the [Figaro](https://github.com/laserlemon/figaro) gem for configuation. The config file is at ```/config/initializers/figaro.rb```.
+
+Specifically you have to choose a name for the ```cms_mode``` and then the required variables. This is at least a url for the cms but could be things such as API keys as well.
+
+---
+
+## API
+
+The Push Backend serves up an API that can be consumed by Push client apps. Right now that's only the iOS and Android apps, but could be things such as TV apps or other readers.
+
+Here are the main consumptionAPIs, there's a few other that I have yet to document, but they are for internal purposes and are not need by the apps.
+
+### Parameters
+
+These parameters are applicable for all requests.
+
+- _language_ (optional): a two letter language code (e.g. 'en', 'de', 'sr'). This raises an error if the language is not enabled.
+
+### Responses
+
+TBD
+
+---
+
+### Get All Articles
+
+#### Verb
+
+GET
+
+#### Path
+
+/articles
+
+#### Required Headers
+
+- Accept: application/json
+
+#### Parameters
+
+- _categories_ (optional): ```true``` or ```false``` if you would like cateogries or consolidated listings. If categories is disabled in the backend this will not matter.
+
+### Get Single Article
+
+#### Verb
+
+GET
+
+#### Path
+
+/article
+
+#### Required Headers
+
+- Accept: application/json
+
+#### Parameters
+
+- _id_ (required): The article id that represents the article in the backend CMS.
+
+#### Discussion
+
+Since the Push backend does not keep track of individual articles the ```id``` is whatever is assigned in the main CMS.
+
+This is mostly used to respond to push notifications.
+
+### Search
+
+#### Verb
+
+GET
+
+#### Path
+
+/search
+
+#### Required Headers
+
+- Accept: application/json
+
+#### Parameters
+
+- _q_ (required): The query, html encoded, to search for.
+
+
+
+
+
