@@ -110,7 +110,14 @@ class Newscoop < CMS
       
       @response = Rails.cache.fetch("categories_string/#{language}", expires_in: 1.hour) do
         # Pull set categories, and only fetch those
-        categories_to_include = YAML.load(Setting.categories)
+        begin
+          categories_to_include = YAML.load(Setting.categories)
+        rescue => exception
+          categories_to_include = {}
+        end
+        
+        categories_to_include = {} unless categories_to_include.class == ActionController::Parameters
+        
         
         if(!Setting.show_most_recent_articles.nil?)
           items[translate_phrase("most_recent", language).to_sym] = most_recent_articles(params)
@@ -118,7 +125,7 @@ class Newscoop < CMS
                         
         categories[language].each do |category|
 
-          if(!categories_to_include.nil? && !categories_to_include[language].include?(category['title']))
+          if(!categories_to_include.nil? && categories_to_include.include?(language) && !categories_to_include[language].include?(category['title']))
             next
           end
         
@@ -219,13 +226,13 @@ class Newscoop < CMS
     logger.info("Fetching article with id #{article_id}")
 
     cached = true
-    @response = Rails.cache.fetch("newscoop_articles/#{article_id}/#{language}/#{version}", expires_in: 1.hour) do
+    #@response = Rails.cache.fetch("newscoop_articles/#{article_id}/#{language}/#{version}", expires_in: 1.hour) do
       logger.info("article is not cached, making call to newscoop server")
       cached = false
       response = HTTParty.get(url, query: options)
       body = JSON.parse response.body
-      format_newscoop_response({items: [body]})
-    end        
+      @response = format_newscoop_response({items: [body]})
+    #end        
 
     if(cached == true)
       logger.info("Cached hit for articles")
@@ -400,6 +407,9 @@ class Newscoop < CMS
   
   def self.format_newscoop_articles articles
     formatted_articles = []
+
+    articles = [] if articles.nil?
+
     articles.each do |article|
         formatted_article = {}
         formatted_article['headline'] = article['title']
@@ -427,7 +437,7 @@ class Newscoop < CMS
             videos << {youtube_id: youtube_id}
         end
               
-        formatted_article['videos'] = videos
+        formatted_article['video'] = videos
         
         images = []
            

@@ -6,35 +6,51 @@ services:
   # we need it for only allowing certain endpoints to be available
   nginx:
     build: https://github.com/PushOCCRP/watchful-nginx.git
+    restart: always
     ports:
       - "80:80"
       - "443:443"
     depends_on:
       - web
-#      - letsencrypt
+#     - letsencrypt
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
     env_file:
       - ./secrets.env
     volumes:
       - "./.docker/nginx/:/etc/nginx/:ro"                            # config
-      - "./.docker/nginx/:/etc/ssl/nginx"
-      - "./.docker/data/secrets/keys/:/srv/data/:ro"                # dhpram and certs are here
+      - "./.docker/nginx/:/etc/ssl/nginx:ro"
+      - "./.docker/data/secrets/keys:/srv/data:ro"                # dhpram and certs are here
       #- "./.docker/data/secrets/keys/live/`ls`:/srv/data/ssl/keys:ro"
       - "./.docker/data/secrets/keys/archive/:/etc/letsencrypt/archive:ro"
       - "./.docker/data/secrets/keys/live/$LETSENCRYPT_DOMAINS:/srv/data/ssl/keys:ro"
-      - "./.docker/data/secrets/keys:/srv/data/"
+      - "./.docker/data/secrets/keys:/srv/data/:ro"
       - "./public/:/var/public/:ro"
   db:
     image: postgres
+    restart: always
     volumes:
       - "./.docker/postgres:/data/postgres"
+      - "./.docker/backups:/data/backups"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - PGDATA=/data/postgres
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 
   web:
     build: .
     command: bundle exec rails s -p 3000 -b '0.0.0.0'
+    restart: always
     volumes:
       - .:/push
     expose:
@@ -52,6 +68,11 @@ services:
     entrypoint: /push/entrypoint.sh
     tty: true
     stdin_open: true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 #    extra_hosts:                            # For dev purposes only
 #      - "rise.md:213.133.100.136"
@@ -61,6 +82,7 @@ services:
   # uniqush itself
   uniqush:
       build: https://github.com/beevelop/docker-uniqush.git
+      restart: always
       environment:
           # this is the default, but let's be explicit here
           UNIQUSH_DATABASE_HOST: "redis"
@@ -75,10 +97,33 @@ services:
       volumes:
           - "./secrets:/secrets"
           #- "/srv/logs/gurac/:/srv/logs/gurac/"
+      logging:
+        driver: "json-file"
+        options:
+          max-size: "10m"
+          max-file: "3"
 
   # the redis db server
   redis:
       image: redis
+      restart: always      
       volumes:
           - "./.docker/redis:/data"
       command: ["redis-server", "--appendonly", "yes"]
+      logging:
+        driver: "json-file"
+        options:
+          max-size: "10m"
+          max-file: "3"
+
+  logrotate:
+    image: blacklabelops/logrotate
+    restart: always
+    volumes:
+      - ./log:/logs
+    environment:
+      - LOGS_DIRECTORIES=/logs
+      - LOGROTATE_SIZE=5M
+      - LOGROTATE_CRONSCHEDULE=0 0 * * * *
+      - LOGROTATE_COMPRESSION=compress
+      - LOGROTATE_COPIES=5

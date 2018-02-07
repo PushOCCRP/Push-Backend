@@ -1,21 +1,22 @@
 class ArticlesController < ApplicationController
 
   before_action :check_for_force_https
-
+  before_action :register_consumer_event
+  
   def index
     
     @response = []
 
     case @cms_mode 
       when :occrp_joomla
-        @response = get_occrp_joomla_articles
+        @response = get_occrp_joomla_articles(params)
       when :wordpress
         @response = Wordpress.articles(params)
         #@response['results'] = clean_up_response @response['results']
       when :newscoop
         @response = Newscoop.articles(params)
       when :cins_codeigniter
-        @response = CinsCodeignitor.articles(params)
+        @response = CinsCodeigniter.articles(params)
     end
     
     respond_to do |format|
@@ -24,7 +25,7 @@ class ArticlesController < ApplicationController
 
   end
 
-  def get_occrp_joomla_articles
+  def get_occrp_joomla_articles(params)
     url = ENV['occrp_joomla_url'] + "&view=articles"
 
     version = params["v"]
@@ -34,7 +35,6 @@ class ArticlesController < ApplicationController
     # At the moment it makes the call twice. We need to cache this.
     @response = Rails.cache.fetch("joomla_articles#{version}", expires_in: 1.hour) do
       request_response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
-      body = response.body
 
       body = JSON.parse(request_response.body)
       articles = clean_up_response(body['results'])
@@ -54,7 +54,7 @@ class ArticlesController < ApplicationController
       when :newscoop
         @response = Newscoop.search(params)
       when :cins_codeigniter
-        @response = CinsCodeignitor.search(params)
+        @response = CinsCodeigniter.search(params)
     end 
     
     respond_to do |format|
@@ -105,7 +105,7 @@ class ArticlesController < ApplicationController
       when :newscoop
         @response = Newscoop.article(params)
       when :cins_codeigniter
-        @response = CinsCodeignitor.article(params)
+        @response = CinsCodeigniter.article(params)
     end 
     
     respond_to do |format|
@@ -149,6 +149,33 @@ class ArticlesController < ApplicationController
     else
       @force_https = false
     end
+  end
+  
+  def register_consumer_event
+    return if !request.env['HTTP_USER_AGENT'].blank? && request.env['HTTP_USER_AGENT'].include?('ApacheBench')
+    return if !params.key? 'installation_uuid'  
+      
+    # Save this record to our analytic tracking  
+    consumer = Consumer.find_or_create_by(uuid: params['installation_uuid'])
+    consumer.times_seen += 1
+    consumer.save!
+    
+    event = ConsumerEvent.new(consumer: consumer)
+    event.language = (params.key?('language') && !params['language'].empty?) ? params['language'] : CMS.default_language
+    event.event_type_id = case params['action']
+    when 'index'
+      ConsumerEvent::EventType::ARTICLES_LIST
+    when 'article'
+      event.article_id = params['id'] if params.key?('id') && !params['id'].empty?
+      ConsumerEvent::EventType::ARTICLE_VIEW
+    when 'search'
+      event.search_phrase = params['q'] if params.key?('q') && !params['q'].empty?
+      ConsumerEvent::EventType::SEARCH
+    else
+      return
+    end
+    
+    event.save!
   end
   
   def get_cookie
@@ -436,8 +463,8 @@ class ArticlesController < ApplicationController
         url = ENV['wordpress_url']
       when "newscoop"
         url = ENV['newscoop_url']
-      when "cins-codeignitor"
-        url = ENV['cins_codeignitor_url']
+      when "cins-codeigniter"
+        url = ENV['codeigniter_url']
       else
         raise "CMS type #{cms_type} not valid for this version of Push."
     end

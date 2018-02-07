@@ -70,7 +70,7 @@ class ApplicationController < ActionController::Base
         @cms_mode = :wordpress
       when "newscoop"
         @cms_mode = :newscoop
-      when "cins-codeignitor"
+      when "cins-codeigniter"
         @cms_mode = :cins_codeigniter
       else
         raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
@@ -78,74 +78,79 @@ class ApplicationController < ActionController::Base
   end
 
   def cms_url
-
     case ENV['cms_mode']
-      when "occrp-joomla"
-        url = ENV['occrp_joomla_url']
-      when "wordpress"
-        url = ENV['wordpress_url']
-      when "newscoop"
-        url = ENV['newscoop_url']
-      when "cins-codeignitor"
-        url = ENV['cins_codeignitor_url']
-      else
-        raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
+    when "occrp-joomla"
+      url = ENV['occrp_joomla_url']
+    when "wordpress"
+      url = ENV['wordpress_url']
+    when "newscoop"
+      url = ENV['newscoop_url']
+    when "cins-codeigniter"
+      url = ENV['codeigniter_url']
+    else
+      raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
     end
 
-    return url
+    url
   end
-  
+
   def heartbeat
     # OK, this checks a bunch of stuff
     # Specifically we have to go through each language and call "articles" on it, that should be good enough for now
-    
-    languages = ENV['languages'].gsub('"', '').split(',')
-    
+
+    categories = ['true', 'false']
     @response = []
 
-    #params has 'language', 'categories' (boolean)
-
-    # Run through each language, and each iteration of categories
-    
-    categories = ['true', 'false']
-    
     begin
-      languages.each do |language|
-        categories.each do |categorized|  
-          params = {"language": language, "categories": categorized}.with_indifferent_access
-          logger.debug "*************"
-          logger.debug params
-          case @cms_mode 
-            when :occrp_joomla
-              @response = ArticlesController.get_occrp_joomla_articles
-            when :wordpress
-              @response = Wordpress.articles(params)
-              #@response['results'] = clean_up_response @response['results']
-            when :newscoop
-              @response = Newscoop.articles(params)
-            when :cins_codeigniter
-              @response = CinsCodeignitor.articles(params)
+      if ENV['languages'].nil?
+        categories.each do |categorized|
+          @response = sample_call nil, categorized
+        end
+      else
+        languages = ENV['languages'].delete('"').split(',')
+
+        # Run through each language, and each iteration of categories
+        languages.each do |language|
+          categories.each do |categorized|
+            @response = sample_call language, categorized
           end
-          
-          @response.to_json
         end
       end
     rescue => e
       message = "Heartbeat failed: #{e}"
-      
+
       if params.has_key?('v') && params['v'] == 'true'
         message += "\n\nBacktrace\n"
-        message += "----------------------"
-        e.backtrace.each {|line| message += "\n#{line}" }
+        message += '----------------------'
+        e.backtrace.each { |line| message += "\n#{line}" }
         message += "\n----------------------\n"
       end
-      
+
       logger.debug message
       render plain: message, status: 503
       return
     end
-    
-    render plain: "Success"
-    return
+
+    render plain: 'Success'
+  end
+
+  def sample_call language, category
+    params = {}
+    params['language'] = language unless language.nil?
+    params['categories'] = category unless category.nil?
+
+    case @cms_mode
+    when :occrp_joomla
+      response = ArticlesController.new.get_occrp_joomla_articles(params)
+    when :wordpress
+      response = Wordpress.articles(params)
+      # @response['results'] = clean_up_response @response['results']
+    when :newscoop
+      response = Newscoop.articles(params)
+    when :cins_codeigniter
+      response = CinsCodeigniter.articles(params)
+    end
+
+    response.to_json
   end
 end

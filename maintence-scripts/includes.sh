@@ -40,6 +40,10 @@ function echoc {
   printf "$2$1${NC}\n"
 }
 
+function timestamp {
+  date +"%Y%m%d-%H:%M:%S"
+}
+
 # asks a yes or no question, echos 'true' for yes, 'false' for no
 # ex: answer=$(askyn 'Are you a god?')
 # ex: askyn 'Are you a god?' $answer
@@ -77,3 +81,25 @@ function askyn {
 #     join_by / var local tmp #var/local/tmp
 #     join_by , "${FOO[@]}" #a,b,c
 function join_by { local d=$1; shift; echo -n "$1"; shift; printf "%s" "${@/#/$d}"; }
+
+# This is the setup script for Lets Encrypt on a new Push Backend Server.
+
+function kill_docker_containers {
+  echoc "\n-------------------------------------------------------------------------------------------------------------\n" $BLUE
+  echoc "Stopping any errantly running docker containers" $BLUE
+  echoc "\n-------------------------------------------------------------------------------------------------------------\n" $BLUE
+  if [ -n "$(docker ps -a -q)" ]; then
+    docker stop $(docker ps -a -q)
+    docker rm $(docker ps -a -q)
+  fi
+}
+
+function check_if_docker_is_running {
+  if [ ! "$(docker ps)" ]; then
+    echoc "\n-------------------------------------------------------------------------------------------------------------" $RED
+    echoc "ERROR: The Docker engine doesn't seem to be running.\n" $RED
+    echoc "Please review the console output and submit a bug report if you think it's necessary."
+    echoc "\n-------------------------------------------------------------------------------------------------------------" $RED
+    exit 100
+  fi
+}

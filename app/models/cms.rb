@@ -212,7 +212,12 @@ class CMS < ActiveRecord::Base
       next if link.attributes.has_key?('href') == false
       
       link_address = link.attributes['href'].value
-      uri = URI(link_address)
+
+      begin
+        uri = URI(link_address)
+      rescue => exception
+        next        
+      end
       
       next if uri.nil? || uri.host.nil?
       
@@ -503,7 +508,8 @@ class CMS < ActiveRecord::Base
   def self.default_language
     default_language = ENV['default_languages']
     default_language = languages[0] if default_language.nil?
-    
+    default_language = 'en' if default_language.nil?
+
     return default_language
   end
   
@@ -516,8 +522,8 @@ class CMS < ActiveRecord::Base
         url = ENV['wordpress_url']
       when "newscoop"
         url = ENV['newscoop_url']
-      when "cins-codeignitor"
-        url = ENV['cins_codeignitor_url']
+      when "cins-codeigniter"
+        url = ENV['codeigniter_url']
       else
         raise "CMS type #{cms_type} not valid for this version of Push."
     end

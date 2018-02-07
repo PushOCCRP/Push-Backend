@@ -33,7 +33,7 @@ echoc "\n-----------------------------------------------------------------------
 echoc "First, what type of CMS do you have?\n"
 # bash options list?
 PS3='Please enter your choice: '
-options=("Wordpress" "Newscoop" "Joomla" "Codeignitor")
+options=("Wordpress" "Newscoop" "Joomla" "Codeigniter")
 select opt in "${options[@]}"
 do
     case $opt in
@@ -49,8 +49,8 @@ do
             cms='Joomla';
             break
             ;;
-        "Codeignitor")
-            cms='Codeignitor';
+        "Codeigniter")
+            cms='Codeigniter';
             break
             ;;
         *) echo invalid option;;
@@ -256,7 +256,6 @@ do
         echo "$language"
         if [ "$language" = "$opt" ]; then
             unset language_options[$index]
-            echo "language_options is now: ${language_options[@]}"
             break
         fi
         let index++

@@ -34,6 +34,8 @@ Rails.application.routes.draw do
   get 'passthrough' => 'application#passthrough'
   
   get 'heartbeat' => 'application#heartbeat'
+  
+  get 'analytics' => 'analytics#index'
 
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".

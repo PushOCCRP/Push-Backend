@@ -1,6 +1,5 @@
 class UsersController < ApplicationController
-    rescue_from ActionController::RedirectBackError, with: :redirect_to_default
-    rescue_from ActiveRecord::RecordNotFound, with: :user_not_found
+  rescue_from ActiveRecord::RecordNotFound, with: :user_not_found
 
 	before_action :authenticate_user!
 	before_action :set_minimum_password_length, only: [:new, :edit]
@@ -52,7 +51,7 @@ class UsersController < ApplicationController
 
 		if(params[:user][:password] != params[:user][:password_confirmation])
 			flash[:alert] = "Passwords must match."
-			redirect_to :back
+			redirect_back(fallback_location: users_path)
 		end
 
 		@user.email = params[:user][:email]
@@ -75,7 +74,7 @@ class UsersController < ApplicationController
 		user.destroy!
 
 		flash[:notice] = "#{email} deleted"
-		redirect_to :back
+		redirect_back(fallback_location: users_path)
 	end
 
 	private
@@ -87,7 +86,7 @@ class UsersController < ApplicationController
   	def user_not_found
 		flash[:alert] = "User not found with id #{params[:id]}"
 		begin
-			redirect_to :back
+			redirect_back(fallback_location: users_path)
 		rescue ActionController::RedirectBackError
 			redirect_to_default
 		end
