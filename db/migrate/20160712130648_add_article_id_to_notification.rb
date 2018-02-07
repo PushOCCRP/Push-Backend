@@ -1,4 +1,4 @@
-class AddArticleIdToNotification < ActiveRecord::Migration[4.2]
+class AddArticleIdToNotification < ActiveRecord::Migration
   def change
   	  add_column :notifications, :article_id, :string
   end

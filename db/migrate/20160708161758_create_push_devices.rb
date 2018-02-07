@@ -1,4 +1,4 @@
-class CreatePushDevices < ActiveRecord::Migration[4.2]
+class CreatePushDevices < ActiveRecord::Migration
   def change
     create_table :push_devices do |t|
       t.string :dev_token
