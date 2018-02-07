@@ -1,8 +1,23 @@
 class Blox < CMS
 
 	def self.articles params
+<<<<<<< HEAD
 		byebug
 		return get_articles
+=======
+    results = Rails.cache.fetch("articles", expires_in: 1.hour) do
+      get_articles
+    end    
+    
+    response = {start_date: "19700101",
+           end_date: DateTime.now.strftime("%Y%m%d"),
+           total_results: results.size,
+           page: "1",
+           results: results
+          }
+
+    return response
+>>>>>>> 2ad85c249ede5fc8738ed97d70c90cc04833c55e
 	end
 
 	def self.article params
@@ -41,12 +56,22 @@ class Blox < CMS
 
 		pages = get_pages newest_edition['id']
 
-		articles = []
+		page_assets = []
 		pages.each do |page|
-			articles += parse_page(page,publish_date)
+			page_assets += parse_page(page)
 		end
-
-		return articles
+		
+		assets = []
+		page_assets.each do |page_asset|
+  		assets << get_asset(page_asset)
+    end
+		
+		assets = clean_up_response(assets)
+		assets.each do |asset|
+  		asset['body'] = normalizeSpacing(asset['body'])
+  		asset['author'] = clean_up_byline(asset)
+    end
+		return assets
 	end
 
 	def self.get_publications
@@ -108,46 +133,70 @@ class Blox < CMS
   
 	  return cached_pages
 	end
-
-	def self.parse_page json, edition_date
+	
+	def self.parse_page json
 		return unless json.has_key?('json_url')
 
 		url = json['json_url']
 
-		page = Rails.cache.fetch("page/#{url}", expires_in: 1.hour) do
+		cached_assets = Rails.cache.fetch("page/#{url}", expires_in: 1.hour) do
       cache = false;
             	    
 	    response = HTTParty.get(url, basic_auth: auth_credentials)
 	    body = JSON.parse response.body
 
-	    articles = []
+	    assets = []
 
 	    segments = body['segments']
 	    segments.each do |segment|
 	    	asset = segment['asset']
 	    	next unless asset['type'] == 'article'
-
-	    	article = {}
-	    	article['headline'] = asset['headline']
-	    	article['description'] = asset['prologue']
-	    	article['body'] = asset['content'].join(' ')
-	    	article['publish_date'] = edition_date
-	    	article['id'] = asset['id']
-	    	article['url'] = asset['urls']['absolute']
-
-	    	articles << article
+	    	page_asset = {}
+	    	page_asset['uuid'] = asset['uuid']
+	    	page_asset['prologue'] = asset['prologue']
+	    	page_asset['body'] = asset['content'].join(' ')
+	    	assets << page_asset
 	    end
 
 	    # Since the array returned is all of what we're looking for, we just return it.
-   		cleaned_articles = clean_up_response(articles)
-	    return cleaned_articles
+#   		cleaned_articles = clean_up_response(articles)
+	    return assets
 	  end
     
     logger.debug("page #{url} Cache hit") if cache == true
     logger.debug("page #{url} Cache missed") if cache == false
 
-    return page
+    return cached_assets
  	end
+ 	
+ 	def self.get_asset page_asset
+    cache = true;
+    cached_asset = Rails.cache.fetch("list_pages/#{page_asset['uuid']}", expires_in: 1.hour) do
+      cache = false;
+            
+	    url = get_url "editorial/get/?id=#{page_asset['uuid']}"
+	    response = HTTParty.get(url, basic_auth: auth_credentials(:editorial))
+	    body = JSON.parse response.body
+      
+      article = {}
+      article['body'] = page_asset['body']
+      article['description'] = page_asset['prologue']
+      article['headline'] = body['title']
+      article['author'] = body['byline']
+      article['publish_date'] = Date.parse(body['update_time']).strftime("%Y%m%d")
+      article['language'] = default_language()
+      article['id'] = body['id']
+      article['url'] = body['url']
+	    # Since the array returned is all of what we're looking for, we just return it.
+	    return article
+	  end
+    
+    logger.debug("get_asset #{page_asset['uuid']} Cache hit") if cache == true
+    logger.debug("get_asset #{page_asset['uuid']} Cache missed") if cache == false
+  
+	  return cached_asset
+  end
+
 
 	def self.make_request url
 		logger.debug("Making request to #{url}")
@@ -165,9 +214,22 @@ class Blox < CMS
     end
 	  return body
 	end
+	
+	def self.clean_up_byline article
+  	article['author'].gsub!("By", "")
+  	article['author'].gsub!("by", "")
+  	article['author'].gsub!("BY", "")
+  	article['author'].strip!
+  end
+  	
 
-	def self.auth_credentials
-		auth = {:username => ENV['blox_key'], :password => ENV['blox_secret']}
+  # options are :eedition and :editorial
+	def self.auth_credentials service=:eedition
+    return case service
+      when :eedition then {:username => ENV['blox_eedition_key'], :password => ENV['blox_eedition_secret']}
+      when :editorial then {:username => ENV['blox_editorial_key'], :password => ENV['blox_editorial_secret']}
+      else raise "Unsupported credentials type #{service}."
+    end
 	end
 
 end

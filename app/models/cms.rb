@@ -12,6 +12,8 @@ class CMS < ActiveRecord::Base
   def self.clean_up_response articles = Array.new, version = 1.0
     articles.delete_if{|article| article['headline'].blank?}
     articles.each do |article|
+      # Clean up the bylines
+      article['author'] = removeNewLines(article['author'])
       # If there is no body (which is very prevalent in the OCCRP data for some reason)
       # this takes the intro text and makes it the body text
       if((!article.has_key?('body') || !article['body'].nil?) && !article[:body].nil?)
@@ -148,7 +150,14 @@ class CMS < ActiveRecord::Base
       begin
         image_address = image.attributes['src'].value
       rescue
-        next
+        # Blox uses data-src for its images. I'm guessing for lazy loading?
+        begin 
+          image_address = image.attributes['data-src'].value
+          image['src'] = image_address
+          image.delete 'data-src'
+        rescue
+          next
+        end
       end
 
       if !image_address.starts_with?("http")        
@@ -404,6 +413,12 @@ class CMS < ActiveRecord::Base
   def self.cleanUpNewLines html_string
     cleaned = html_string
     cleaned.gsub!("\r\n\r\n", "<br />")
+    return cleaned
+  end
+  
+  def self.removeNewLines string
+    cleaned = string
+    string.gsub!("\n", "")
     return cleaned
   end
   
