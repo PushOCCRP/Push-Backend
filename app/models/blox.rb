@@ -20,6 +20,22 @@ class Blox < CMS
 
 	def self.search params
 	end
+	
+	def self.authenticate user_name, password, params
+    url = get_url "/user/authenticate/"
+    
+    body = {'user' => user_name, 'password' => password}
+    headers = {'Accept' => 'application/json', 'Content-Type'  => 'application/x-www-form-urlencoded'}
+    response = HTTParty.post(url, body: body, headers: headers, basic_auth: auth_credentials(:user))
+    body = JSON.parse response.body
+
+    # Check if we authenticated properly
+    # {"code"=>0, "status"=>"error", "message"=>"Invalid password or account does not exist"}
+    return false if body['code'] == 0 && body['status'] == 'error'
+
+    # {"id"=>"91776626-faf4-11e7-9740-5cb9017bb5c0", "screen_name"=>"cguess", "screenname"=>"cguess", "authtoken"=>"0bef3508-0d21-11e8-bab0-5cb9017b3637", "avatar_url"=>"https://secure.gravatar.com/avatar/716725aebaee97a244ce88b27c296de9?s=100&d=mm&r=g", "avatarurl"=>"https://secure.gravatar.com/avatar/716725aebaee97a244ce88b27c296de9?s=100&d=mm&r=g", "services"=>[], "auth_assertion_url"=>"https://www.columbiamissourian.com/tncms/auth/assert/?token=d6bu5L9NtERytnV9wQ1IstsUr9bhAmvI9Btlu5kXz43CMYkUbI4jOJyp25KwOWuTtB8wzlh2XXKjrS814XC0kF%2Fbf%2BUPaXXktAFD3Q%2BnLSddjQPg%2BWlZkghy78P1wxev7vsIA7K1sNZWT9yjAhymkNqDHUaLj3d0cCfyQq0pGgIq6runWQ7jaLDenCN8qNoxAZrGe2Tf%2FkImD%2B9CBIFiP%2BEyxmqWa4%2BW"}
+    return true
+  end
 
 	private
 
@@ -58,13 +74,15 @@ class Blox < CMS
 		
 		assets = []
 		page_assets.each do |page_asset|
-  		assets << get_asset(page_asset)
+  		assets << get_article_asset(page_asset)
     end
 		
 		assets = clean_up_response(assets)
 		assets.each do |asset|
-  		asset['body'] = normalizeSpacing(asset['body'])
+  		asset['body'] = scrubScriptTagsFromHTMLString(asset['body'])
+  		asset['body'] = scrubJSCommentsFromHTMLString(asset['body'])
   		asset['author'] = clean_up_byline(asset)
+  		asset['body'] = normalizeSpacing(asset['body'])
     end
 		return assets
 	end
@@ -164,32 +182,72 @@ class Blox < CMS
     return cached_assets
  	end
  	
- 	def self.get_asset page_asset
+ 	def self.get_article_asset page_asset
     cache = true;
-    cached_asset = Rails.cache.fetch("list_pages/#{page_asset['uuid']}", expires_in: 1.hour) do
+    cached_asset = Rails.cache.fetch("article/#{page_asset['id']}", expires_in: 1.hour) do
       cache = false;
             
-	    url = get_url "editorial/get/?id=#{page_asset['uuid']}"
-	    response = HTTParty.get(url, basic_auth: auth_credentials(:editorial))
-	    body = JSON.parse response.body
+      asset = get_asset page_asset
       
       article = {}
       article['body'] = page_asset['body']
       article['description'] = page_asset['prologue']
-      article['headline'] = body['title']
-      article['author'] = body['byline']
-      article['publish_date'] = Date.parse(body['update_time']).strftime("%Y%m%d")
+      article['headline'] = asset['title']
+      article['author'] = asset['byline']
+      article['publish_date'] = Date.parse(asset['update_time']).strftime("%Y%m%d")
       article['language'] = default_language()
-      article['id'] = body['id']
-      article['url'] = body['url']
-	    # Since the array returned is all of what we're looking for, we just return it.
+      article['id'] = asset['id']
+      article['url'] = asset['url']
+
+      # Now we go through any images attached to the story, adding them to the object
+
+      article['images'] = asset['relationships']['child'].select{|image_asset|
+            image_asset['asset_type'] == 'image'
+          }.map{|image_asset|
+            get_image_asset(image_asset)
+          }
+      
+      article['captions'] = article['images'].map{|image| image['caption']}
+      article['photoBylines'] = article['images'].map{|image| image['byline']}
 	    return article
 	  end
-    
+	      
     logger.debug("get_asset #{page_asset['uuid']} Cache hit") if cache == true
     logger.debug("get_asset #{page_asset['uuid']} Cache missed") if cache == false
   
-	  return cached_asset
+    return cached_asset
+  end
+  
+  def self.get_image_asset page_asset
+    cache = true;
+    cached_asset = Rails.cache.fetch("image/#{page_asset['id']}", expires_in: 1.hour) do
+      cache = false;
+            
+      asset = get_asset page_asset
+      image = {}      
+      image['url'] = asset['resource_url']
+      image['caption'] = asset['content'].nil? ? "" : clean_up_image_caption(asset['content'].join(' '))
+      image['byline'] = clean_up_image_caption(asset['byline'])
+      image['id'] = asset['id']
+      image['date'] = Date.parse(asset['update_time'])
+#      image = CMS.rewrite_image_url(image)
+	    return image
+	  end
+	      
+    logger.debug("get_asset #{page_asset['uuid']} Cache hit") if cache == true
+    logger.debug("get_asset #{page_asset['uuid']} Cache missed") if cache == false
+  
+    return cached_asset
+  end
+
+  def self.get_asset page_asset
+    id = page_asset['id'].blank? ? page_asset['uuid'] : page_asset['id']
+    return Rails.cache.fetch("list_pages/#{id}", expires_in: 1.hour) do
+  	  url = get_url "editorial/get/?id=#{id}"
+	    response = HTTParty.get(url, basic_auth: auth_credentials(:editorial))
+	    body = JSON.parse response.body
+	    return body
+	  end
   end
 
 
@@ -214,7 +272,16 @@ class Blox < CMS
   	article['author'].gsub!("By", "")
   	article['author'].gsub!("by", "")
   	article['author'].gsub!("BY", "")
+  	article['author'].gsub!("\\n", "")
   	article['author'].strip!
+  end
+  
+  def self.clean_up_image_caption caption
+    caption.gsub!("<p>", '')
+    caption.gsub!("</p>", '')
+    # Yes, I know, never use regex on html, but it's just comments and only used in very small instances
+    caption.gsub!(/(?=<!--)([\s\S]*?)-->/, '')
+    return caption
   end
   	
 
@@ -223,6 +290,7 @@ class Blox < CMS
     return case service
       when :eedition then {:username => ENV['blox_eedition_key'], :password => ENV['blox_eedition_secret']}
       when :editorial then {:username => ENV['blox_editorial_key'], :password => ENV['blox_editorial_secret']}
+      when :user then {:username => ENV['blox_user_key'], :password => ENV['blox_user_secret']}
       else raise "Unsupported credentials type #{service}."
     end
 	end

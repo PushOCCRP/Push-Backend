@@ -27,7 +27,8 @@ Rails.application.routes.draw do
   get 'articles' => 'articles#index'
   get 'article' => 'articles#article'
   get 'search' => 'articles#search'
-  
+  post 'authenticate' => 'subscriptions#authenticate'
+    
   get 'preferences' => 'preferences#index'
   put 'preferences' => 'preferences#update'
   

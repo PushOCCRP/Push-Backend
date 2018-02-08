@@ -98,56 +98,14 @@ class CMS < ActiveRecord::Base
     
     #Yes, i'm aware this is repetitive code.
     article['images'].each do |image|
-      image_address = image['url']
-      if(image_address.nil?)
-        if(!image[:url].blank?)
-          image_address = image[:url]
-        elsif(!image['url'].blank?)
-          image_address = image['url']
-        end
-      end
-
-      if !image_address.starts_with?("http")
-        # build up missing parts
-        prefix = ""
-        if(image_address.starts_with?(":"))
-          prefix = 'https'
-        elsif(image_address.starts_with?("//"))
-          prefix = 'https:'
-        elsif(image_address.starts_with?("/"))
-          prefix = base_url
-        else
-          prefix = base_url + "/"
-        end  
-        # Obviously needs to be fixed
-        full_url = prefix + image_address
-
-        image['url'] = full_url
-        image['start'] = 0
-        image['length'] = 0
-
-        article['image_urls'] << full_url
-      else
-        if(force_https)
-          uri = Addressable::URI.parse(image_address)
-          uri.scheme = 'https'
-          image_address = uri.to_s
-        end
-
-        if(!image[:url].nil?)
-          image[:url] = rewrite_url_for_ssl(rewrite_image_url_for_proxy(image_address))
-        else
-          image['url'] = rewrite_url_for_ssl(rewrite_image_url_for_proxy(image_address))
-        end
-        
-        image['start'] = 0
-        image['length'] = 0
-      end
+      raise "Image is nil when processing. Check your custom model, this should not happen." if image.nil?
+      image = rewrite_image_url(image)
     end
 
     elements = Nokogiri::HTML article['body']
     elements.css('img').each do |image|
       begin
+        image = rewrite_image_url(image)
         image_address = image.attributes['src'].value
       rescue
         # Blox uses data-src for its images. I'm guessing for lazy loading?
@@ -210,6 +168,57 @@ class CMS < ActiveRecord::Base
     end
 
     article['image_urls'] = proxied_image_urls
+  end
+  
+  def self.rewrite_image_url image
+    image_address = image['url']
+
+    if(image_address.nil?)
+      if(!image[:url].blank?)
+        image_address = image[:url]
+      elsif(!image['url'].blank?)
+        image_address = image['url']
+      end
+    end
+    
+    if !image_address.starts_with?("http")
+      byebug
+      # build up missing parts
+      prefix = ""
+      if(image_address.starts_with?(":"))
+        prefix = 'https'
+      elsif(image_address.starts_with?("//"))
+        prefix = 'https:'
+      elsif(image_address.starts_with?("/"))
+        prefix = base_url
+      else
+        prefix = base_url + "/"
+      end  
+      # Obviously needs to be fixed
+      full_url = prefix + image_address
+
+      image['url'] = full_url
+      image['start'] = 0
+      image['length'] = 0
+
+    else
+      if(force_https)
+        uri = Addressable::URI.parse(image_address)
+        uri.scheme = 'https'
+        image_address = uri.to_s
+      end
+
+      if(!image[:url].nil?)
+        image[:url] = rewrite_url_for_ssl(rewrite_image_url_for_proxy(image_address))
+      else
+        image['url'] = rewrite_url_for_ssl(rewrite_image_url_for_proxy(image_address))
+      end
+      
+      image['start'] = 0
+      image['length'] = 0
+    end
+    
+    return image
   end
   
   def self.extract_youtube_links article

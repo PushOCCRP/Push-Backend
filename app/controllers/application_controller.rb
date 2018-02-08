@@ -116,7 +116,7 @@ class ApplicationController < ActionController::Base
     allowed_proxy_subdomains = allowed_proxy_subdomains.gsub('[', '')
     allowed_proxy_subdomains = allowed_proxy_subdomains.gsub(']', '')
     allowed_hosts = allowed_proxy_subdomains.split(',')
-    allowed_hosts.map!{|host| host.gsub('"', '')}
+    allowed_hosts.map!{|host| host.gsub('"', '').strip}
 
     return allowed_hosts
   end
@@ -154,11 +154,17 @@ class ApplicationController < ActionController::Base
       end
 
       logger.debug message
-      render plain: message, status: 503
+      respond_to do |format|
+        format.json{ render :json=>  {status: message, code: '503'} }
+        format.html { render message, status: 503}
+      end
       return
     end
-
-    render plain: 'Success'
+    
+    respond_to do |format|
+      format.json{ render :json=>  {status: 'Success', code: '200'} }
+      format.html { render plain: 'Success'}
+    end
   end
 
   def sample_call language, category
