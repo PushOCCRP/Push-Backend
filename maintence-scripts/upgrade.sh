@@ -42,7 +42,7 @@ fi
 # Stop the cert docker-compose containers
 kill_docker_containers
 
-if ! [ "$rebuild" = true ] then 
+if ! [ "$rebuild" = true ]; then 
   command="docker-compose -f docker-compose.yml build"
   $(docker-compose -f docker-compose.yml build)
 fi
