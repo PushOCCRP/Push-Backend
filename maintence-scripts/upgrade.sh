@@ -13,7 +13,7 @@ echoc "\n-----------------------------------------------------------------------
 echoc "Updating the Push software from the git repository" $GREEN
 echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
 
-# error=$(git pull --rebase | tee /dev/tty | grep 'error')
+# error=$(git pull origin master --rebase | tee /dev/tty | grep 'error')
 
 # if ! [[ -z "${error// }" ]]; then
 
