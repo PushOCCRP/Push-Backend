@@ -42,7 +42,7 @@ fi
 # Stop the cert docker-compose containers
 kill_docker_containers
 
-if ! [ "$rebuild" = true ]; then 
+if [ "$rebuild" = true ]; then 
   echoc "Rebuilding Containers\n" $LIGHT_BLUE
   echoc "---------------------------------------------------------------------------------------------------------------\n"
   $(docker-compose -f docker-compose.yml build)
