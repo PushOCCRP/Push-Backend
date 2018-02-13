@@ -6,6 +6,16 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 # This script will pull the newest version of Push from the git repository.
 # If Push wasn't set up with git this will break pretty fantastically.
 
+# Borrowed from https://stackoverflow.com/a/21128172
+rebuild='false'
+
+while getopts 'r' flag; do
+  case "${flag}" in
+    r) rebuild='true' ;;
+    *) error "Unexpected option ${flag}" ;;
+  esac
+done
+
 check_if_docker_is_running
 
 # Pull the Git repository
@@ -17,7 +27,7 @@ echoc "\n-----------------------------------------------------------------------
 
 # if ! [[ -z "${error// }" ]]; then
 
-if ! [ "$(git pull --rebase)" ]; then
+if ! [ "$(git pull origin master --rebase)" ]; then
   echoc "\n-------------------------------------------------------------------------------------------------------------" $RED
   echoc "There was an error in upgrading from Git.\n" $RED
   echoc "Please review the console output and submit a bug report if you think it's necessary."
@@ -31,6 +41,11 @@ fi
 
 # Stop the cert docker-compose containers
 kill_docker_containers
+
+if ! [ "$rebuild" = true ] then 
+  command="docker-compose -f docker-compose.yml build"
+  $(docker-compose -f docker-compose.yml build)
+fi
 
 if basename "$PWD" | grep 'maintence-scripts' > /dev/null; then
   command='docker-compose -f ../docker-compose.yml up -d'
