@@ -43,7 +43,8 @@ fi
 kill_docker_containers
 
 if ! [ "$rebuild" = true ]; then 
-  command="docker-compose -f docker-compose.yml build"
+  echoc "Rebuilding Containers\n" $LIGHT_BLUE
+  echoc "---------------------------------------------------------------------------------------------------------------\n"
   $(docker-compose -f docker-compose.yml build)
 fi
 
