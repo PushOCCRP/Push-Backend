@@ -89,8 +89,8 @@ function kill_docker_containers {
   echoc "Stopping any errantly running docker containers from this compose file" $BLUE
   echoc "\n-------------------------------------------------------------------------------------------------------------\n" $BLUE
   if [ -n "$(docker ps -a -q)" ]; then
-    docker-compose -f ./docker-compose.yml rm -fsv
-    docker-compose -f ./letsencrypt-docker-compose.yml rm -fsv
+    docker-compose -f ./docker-compose.yml rm -fv
+    docker-compose -f ./letsencrypt-docker-compose.yml rm -fv
     # docker stop $(docker ps -aq)
     # docker rm $(docker ps -aq)
   fi
