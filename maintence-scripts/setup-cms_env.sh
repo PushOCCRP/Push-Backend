@@ -38,7 +38,7 @@ do
             break
             ;;
         "Joomla")
-            cms='Joomla';
+            cms='Occrp-Joomla';
             break
             ;;
         "Codeigniter")
