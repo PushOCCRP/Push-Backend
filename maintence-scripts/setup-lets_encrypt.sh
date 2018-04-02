@@ -111,6 +111,27 @@ echoc "\n-----------------------------------------------------------------------
 echoc "Creating SSL certificates" $GREEN
 echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
 
+# First generate the dhparam key.
+if basename "$PWD" | grep 'maintence-scripts' > /dev/null; then
+  command='docker-compose -f ../letsencrypt-docker-compose.yml run nginx'
+else
+  command='docker-compose -f letsencrypt-docker-compose.yml run nginx'
+fi
+
+error=$($command | tee /dev/tty | grep 'The following errors were reported by the server')
+
+if ! [[ -z "${error// }" ]]; then
+  echoc "\n-------------------------------------------------------------------------------------------------------------" $RED
+  echoc "There was an error in generating your certificates.\n" $RED
+  echoc "Please review the console output and submit a bug report if you think it's necessary."
+  echoc "\n-------------------------------------------------------------------------------------------------------------" $RED
+  exit 100
+else
+  echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT$
+  echoc "Successfully generated your SSL keys!" $LIGHT_BLUE
+  echoc "\n-------------------------------------------------------------------------------------------------------------\n\n" $LIG$
+fi
+
 if basename "$PWD" | grep 'maintence-scripts' > /dev/null; then
   command='docker-compose -f ../letsencrypt-docker-compose.yml up'
 else
