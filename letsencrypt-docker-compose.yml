@@ -28,7 +28,7 @@ services:
   # if running docker-compose >= 1.7.0, put your env vars in .env file
   #
   letsencrypt:
-       image: quay.io/letsencrypt/letsencrypt
+       image: certbot/certbot
        # this file should contain at least two envvars defined
        # - LETSENCRYPT_EMAIL
        # - LETSENCRYPT_DOMAINS (comma-separated list; first domain used as the name of the cert)
@@ -61,12 +61,12 @@ services:
       - "./.docker/data/secrets/keys:/srv/data/"
       - "./public/:/var/public/"
 
-  devencrypt:
-      image: paulczar/omgwtfssl
-      volumes:
-        - "./.docker/data/secrets/keys/ssl/keys/:/certs/"                 # config, certs, etc
-      environment:
-        - SSL_SUBJECT=dev.pushapp.press
-        - SSL_CERT=fullchain.pem
-        - SSL_KEY=privkey.pem
+#  devencrypt:
+#      image: paulczar/omgwtfssl
+#      volumes:
+#        - "./.docker/data/secrets/keys/ssl/keys/:/certs/"                 # config, certs, etc
+#      environment:
+#        - SSL_SUBJECT=dev.pushapp.press
+#        - SSL_CERT=fullchain.pem
+#        - SSL_KEY=privkey.pem
         
