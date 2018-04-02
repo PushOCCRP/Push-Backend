@@ -1,10 +1,6 @@
 class Blox < CMS
 
 	def self.articles params
-<<<<<<< HEAD
-		byebug
-		return get_articles
-=======
     results = Rails.cache.fetch("articles", expires_in: 1.hour) do
       get_articles
     end    
@@ -17,7 +13,6 @@ class Blox < CMS
           }
 
     return response
->>>>>>> 2ad85c249ede5fc8738ed97d70c90cc04833c55e
 	end
 
 	def self.article params
