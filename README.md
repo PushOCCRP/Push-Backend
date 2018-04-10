@@ -48,6 +48,7 @@ Theres a few different ways to set this up (and if you're familiar with Docker p
 
 #### Start here if using the AWS setup script.
 1. ```cd Push-Backend```
+1. Set up the CMS environment variables. ```bash maintence-scripts/setup-cms_env.sh```
 1. Generate a secure key for the web server. ```docker-compose -f letsencrypt-docker-compose.yml run nginx```
 1. Be patient, there's a bunch of stuff going on here including building a bunch of different Docker containers, and creating SSL keys, which can take A LONG time. It really depends on the machine. If you're on an AWS micro instance go for a run, take a shower, whatever, you have at least 45 minutes, maybe two hours to kill.
 1. Run the set up scripts ```bash ./maintence-scripts/setup.sh```
