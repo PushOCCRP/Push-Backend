@@ -59,6 +59,13 @@ class CMS < ActiveRecord::Base
       
       if(published_date.nil?)
         begin
+          published_date = DateTime.strptime(article['publish_date'], '%Y-%m-%dT%H:%M:%S%z')
+        rescue => error
+        end
+      end
+      
+      if(published_date.nil?)
+        begin
           cleaned_date = article['publish_date'].gsub(/(nd)|(th)|(rd)/, '').gsub(/[.,]/, '')
           published_date = DateTime.strptime(cleaned_date, '%A %B %e %Y')
         rescue => error

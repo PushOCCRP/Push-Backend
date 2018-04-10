@@ -108,4 +108,3 @@ ActiveRecord::Schema.define(version: 20180116215137) do
     t.index ["{:index=>true, :foreign_key=>true}_id"], name: "index_users_on_{:index=>true, :foreign_key=>true}_id"
   end
 
-end

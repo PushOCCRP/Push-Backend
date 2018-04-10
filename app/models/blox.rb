@@ -54,98 +54,116 @@ class Blox < CMS
 		# publications, editions, pages. The pages each has various elements
 		# the CMS even includes positioning information, which... fine?
 		# The problem is that this means a lot of calls to pull everything in.
-		publications = get_publications
 		
-		valid_publication = nil
-		publications.each{|publication| valid_publication = publication if publication['name'] == ENV['blox_publication_name']}
-		raise "Publication in secrets.env not found" if valid_publication.nil?
+		# Instead of the system above we're going to try something a bit different.
+		# Here we'll use the "search" function to pull everything.
+		# 1.) Use the categories API to get categories for display. If there's nothing selected... get them all?
+		# 2.) Run a search through each category. Get the first ten "articles".
+		# 3.) Get details on each article
+		# 4.) Retreive images for each article.
+		# 5.) Right now we'll just use the top one. Unless there's some way to indicate positioning.
+		# 6.) Cache this because otherwise... dear god.
+		# 7.) Set up a timer to somehow do this every two minutes or so to seed the cache.
 
-		editions = get_editions valid_publication['id']
-		raise "No editions found for publication_id #{valid_publication['id']}" unless editions.count > 0
-		newest_edition = editions[0]
-		publish_date = newest_edition['edition_date']
-
-		pages = get_pages newest_edition['id']
-
-		page_assets = []
-		pages.each do |page|
-			page_assets += parse_page(page)
-		end
+    categories = get_categories
+    assets = {}
+    categories.each{|category| assets[category] = get_articles_for_category(category)} 
 		
-		assets = []
-		page_assets.each do |page_asset|
-  		assets << get_article_asset(page_asset)
+		articles = {}
+		assets.each do |key, assets_array|
+   		articles[key] = []
+
+  		assets_array['items'].each do |asset|
+    		article = get_asset(asset)    		
+    		articles[key] << article
+      end
+
+      puts("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+      puts(articles[key][0]) 
+      puts("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
     end
-		
-		assets = clean_up_response(assets)
-		assets.each do |asset|
-  		asset['body'] = scrubScriptTagsFromHTMLString(asset['body'])
-  		asset['body'] = scrubJSCommentsFromHTMLString(asset['body'])
-  		asset['author'] = clean_up_byline(asset)
-  		asset['body'] = normalizeSpacing(asset['body'])
+    
+#		articles = clean_up_response(articles)
+#    return articles
+    
+    formatted_categories = {}
+    
+		articles.each do |key, category|
+  		formatted_categories[key] = []
+  		formatted_categories[key] = category.map do |article|
+
+    		byline = article['byline']
+    		content = article['content'].join("")
+    		
+    		content = scrubScriptTagsFromHTMLString(content)
+    		content = scrubJSCommentsFromHTMLString(content)
+        content = normalizeSpacing(content)
+        
+        byline = ' ' if byline.nil?
+        
+    		formatted_article = {
+      		'author' => byline,
+      		'publish_date' => article['start_time'],
+          'headline' => article['title'],
+      		'body' => content
+    		}
+        
+        clean_up_byline(formatted_article)
+    		formatted_article
+      end
+      formatted_categories[key] = clean_up_response(formatted_categories[key])
+      formatted_categories.delete(key) if formatted_categories[key].empty?
     end
-		return assets
+
+		return formatted_categories
 	end
-
-	def self.get_publications
-		cache = true;
-    cached_publications = Rails.cache.fetch("publications", expires_in: 1.hour) do
+	
+  def self.get_categories
+    cache = true;
+    cached_categories = Rails.cache.fetch("categories", expires_in: 1.hour) do
       cache = false;
                   
-	    url = get_url "/eedition/list_publications/"
+	    url = get_url "/editorial/categories/"
 	    
-	    response = HTTParty.get(url, basic_auth: auth_credentials)
+	    response = HTTParty.get(url, basic_auth: auth_credentials(:editorial))
 	    body = JSON.parse response.body
 
 	    # Since the array returned is all of what we're looking for, we just return it.
 	    return body
 	  end
     
-    logger.debug("get_publications #{params.to_s} Cache hit") if cache == true
-    logger.debug("get_publications #{params.to_s} Cache missed") if cache == false
+    logger.debug("get_categories #{params.to_s} Cache hit") if cache == true
+    logger.debug("get_categories #{params.to_s} Cache missed") if cache == false
   
-	  return cached_publications
-	end
-
-	def self.get_editions publication_id
-		cache = true;
-    cached_editions = Rails.cache.fetch("editions/#{publication_id}", expires_in: 1.hour) do
+	  return cached_categories
+  end
+  
+  def self.get_articles_for_category category
+    cache = true;
+    cached_articles = Rails.cache.fetch("articles_#{category}", expires_in: 1.minutes) do
       cache = false;
-            
-	    url = get_url "/eedition/list_editions/?pub_id=#{publication_id}"
+                  
+      params = {
+        'l': 10,
+        'sd': 'desc',
+        'c[]': "#{category}*",
+        't': 'article'
+      }
+	    url = get_url "/editorial/search/"
 	    
-	    response = HTTParty.get(url, basic_auth: auth_credentials)
+	    response = HTTParty.get(url, basic_auth: auth_credentials(:editorial), query: params)
 	    body = JSON.parse response.body
 
 	    # Since the array returned is all of what we're looking for, we just return it.
 	    return body
 	  end
     
-    logger.debug("get_editions #{publication_id} Cache hit") if cache == true
-    logger.debug("get_editions #{publication_id} Cache missed") if cache == false
+    logger.debug("get_categories #{params.to_s} Cache hit") if cache == true
+    logger.debug("get_categories #{params.to_s} Cache missed") if cache == false
   
-	  return cached_editions
-	end
+	  return cached_categories
 
-	def self.get_pages edition_id
-		cache = true;
-    cached_pages = Rails.cache.fetch("list_pages/#{edition_id}", expires_in: 1.hour) do
-      cache = false;
-            
-	    url = get_url "/eedition/list_pages/?edition_id=#{edition_id}"
-	    
-	    response = HTTParty.get(url, basic_auth: auth_credentials)
-	    body = JSON.parse response.body
-
-	    # Since the array returned is all of what we're looking for, we just return it.
-	    return body['pages']
-	  end
-    
-    logger.debug("get_pages #{edition_id} Cache hit") if cache == true
-    logger.debug("get_pages #{edition_id} Cache missed") if cache == false
-  
-	  return cached_pages
-	end
+  end
 	
 	def self.parse_page json
 		return unless json.has_key?('json_url')
@@ -242,7 +260,7 @@ class Blox < CMS
 
   def self.get_asset page_asset
     id = page_asset['id'].blank? ? page_asset['uuid'] : page_asset['id']
-    return Rails.cache.fetch("list_pages/#{id}", expires_in: 1.hour) do
+    return Rails.cache.fetch("editorial/get/#{id}", expires_in: 1.hour) do
   	  url = get_url "editorial/get/?id=#{id}"
 	    response = HTTParty.get(url, basic_auth: auth_credentials(:editorial))
 	    body = JSON.parse response.body
