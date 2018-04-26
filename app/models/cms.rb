@@ -110,6 +110,7 @@ class CMS < ActiveRecord::Base
     end
 
     elements = Nokogiri::HTML article['body']
+    
     elements.css('img').each do |image|
       begin
         image = rewrite_image_url(image)

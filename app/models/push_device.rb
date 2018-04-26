@@ -62,7 +62,7 @@ class PushDevice < ActiveRecord::Base
 		# Build up the options that Uniqush needs
 		# Subscriber has their language attached to the end of it so we can seperate it out
 		options = { "service": service_name,
-					      "subscriber": dev_id + "." + language
+					      "subscriber": dev_id + "." + language,
 							}
 
 		# Uniqush expects Android to use the "regid", iOS use the "devtoken"

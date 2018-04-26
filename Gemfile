@@ -1,4 +1,4 @@
-ruby '2.4.2'
+ruby '2.4.4'
 
 source 'https://rubygems.org'
 
@@ -71,3 +71,4 @@ gem "devise"
 gem "rails-settings-cached"
 
 gem "fcm"
+gem "rufus-scheduler"

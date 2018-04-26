@@ -24,10 +24,10 @@ Rails.application.routes.draw do
   resources :users
 
 
-  get 'articles' => 'articles#index'
-  get 'article' => 'articles#article'
-  get 'search' => 'articles#search'
-  post 'authenticate' => 'subscriptions#authenticate'
+  get 'articles' => 'articles#index', :defaults => { :format => 'json' }
+  get 'article' => 'articles#article', :defaults => { :format => 'json' }
+  get 'search' => 'articles#search', :defaults => { :format => 'json' }
+  post 'authenticate' => 'subscriptions#authenticate', :defaults => { :format => 'json' }
     
   get 'preferences' => 'preferences#index'
   put 'preferences' => 'preferences#update'

@@ -78,7 +78,7 @@ class PreferencesController < ApplicationController
     when :cins_codeigniter
 			# Not implemented yet
 		when :blox
-			# not implemented yet
+			response = Blox.categories
     end
 
     return response

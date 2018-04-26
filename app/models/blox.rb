@@ -1,7 +1,7 @@
 class Blox < CMS
 
 	def self.articles params
-    results = Rails.cache.fetch("articles", expires_in: 1.hour) do
+    results, categories = Rails.cache.fetch("articles", expires_in: 1.hour) do
       get_articles
     end    
     
@@ -9,17 +9,63 @@ class Blox < CMS
            end_date: DateTime.now.strftime("%Y%m%d"),
            total_results: results.size,
            page: "1",
-           results: results
+           results: results,
+           categories: categories
           }
-
+    
     return response
 	end
 
 	def self.article params
+  	asset = get_asset({'id' => params['id']})
+  	article = format_article(asset)
+    response = {start_date: "19700101",
+     end_date: DateTime.now.strftime("%Y%m%d"),
+     total_results: "1",
+     page: "1",
+     results: [article]
+    }
+  
+    return response
 	end
 
 	def self.search params
+    cache = true;
+    cached_articles = Rails.cache.fetch("search_#{params['q']}", expires_in: 1.minutes) do
+      cache = false;
+                  
+      params = {
+        'l': 10,
+        'sd': 'desc',
+        'q': params['q'],
+        't': 'article'
+      }
+	    url = get_url "/editorial/search/"
+	    
+	    response = HTTParty.get(url, basic_auth: auth_credentials(:editorial), query: params)
+	    body = JSON.parse response.body
+      articles = articles_from_assets(body['items'])
+      articles = articles.map{|article| format_article(article)}
+	    # Since the array returned is all of what we're looking for, we just return it.
+	    articles
+	  end
+    
+    logger.debug("search #{params['q']} Cache hit") if cache == true
+    logger.debug("search #{params['q']} Cache missed") if cache == false
+    
+    response = {start_date: "19700101",
+     end_date: DateTime.now.strftime("%Y%m%d"),
+     total_results: cached_articles.count,
+     page: "1",
+     results: cached_articles
+    }
+
 	end
+	
+	def self.categories
+  	categories = {en: get_categories}
+    return categories
+ 	end
 	
 	def self.authenticate user_name, password, params
     url = get_url "/user/authenticate/"
@@ -32,8 +78,6 @@ class Blox < CMS
     # Check if we authenticated properly
     # {"code"=>0, "status"=>"error", "message"=>"Invalid password or account does not exist"}
     return false if body['code'] == 0 && body['status'] == 'error'
-
-    # {"id"=>"91776626-faf4-11e7-9740-5cb9017bb5c0", "screen_name"=>"cguess", "screenname"=>"cguess", "authtoken"=>"0bef3508-0d21-11e8-bab0-5cb9017b3637", "avatar_url"=>"https://secure.gravatar.com/avatar/716725aebaee97a244ce88b27c296de9?s=100&d=mm&r=g", "avatarurl"=>"https://secure.gravatar.com/avatar/716725aebaee97a244ce88b27c296de9?s=100&d=mm&r=g", "services"=>[], "auth_assertion_url"=>"https://www.columbiamissourian.com/tncms/auth/assert/?token=d6bu5L9NtERytnV9wQ1IstsUr9bhAmvI9Btlu5kXz43CMYkUbI4jOJyp25KwOWuTtB8wzlh2XXKjrS814XC0kF%2Fbf%2BUPaXXktAFD3Q%2BnLSddjQPg%2BWlZkghy78P1wxev7vsIA7K1sNZWT9yjAhymkNqDHUaLj3d0cCfyQq0pGgIq6runWQ7jaLDenCN8qNoxAZrGe2Tf%2FkImD%2B9CBIFiP%2BEyxmqWa4%2BW"}
     return true
   end
 
@@ -65,58 +109,96 @@ class Blox < CMS
 		# 6.) Cache this because otherwise... dear god.
 		# 7.) Set up a timer to somehow do this every two minutes or so to seed the cache.
 
-    categories = get_categories
-    assets = {}
-    categories.each{|category| assets[category] = get_articles_for_category(category)} 
-		
-		articles = {}
-		assets.each do |key, assets_array|
-   		articles[key] = []
-
-  		assets_array['items'].each do |asset|
-    		article = get_asset(asset)    		
-    		articles[key] << article
-      end
-
-      puts("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
-      puts(articles[key][0]) 
-      puts("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+		categories_string = Setting.categories
+  	most_recent_articles = nil
+  	
+  	YAML.load(Setting.category_names)
+  	if(!categories_string.blank? && Setting.consolidated_categories.blank?)
+  		categories = YAML.load(categories_string)['en']
+#       if(!Setting.consolidated_categories)
+#         options[:categorized]='true'
+#       end
+    else
+      categories = get_categories
     end
-    
-#		articles = clean_up_response(articles)
-#    return articles
-    
-    formatted_categories = {}
-    
-		articles.each do |key, category|
-  		formatted_categories[key] = []
-  		formatted_categories[key] = category.map do |article|
 
-    		byline = article['byline']
-    		content = article['content'].join("")
+    category_names = YAML.load(Setting.category_names)
+    
+    cached_articles = Rails.cache.fetch("articles_#{categories.join('_')}", expires_in: 5.minutes) do
+
+      assets = {}
+      categories.each{|category| assets[category] = get_articles_for_category(category)} 
+
+  		articles = {}
+  		assets.each do |key, assets_array|
+    		index = assets.keys.index(key)
+    		key = category_names['en'][index] if index < category_names['en'].count
     		
-    		content = scrubScriptTagsFromHTMLString(content)
-    		content = scrubJSCommentsFromHTMLString(content)
-        content = normalizeSpacing(content)
-        
-        byline = ' ' if byline.nil?
-        
-    		formatted_article = {
-      		'author' => byline,
-      		'publish_date' => article['start_time'],
-          'headline' => article['title'],
-      		'body' => content
-    		}
-        
-        clean_up_byline(formatted_article)
-    		formatted_article
+    		# We want to use the customized name if there is one.
+     		articles[key] = articles_from_assets(assets_array['items'])
       end
-      formatted_categories[key] = clean_up_response(formatted_categories[key])
-      formatted_categories.delete(key) if formatted_categories[key].empty?
+      
+      formatted_categories = {}
+      
+  		articles.each do |key, category|
+    		formatted_categories[key] = []
+    		formatted_categories[key] = category.map{|article| format_article(article)}
+        
+        # We need to rearrange articles per category so an article with an image is going to be at top
+        formatted_categories.keys.each do |key|
+          formatted_categories[key] = rearrange_articles_for_images(formatted_categories[key]) 
+        end
+        
+        formatted_categories[key] = clean_up_response(formatted_categories[key])
+        formatted_categories.delete(key) if formatted_categories[key].empty?
+      end
+            
+      formatted_categories
     end
-
-		return formatted_categories
+        
+    categories = category_names['en'].reject{|name| name.empty?} unless category_names['en'].empty?
+		return cached_articles, categories
 	end
+	
+	def self.articles_from_assets assets
+  	articles = []
+  	assets.each do |asset|
+  		article = get_asset(asset) 
+	    article['description'] = asset['summary']  
+  		articles << article
+    end
+    return articles
+  end
+	
+	def self.format_article article
+ 		byline = article['byline']
+		content = article['content'].join("")
+		      		
+		content = scrubScriptTagsFromHTMLString(content)
+		content = scrubJSCommentsFromHTMLString(content)
+    content = normalizeSpacing(content)
+    content = clean_up_paragraphs(content)
+    
+    byline = ' ' if byline.nil?
+    
+    
+    images = article['images'].map do |image|
+      {'url' => image['url'], 'caption' => "#{image['caption']} #{image['byline']}"}
+    end
+    
+		formatted_article = {
+  		'author' => byline,
+  		'publish_date' => Date.parse(article['start_time']).strftime("%Y%m%d"),
+      'headline' => article['title'],
+      'description' => article['description'],
+  		'body' => content,
+  		'images' => images
+		}
+    
+    clean_up_byline(formatted_article)
+		formatted_article
+
+  end
 	
   def self.get_categories
     cache = true;
@@ -155,13 +237,13 @@ class Blox < CMS
 	    body = JSON.parse response.body
 
 	    # Since the array returned is all of what we're looking for, we just return it.
-	    return body
+	    body
 	  end
     
-    logger.debug("get_categories #{params.to_s} Cache hit") if cache == true
-    logger.debug("get_categories #{params.to_s} Cache missed") if cache == false
-  
-	  return cached_categories
+    logger.debug("get_categories #{category.to_s} Cache hit") if cache == true
+    logger.debug("get_categories #{category.to_s} Cache missed") if cache == false
+    
+	  return cached_articles
 
   end
 	
@@ -191,7 +273,7 @@ class Blox < CMS
 
 	    # Since the array returned is all of what we're looking for, we just return it.
 #   		cleaned_articles = clean_up_response(articles)
-	    return assets
+	    assets
 	  end
     
     logger.debug("page #{url} Cache hit") if cache == true
@@ -227,7 +309,7 @@ class Blox < CMS
       
       article['captions'] = article['images'].map{|image| image['caption']}
       article['photoBylines'] = article['images'].map{|image| image['byline']}
-	    return article
+	    article
 	  end
 	      
     logger.debug("get_asset #{page_asset['uuid']} Cache hit") if cache == true
@@ -240,7 +322,7 @@ class Blox < CMS
     cache = true;
     cached_asset = Rails.cache.fetch("image/#{page_asset['id']}", expires_in: 1.hour) do
       cache = false;
-            
+
       asset = get_asset page_asset
       image = {}      
       image['url'] = asset['resource_url']
@@ -248,8 +330,8 @@ class Blox < CMS
       image['byline'] = clean_up_image_caption(asset['byline'])
       image['id'] = asset['id']
       image['date'] = Date.parse(asset['update_time'])
-#      image = CMS.rewrite_image_url(image)
-	    return image
+
+	    image
 	  end
 	      
     logger.debug("get_asset #{page_asset['uuid']} Cache hit") if cache == true
@@ -260,11 +342,26 @@ class Blox < CMS
 
   def self.get_asset page_asset
     id = page_asset['id'].blank? ? page_asset['uuid'] : page_asset['id']
+    
     return Rails.cache.fetch("editorial/get/#{id}", expires_in: 1.hour) do
   	  url = get_url "editorial/get/?id=#{id}"
 	    response = HTTParty.get(url, basic_auth: auth_credentials(:editorial))
-	    body = JSON.parse response.body
-	    return body
+	    article = JSON.parse response.body	    
+
+ 	    article['images'] = []
+
+		    #Run through the relationships
+	    if article['relationships'].key?('child')
+
+  	    article['relationships']['child'].each do |relationship|
+    	    # Right now we relationship handle images, add more here if we need to
+    	    next unless relationship['asset_type'] == 'image'
+          image = get_image_asset(relationship)
+          article['images'] << image
+        end
+  	  end
+
+	    article
 	  end
   end
 
@@ -283,7 +380,7 @@ class Blox < CMS
       logger.debug "---------------------------------------"
       raise
     end
-	  return body
+	  body
 	end
 	
 	def self.clean_up_byline article
@@ -295,13 +392,33 @@ class Blox < CMS
   end
   
   def self.clean_up_image_caption caption
+    return '' if caption.nil?
     caption.gsub!("<p>", '')
     caption.gsub!("</p>", '')
     # Yes, I know, never use regex on html, but it's just comments and only used in very small instances
     caption.gsub!(/(?=<!--)([\s\S]*?)-->/, '')
-    return caption
+    caption
+  end
+  
+  def self.clean_up_paragraphs text
+    text.gsub! '<br><br>', '<br><br><br><br>'
+    text.gsub! '<br/><br/>', '<br/><br/><br/><br/>'
+    text.gsub! '<br /><br />', '<br /><br /><br /><br />'    
+    return text
   end
   	
+  # Rearrange articles so the first has an image. If none do, then return the original array	
+  def self.rearrange_articles_for_images articles
+    article_with_image = articles.find{|article| article['images'].count > 0}
+    
+    #Because I'm a good CS student I make sure we don't do unncessary array modification
+    return articles if article_with_image.nil? || article_with_image == articles.first
+        
+    articles.delete(article_with_image)
+    articles.unshift(article_with_image)
+    
+    return articles
+  end
 
   # options are :eedition and :editorial
 	def self.auth_credentials service=:eedition

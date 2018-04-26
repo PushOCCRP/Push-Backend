@@ -21,19 +21,19 @@ else
   path='./maintence-scripts/setup-cms_env.sh'
 fi
 
-bash $path
+#bash $path
 
-echoc '\n---------------------------------------------------------\n' $LIGHT_BLUE
-echoc '    Moving on to generating SSL keys \n' $LIGHT_BLUE
-echoc '---------------------------------------------------------\n\n' $LIGHT_BLUE 
+#echoc '\n---------------------------------------------------------\n' $LIGHT_BLUE
+#echoc '    Moving on to generating SSL keys \n' $LIGHT_BLUE
+#echoc '---------------------------------------------------------\n\n' $LIGHT_BLUE 
 
-if basename "$PWD" | grep 'maintence-scripts' > /dev/null; then
-  path='./setup-lets_encrypt.sh'
-else
-  path='./maintence-scripts/setup-lets_encrypt.sh'
-fi
+#if basename "$PWD" | grep 'maintence-scripts' > /dev/null; then
+#  path='./setup-lets_encrypt.sh'
+#else
+#  path='./maintence-scripts/setup-lets_encrypt.sh'
+#fi
 
-bash $path
+#bash $path
 
 if [ "$?" = 0 ]; then
   echoc '\n---------------------------------------------------------\n' $LIGHT_BLUE

@@ -30,20 +30,23 @@ class ApplicationController < ActionController::Base
     end
     
     if(allow_to_proxy?(url))
-      image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
-        logger.info("URL requested not cached: #{url}")
-        logger.info("Fetching #{url}")
-        raw_response = HTTParty.get(url)
-        image_response = {body: raw_response.body, content_type: raw_response.headers['content-type']}
-        image_response
-      end
+      image_response = passthrough_image url
       
       send_data image_response[:body], type: image_response[:content_type], disposition: 'inline', layout: false
     else
       render plain: "Error retreiving #{url}, the host does not match any allowed uris."
       return
     end
-    
+  end
+  
+  def passthrough_image url
+    image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
+      logger.info("URL requested not cached: #{url}")
+      logger.info("Fetching #{url}")
+      raw_response = HTTParty.get(url)
+      image_response = {body: raw_response.body, content_type: raw_response.headers['content-type']}
+      image_response
+    end
   end
 
   def check_for_valid_cms_mode

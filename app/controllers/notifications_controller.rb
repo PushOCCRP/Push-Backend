@@ -14,7 +14,6 @@ class NotificationsController < ApplicationController
 	# when opening a new session, or sometimes randomly when the OS decides it should.
 	# This also should happen when changing languages, since it'll be a different channel.
 	def subscribe
-    
     # Parse out the request parameters
     # These might be passed as a JSON body or as request parameters
     begin
@@ -43,6 +42,7 @@ class NotificationsController < ApplicationController
 			dev_token = params['reg_id'] if params.has_key? 'reg_id'
 		when 'ios'
 			dev_token = params['dev_token']
+			
 		end
 
 
@@ -51,12 +51,15 @@ class NotificationsController < ApplicationController
 		if(!device)
 			device = PushDevice.new({
 				dev_id: params['dev_id'],
-				dev_token: dev_token
+				dev_token: dev_token,
+				platform: params['platform']
 			})
 		else
 			# There's already a device, we should unsubscribe it from the channel it's already in
 			# This is so that we make up any differences in the Uniqush server and ours.
 			# I wish there was a way to check, but it doesn't seem as if there is.
+			device.platform = params['platform']
+			device.save!
 			device.unsubscribe_to_push(params['sandbox'])
 		end
 
@@ -322,9 +325,9 @@ class NotificationsController < ApplicationController
 	# 
 	#
 	# Eventually I want to make it so this is all done automatically
+	# NOTE: This is done now automatically in the Push Generator with the '-c' flag
 
 	def process_cert
-
 		flash[:error] = "No file selected for the cert" if params[:cert].nil?
 		flash[:error] = "No file selected for the key" if params[:key].nil?
 		redirect_to action: :cert_upload unless flash[:error].blank?
@@ -338,12 +341,14 @@ class NotificationsController < ApplicationController
 		cert_file_name = "/secrets/certs/#{filename}-cert.pem"
 		key_file_name = "/secrets/certs/#{filename}-key.pem"
 
+    FileUtils::mkdir_p("/push/secrets/certs") unless File.directory?("/push/secrets/certs")
+    
 		# Upload the files
-		File.open("/push/#{cert_file_name}", 'wb') do |file|
+		File.open("/push#{cert_file_name}", 'wb') do |file|
 			file.write(cert_io.read)
 		end
 
-		File.open("/push/#{key_file_name}", 'wb') do |file|
+		File.open("/push#{key_file_name}", 'wb') do |file|
 			file.write(key_io.read)
 		end
 

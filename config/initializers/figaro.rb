@@ -21,7 +21,6 @@ case ENV['cms_mode']
     Figaro.require_keys("blox_eedition_secret")
     Figaro.require_keys("blox_editorial_key")
     Figaro.require_keys("blox_editorial_secret")
-
     if auth == true
       Figaro.require_keys("blox_user_key")
       Figaro.require_keys("blox_user_secret")
