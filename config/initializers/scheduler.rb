@@ -42,8 +42,6 @@ def run_update
   
 end
 
-return
-
 unless defined?(Rails::Console) || File.split($0).last == 'rake'
   s.every '1m' do
     run_update

@@ -2,6 +2,7 @@ class ArticlesController < ApplicationController
 
   before_action :check_for_force_https
   before_action :register_consumer_event
+  before_action :check_api_key
   
   def index
     
@@ -184,6 +185,27 @@ class ArticlesController < ApplicationController
     event.save!
   end
   
+  def check_api_key
+    # first check if the setup has login enabled
+    auth = true
+    auth = false unless ENV.has_key?('auth_enabled') && ENV['auth_enabled'] == "true"
+    
+    # if there's nothing passed in, kill it with fire
+    auth = false unless params.has_key?('api_key') && params['api_key'].empty? == false
+    if auth == false
+      render json: return_error("No api_key specified but authentication is enabled on this installation.")
+      return
+    end
+    
+    # if there's no user with this then also return false
+    auth = false unless SubscriptionUser.exists?(api_key: params['api_key'])
+    
+    if auth == false
+      render json: return_error("Invalid api_key")
+      return
+    end    
+  end
+  
   def get_cookie
     #change to the environment variable
     url = "https://www.occrp.org/index.html?option=com_push&format=json&view=urllookup&u="
@@ -272,7 +294,6 @@ class ArticlesController < ApplicationController
     article['images'].each do |image|
       image_address = image['url']
 
-      byebug
       if !image_address.starts_with?("http")
         # build up missing parts
         prefix = ""

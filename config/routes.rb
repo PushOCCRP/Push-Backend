@@ -28,6 +28,7 @@ Rails.application.routes.draw do
   get 'article' => 'articles#article', :defaults => { :format => 'json' }
   get 'search' => 'articles#search', :defaults => { :format => 'json' }
   post 'authenticate' => 'subscriptions#authenticate', :defaults => { :format => 'json' }
+  post 'logout' => 'subscriptions#logout', :defaults => { :format => 'json' }
     
   get 'preferences' => 'preferences#index'
   put 'preferences' => 'preferences#update'

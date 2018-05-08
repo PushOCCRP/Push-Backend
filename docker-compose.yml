@@ -86,8 +86,8 @@ services:
       environment:
           # this is the default, but let's be explicit here
           UNIQUSH_DATABASE_HOST: "redis"
-#          UNIQUSH_LOGFILE:       "/srv/logs/gurac/uniqush.log"
-          UNIQUSH_LOGLEVEL:      "verbose"
+#          UNIQUSH_LOGFILE:       "/var/log/uniqush"
+#          UNIQUSH_LOGLEVEL:      "verbose"
           UNIQUSH_GID:           "60001"
           UNIQUSH_UID:           "60001"
       ports:
@@ -96,7 +96,7 @@ services:
           - redis
       volumes:
           - "./secrets:/secrets"
-          #- "/srv/logs/gurac/:/srv/logs/gurac/"
+          - "./log/uniqush:/var/log/uniqush"
       logging:
         driver: "json-file"
         options:

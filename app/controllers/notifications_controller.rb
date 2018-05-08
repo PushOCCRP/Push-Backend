@@ -674,7 +674,7 @@ class NotificationsController < ApplicationController
 			statuses[:apns_prod] = check_push_ios_status(services['push_app-ios'].first)
 		end
 
-		if(services.has_key?('push_app-ios-sandbox') && services['push_app-ios'].size > 0)
+		if(services.has_key?('push_app-ios-sandbox') && services['push_app-ios-sandbox'].size > 0)
 			statuses[:apns_sandbox] = check_push_ios_status(services['push_app-ios-sandbox'].first)
 		end
 

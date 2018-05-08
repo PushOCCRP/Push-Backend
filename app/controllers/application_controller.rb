@@ -190,4 +190,10 @@ class ApplicationController < ActionController::Base
     response.to_json
   end
   
+  # Error code 0 is usually what indicates bad things happend
+  def return_error message, code=0
+    error = {code: code, message: message}
+    return error.to_json
+  end
+  
 end

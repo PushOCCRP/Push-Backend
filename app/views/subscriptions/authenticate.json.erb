@@ -1,4 +1,13 @@
+<% if @authenticated == true %>
 {
-  "status": "<%= @authenticated == true ? "authenticated" : "error" %>",
-  "code": "<%= @authenticated == true ? "1" : "0" %>"
+  "status": "authenticated",
+  "code": "1",
+  "api_key": "<%= @subscription_user.api_key %>",
+  "username": "<%= @subscription_user.username %>"
 }
+<% else %>
+{
+  "status": "error",
+  "code": "0"
+}
+<% end %>

@@ -77,7 +77,7 @@ class Blox < CMS
 
     # Check if we authenticated properly
     # {"code"=>0, "status"=>"error", "message"=>"Invalid password or account does not exist"}
-    return false if body['code'] == 0 && body['status'] == 'error'
+    return false if (body['code'] == 0 && body['status'] == 'error') #|| body['services'].count < 1
     return true
   end
 
@@ -192,7 +192,9 @@ class Blox < CMS
       'headline' => article['title'],
       'description' => article['description'],
   		'body' => content,
-  		'images' => images
+  		'images' => images,
+  		'id' => article['id'],
+  		'url' => article['url']
 		}
     
     clean_up_byline(formatted_article)
