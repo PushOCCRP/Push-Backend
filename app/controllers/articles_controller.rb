@@ -190,6 +190,8 @@ class ArticlesController < ApplicationController
     auth = true
     auth = false unless ENV.has_key?('auth_enabled') && ENV['auth_enabled'] == "true"
     
+    return if auth == false
+    
     # if there's nothing passed in, kill it with fire
     auth = false unless params.has_key?('api_key') && params['api_key'].empty? == false
     if auth == false
