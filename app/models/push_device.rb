@@ -8,9 +8,10 @@ class PushDevice < ActiveRecord::Base
   end
 
   module UniqushServiceType
-  	GCM = 'gcm'
+  	GCM = 'fcm'
+  	FCM = 'fcm'
   	APNS = 'apns'
-  	ANDROID = 'gcm'
+  	ANDROID = 'fcm'
   	IOS = 'ios'
   end
 
@@ -18,10 +19,10 @@ class PushDevice < ActiveRecord::Base
   	service_name = PushDevice.push_id()
 		
 		if(platform == 'android')
-			service_name += "-gcm"
+			service_name += "-#{PushDevice::UniqushServiceType::ANDROID}"
 			# All Android devices will use the same credentials, we seperate sandboxed later as a naming convention
 		else
-			service_name += "-ios"
+			service_name += "-#{PushDevice::UniqushServiceType::IOS}"
 			# iOS has seperate protocols for sandbox and production
 			service_name += "-sandbox" if sandbox == true
 		end
