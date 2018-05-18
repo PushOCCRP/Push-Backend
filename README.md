@@ -25,7 +25,7 @@ Theres a few different ways to set this up (and if you're familiar with Docker p
 
 
 ## Setup From Scratch 
-#### (Skip to next section if you're using the AWS setup [scripts}(https://github.com/PushOCCRP/Push-AWS-Launcher)
+#### (Skip to next section if you're using the AWS setup [scripts](https://github.com/PushOCCRP/Push-AWS-Launcher)
 
 #### Some Notes
 - This will assume you're setting up on a Debian-based Linux system (Debian/Ubuntu etc.)
@@ -48,14 +48,17 @@ Theres a few different ways to set this up (and if you're familiar with Docker p
 
 #### Start here if using the AWS setup script.
 1. ```cd Push-Backend```
-1. Run the set up scripts ```bash ./maintence-scripts/setup.sh```
+1. Set up the CMS environment variables. ```bash maintence-scripts/setup-cms_env.sh```
+1. Generate a secure key for the web server. ```docker-compose -f letsencrypt-docker-compose.yml run nginx```
+1. Be patient, there's a bunch of stuff going on here including building a bunch of different Docker containers, and creating SSL keys, which can take A LONG time. It really depends on the machine. If you're on an AWS micro instance go for a run, take a shower, whatever, you have at least 45 minutes, maybe two hours to kill.
+1. Run the set up scripts ```bash ./maintence-scripts/setup-lets_encrypt.sh```
 1. From here there will be a bunch of questions to answer, it should be quite self explanatory
 1. After answering some questions it will also set up your SSL keys, so everything is secure. The questions may repeat a bit.
-1. Be patient, there's a bunch of stuff going on here including building a bunch of different Docker containers, and creating SSL keys, which can take A LONG time. It really depends on the machine. If you're on an AWS micro instance go for a run, take a shower, whatever, you have at least 45 minutes, maybe two hours to kill.
+1. (Again) Be patient, there's a bunch of stuff going on here including building a bunch of different Docker containers, and creating SSL keys, which can take A LONG time. It really depends on the machine. If you're on an AWS micro instance go for a run, take a shower, whatever, you have at least 45 minutes, maybe two hours to kill.
 1. After waiting far too long, run ```docker-compose up``` and everything should build and boot automatically. If there are any errors you should see them in the log
 1. If all is good ctrl-c to close down. Then run ```docker-compose up -d``` to start in the background
 1. At this point you're good to go. You can exit your server and rest easy.
-
+1. If you're seeing any errors here try and restarting the box and running ```docker-compose up``` again. It may fix it.
 
 # Running
 After following the steps above, ```docker-compose up -d``` should be all you need to run the project.
@@ -67,8 +70,43 @@ After following the steps above, ```docker-compose up -d``` should be all you ne
 - If you're having troubles connecting from your browser, make sure that you have port 443 open to incoming traffic on the server.
 
 # Setting Up Push Notifiations
+For our project we use a system called Uniqush. This is an open sourced push notification manager that lets us manage the system without paying or using a service such as Urban airship. Because iOS and Android use different systems we need to set them up seperately, but in the end this will let us send the same message to all devices.
 
-TBD, this is annoyingly complicated.
+### iOS
+
+1. This is done using the generator scripts. Specifically run the generator with the -c command an it will create and convert the files for you automatically.
+
+1. From the back end go to "Notifications" -> "Preferences" and click "APNS Cert Upload".
+
+1. Click "Browse" and go the folder where your generator scripts are. In here the certificates are saved to /credentials/push/ios/[name of your app]/. For the "Cert" field choose the filed that ends in "\_cert.pem". For the "Key" field choose the field that ends in "\_key.pem"
+
+1. Click "Save"
+
+### Android
+
+1. Go to https://console.firebase.google.com and log in.
+
+1. Click the big button that says "Add Project"
+
+1. In the popup type in the name for your project, choose your country, and then click "Create Project"
+
+1. If you're not taken directly to the new project just click the box that pops up with the name on it.
+
+1. From the "Overview" page look to the upper-left corner and click the "settings" sprocket and then click "Project settings".
+
+1. From the backend of your app go to "Notifications" -> "Preferences" and click "GCM Management". **Note:** This now uses Google's Firebase but I haven't gotten around to changing the labels yet.
+
+1. Going back to the Firebase Console you should see a bunch of identifying information. Copy the text next to "Project ID". It will be a version of your apps name with dashes like ```sample-push-app``` 
+
+1. Go back to your apps backend and paste it into the "Project ID" field.
+
+1. Going back to Firebase click on the second tab "Cloud Messaging".
+
+1. From here copy the very long string next to "Server key"
+
+1. Going back to the backend again paste this string into the "Legacy gcm api key" **Note:** The same as above applies here.
+
+1. Click "Save"
 
 # Notes
 
@@ -81,3 +119,124 @@ Since every host is different If you don't know how to do this it's best to ask 
 WP Super Cache is a plugin for Wordpress that makes your site sometimes load much faster. It's totally fine if you use it. Howver, our server does its own caching so it needs to be able to get around the cache. It does this by using a specially crafter 'key'. You can generate it from the settings page on your Wordpress installation.
 
 Steps to get key forthcoming here...
+
+# Development
+
+## Adding Support For New CMS
+
+#### Model
+
+For every CMS backend that Push supports there is a corresponding model that inherets from the ```CMS``` class found in ```/app/models/cms.rb```.
+
+There are three methods that have to be implemented:
+
+- ```def self.articles params```
+- ```def self.article params```
+- ```def self.search params```
+
+If you implement categories you must also implement
+
+- ```def self.categories```
+
+How you decided to implement these is mostly up to you, since every CMS does it differently. There are formatting helpers and standard HTML/CSS/JS cleaners in the ```CMS``` class. I would recommend looking at the various other implementations of cms models to get a feel for how they work.
+
+#### Controller
+
+For every CMS you need to add a switch so that the controller knows which model to use. Right now that's here:
+
+- ```def index```
+- ```def search```
+- ```def article```
+
+There are some leftover stuff from Joomla in the Controller but you can ignore it for implementation purposes.
+
+#### Environment Variables
+
+Push uses the [Figaro](https://github.com/laserlemon/figaro) gem for configuation. The config file is at ```/config/initializers/figaro.rb```.
+
+Specifically you have to choose a name for the ```cms_mode``` and then the required variables. This is at least a url for the cms but could be things such as API keys as well.
+
+---
+
+## API
+
+The Push Backend serves up an API that can be consumed by Push client apps. Right now that's only the iOS and Android apps, but could be things such as TV apps or other readers.
+
+Here are the main consumptionAPIs, there's a few other that I have yet to document, but they are for internal purposes and are not need by the apps.
+
+### Parameters
+
+These parameters are applicable for all requests.
+
+- _language_ (optional): a two letter language code (e.g. 'en', 'de', 'sr'). This raises an error if the language is not enabled.
+
+### Responses
+
+TBD
+
+---
+
+### Get All Articles
+
+#### Verb
+
+GET
+
+#### Path
+
+/articles
+
+#### Required Headers
+
+- Accept: application/json
+
+#### Parameters
+
+- _categories_ (optional): ```true``` or ```false``` if you would like cateogries or consolidated listings. If categories is disabled in the backend this will not matter.
+
+### Get Single Article
+
+#### Verb
+
+GET
+
+#### Path
+
+/article
+
+#### Required Headers
+
+- Accept: application/json
+
+#### Parameters
+
+- _id_ (required): The article id that represents the article in the backend CMS.
+
+#### Discussion
+
+Since the Push backend does not keep track of individual articles the ```id``` is whatever is assigned in the main CMS.
+
+This is mostly used to respond to push notifications.
+
+### Search
+
+#### Verb
+
+GET
+
+#### Path
+
+/search
+
+#### Required Headers
+
+- Accept: application/json
+
+#### Parameters
+
+- _q_ (required): The query, html encoded, to search for.
+
+
+
+
+
