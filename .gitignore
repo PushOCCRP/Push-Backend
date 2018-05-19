@@ -62,3 +62,6 @@ data/dump.rdb
 # Backups
 /.docker/backups/*
 !/.docker/backups/.keep
+
+/.vagrant
+/.idea
