@@ -7,7 +7,7 @@ This app is set up to run on Docker, which handles 90% of the set up for the dat
 ## Overview
 This consists of five systems.
 - Web
--- This is the main Ruby on Rails 4.2.2 app. It's an utterly standard Rails app which uses Puma as the front server for multithreading and such.
+-- This is the main Ruby on Rails 5.1.2 app. It's an utterly standard Rails app which uses Puma as the front server for multithreading and such.
 - Nginx
 -- Set up to be a basic proxy server to insure SSL connectivity and passthrough to the Puma server running the Rails app.
 - Postgres
