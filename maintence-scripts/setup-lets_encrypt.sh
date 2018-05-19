@@ -103,21 +103,21 @@ LETSENCRYPT_STAGING=
 RAILS_ENV=production
 EOT
 
-# Stop any possible docker-compose containers that might be sticking around
-kill_docker_containers
+# # Stop any possible docker-compose containers that might be sticking around
+# kill_docker_containers
 
-# Create the proper ssl certs
-echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
-echoc "Creating SSL certificates" $GREEN
-echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
+# # Create the proper ssl certs
+# echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
+# echoc "Creating SSL certificates" $GREEN
+# echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
 
-if basename "$PWD" | grep 'maintence-scripts' > /dev/null; then
-  command='docker-compose -f ../letsencrypt-docker-compose.yml up letsencrypt'
-else
-  command='docker-compose -f letsencrypt-docker-compose.yml up letsencrypt'
-fi
+# if basename "$PWD" | grep 'maintence-scripts' > /dev/null; then
+#   command='docker-compose -f ../letsencrypt-docker-compose.yml up letsencrypt'
+# else
+#   command='docker-compose -f letsencrypt-docker-compose.yml up letsencrypt'
+# fi
 
-error=$($command | tee /dev/tty | grep 'The following errors were reported by the server')
+# error=$($command | tee /dev/tty | grep 'The following errors were reported by the server')
 
 
 if ! [[ -z "${error// }" ]]; then

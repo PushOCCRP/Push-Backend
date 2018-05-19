@@ -90,8 +90,6 @@ services:
 #          UNIQUSH_LOGLEVEL:      "verbose"
           UNIQUSH_GID:           "60001"
           UNIQUSH_UID:           "60001"
-      ports:
-          - "9898:9898"
       depends_on:
           - redis
       volumes:
