@@ -1,3 +1,8 @@
+#!/bin/bash          
+DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
+. "$DIR/includes.sh"
+
 # Stop any possible docker-compose containers that might be sticking around
 kill_docker_containers
 
