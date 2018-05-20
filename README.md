@@ -51,9 +51,10 @@ Theres a few different ways to set this up (and if you're familiar with Docker p
 1. Set up the CMS environment variables. ```bash maintence-scripts/setup-cms_env.sh```
 1. Run the set up scripts ```bash ./maintence-scripts/setup-lets_encrypt.sh```
 1. From here there will be a bunch of questions to answer, it should be quite self explanatory
-1. Generate a secure key for the web server. ```docker-compose -f letsencrypt-docker-compose.yml run nginx```
+1. Generate a secure key for the web server. ```docker-compose -f letsencrypt-docker-compose.yml run -e NGINX_BOOT=false nginx```
 1. Be patient, there's a bunch of stuff going on here including building a bunch of different Docker containers, and creating SSL keys, which can take A LONG time. It really depends on the machine. If you're on an AWS micro instance go for a run, take a shower, whatever, you have at least 45 minutes, maybe two hours to kill.
 1. (Again) Be patient, there's a bunch of stuff going on here including building a bunch of different Docker containers, and creating SSL keys, which can take A LONG time. It really depends on the machine. If you're on an AWS micro instance go for a run, take a shower, whatever, you have at least 45 minutes, maybe two hours to kill.
+1. Generate different secure keys for the web server. ```docker-compose -f letsencrypt-docker-compose.yml up```
 1. Run the final script to set up all the databases ```sudo bash maintence-scripts/setup-databases.sh```
 1. After waiting far too long, run ```docker-compose up``` and everything should build and boot automatically. If there are any errors you should see them in the log
 1. If all is good ctrl-c to close down. Then run ```docker-compose up -d``` to start in the background
