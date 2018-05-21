@@ -60,7 +60,7 @@ Theres a few different ways to set this up (and if you're familiar with Docker p
 1. Close it all out by pressing ```ctrl-c```
 1. Rerun the lets encrypt again ```sudo docker-compose -f letsencrypt-docker-compose.yml up letsencrypt```
 1. This part is slightly confusing, but I haven't figured out a way around. The previous steps create the SSL keys, but put them in the wrong folder. First, we need to move the certificates to the right place ```sudo mv .docker/data/secrets/keys/live/<<your host name>>-0001/* .docker/data/secrets/keys/live/<<your host name>>``` example is ```sudo mv .docker/data/secrets/keys/live/example.pushapp.press-0001/* .docker/data/secrets/keys/live/example.pushapp.press```.
-1. Now we remove the old folder ```sudo rm .docker/data/secrets/keys/live/example.pushapp.press-0001```
+1. Now we remove the old folder ```sudo rm -r .docker/data/secrets/keys/live/example.pushapp.press-0001```
 1. __Really__ run docker-compose now ```sudo docker-compose up```
 1. If all is good ```ctrl-c``` to close down. Then run ```docker-compose up -d``` to start in the background
 1. At this point you're good to go. You can exit your server and rest easy.
