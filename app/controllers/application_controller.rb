@@ -40,19 +40,20 @@ class ApplicationController < ActionController::Base
   end
   
   def passthrough_image url
+    cached = true
     image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
-      logger.info("URL requested not cached: #{url}")
-      logger.info("Fetching #{url}")
       raw_response = HTTParty.get(url)
       image_response = {body: raw_response.body, content_type: raw_response.headers['content-type']}
+      cached = false
       image_response
     end
+    
+    logger.info("Cache for image #{url} hit: #{cached == true ? "true" : "false"}")
+    return image_response
   end
 
   def check_for_valid_cms_mode
     @cms_mode
-
-    logger.debug "Checking validity of #{ENV['cms_mode']}"
     case ENV['cms_mode']
       when "occrp-joomla"
         @cms_mode = :occrp_joomla
@@ -101,9 +102,10 @@ class ApplicationController < ActionController::Base
     link_host = link_uri.host.gsub('www.', '')
     base_host = base_uri.host.gsub('www.', '')
     
-    logger.info("Checking for valid image proxy request #{link_host} vs. #{base_host}")
     if(link_host == base_host)
       return true
+    else
+      logger.info("Invalid image proxy request #{link_host} vs. #{base_host}")
     end
     
     # We check if there's optional urls listed in the secret.env file

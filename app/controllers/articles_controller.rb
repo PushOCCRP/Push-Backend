@@ -10,7 +10,7 @@ class ArticlesController < ApplicationController
 
     case @cms_mode 
       when :occrp_joomla
-        @response = get_occrp_joomla_articles(params)
+        @response = JoomlaOccrp.articles(params)
       when :wordpress
         @response = Wordpress.articles(params)
         #@response['results'] = clean_up_response @response['results']
