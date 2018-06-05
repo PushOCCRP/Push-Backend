@@ -1,4 +1,4 @@
-FROM ruby:2.4-stretch
+FROM ruby:2.4.4-stretch
 
 RUN apt-get update
 RUN apt-get -y install apt-transport-https ca-certificates
