@@ -38,6 +38,8 @@ class CMS < ActiveRecord::Base
 
       elements = Nokogiri::HTML::fragment article['body']
 
+      elements.search('a')
+
       elements.search('img').wrap('<p></p>')
 
       article['body'] = elements.to_html
@@ -90,47 +92,67 @@ class CMS < ActiveRecord::Base
     return articles
   end
 
+  
+  def self.extract_images article
+    text, images, image_urls = extract_images_from_string article['body'], article['images'], article['image_urls']
+    article['body'] = text
+    article['images'] = images
+    article['image_urls'] = image_urls
+  end
+
   # Parses an article, extracting all <img> links, and putting them, with their range, into
   # an array
-  def self.extract_images article
+  def self.extract_images_from_string text, images = [], image_urls = []
 
     # Extract all image urls in the article and put them into a single array.
-    if(article['images'] == nil)
-      article['images'] = []
-    end
+    # if(article['images'] == nil)
+    #   article['images'] = []
+    # end
     
-    if(article['image_urls'] == nil)
-      article['image_urls'] = []
-    end
+    # if(article['image_urls'] == nil)
+    #   article['image_urls'] = []
+    # end
     
     #Yes, i'm aware this is repetitive code.
-    article['images'].each do |image|
+    
+
+    
+    images.each do |image|
       raise "Image is nil when processing. Check your custom model, this should not happen." if image.nil?
       image = rewrite_image_url(image)
     end
 
-    elements = Nokogiri::HTML article['body']
-    
+    elements = Nokogiri::HTML text
+    elements.css('a').each do |link|
+      
+     rewrite_link_url(link)
+     
+    end
+ 
+
+
+
     elements.css('img').each do |image|
+      
       begin
         image = rewrite_image_url(image)
-        image_address = image.attributes['src'].value
-      rescue
+        image_address = image['url']
+      rescue Exception => e
         # Blox uses data-src for its images. I'm guessing for lazy loading?
         begin 
           image_address = image.attributes['data-src'].value
           image['src'] = image_address
           image.delete 'data-src'
-        rescue
+        rescue Exception => e
           next
         end
       end
-
+      
       if !image_address.starts_with?("http")        
         full_url = rewrite_url_for_ssl(rewrite_image_url_for_proxy(image.attributes['src'].value))
         image_object = {url: full_url, start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
-        article['images'] << image_object
-        article['image_urls'] << full_url
+        images << image_object
+        image_urls << full_url
         image['src'] = full_url
       else
         if(force_https)
@@ -143,10 +165,8 @@ class CMS < ActiveRecord::Base
         image_object = {url: rewrite_url_for_ssl(image_address), start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
         
         # If, for some reason, there's an image in the story, but there's not one already in the Array
-        # (there should be, since the plugin should have handled it) add it so it shows up as the top image
-        article['images'] << image_object if article['images'].empty?
-        
-        article['images'] << image_object
+        # (there should be, since the plugin should have handled it) add it so it shows up as the top image        
+        images << image_object
       end
 
 
@@ -164,20 +184,30 @@ class CMS < ActiveRecord::Base
       image['push'] = ":::"
     end
 
-    article['body'] = elements.to_html
+    text = elements.to_html
 
     # We need to force HTTPS, christ this is annoying
     host = ENV['host']
-      
+     
     proxied_image_urls = []
-    article['image_urls'].each do |image_url|
+    image_urls.each do |image_url|
       proxied_url = rewrite_url_for_ssl image_url
       proxied_image_urls.push proxied_url
     end
 
-    article['image_urls'] = proxied_image_urls
+    image_urls = proxied_image_urls
+
+    return text, images, image_urls
   end
   
+
+  def self.rewrite_link_url link
+     link_address = link['href']
+     link_address = rewrite_url_for_ssl link_address, false
+     link['href'] = link_address
+     return link
+  end
+
   def self.rewrite_image_url image
     image_address = image['url']
 
@@ -186,11 +216,14 @@ class CMS < ActiveRecord::Base
         image_address = image[:url]
       elsif(!image['url'].blank?)
         image_address = image['url']
+      elsif(!image[:src].blank?)
+        image_address = image[:src]
+      elsif(!image['src'].blank?)
+        image_address = image['src']
       end
     end
     
     if !image_address.starts_with?("http")
-      byebug
       # build up missing parts
       prefix = ""
       if(image_address.starts_with?(":"))
@@ -588,7 +621,9 @@ class CMS < ActiveRecord::Base
     return value
   end
 
-  def self.rewrite_url_for_ssl url
+
+
+  def self.rewrite_url_for_ssl url, force = true
     if(!ENV['force_https'] || url.starts_with?("https://"))
       return url
     end
@@ -597,10 +632,11 @@ class CMS < ActiveRecord::Base
       url = url.sub('http:', 'https:')
     else
       prefix = ""
+      http_prefix = force ? "https" : "http"
       if(url.starts_with?(":"))
-        prefix = 'https'
+        prefix = force
       elsif(url.starts_with?("//"))
-        prefix = 'https:'
+        prefix = "#{force}:"
       elsif(url.starts_with?("/"))
         prefix = base_url
       else
@@ -618,9 +654,12 @@ class CMS < ActiveRecord::Base
     # It's a mess, refactor this please
     
     rewritten_url = url
-    
+
     if(!ENV['proxy_images'].blank? && ENV['proxy_images'].downcase == 'true')
-      if(!url.starts_with?(Rails.application.routes.url_helpers.passthrough_url(host: ENV['host'])))
+      passthrough_url = Rails.application.routes.url_helpers.passthrough_url(host: ENV['host'])
+      https_passthrough_url = rewrite_url_for_ssl(passthrough_url) 
+      if(!url.starts_with?(passthrough_url) && !url.starts_with?(https_passthrough_url) )
+       # byebug
         rewritten_url = Rails.application.routes.url_helpers.passthrough_url(host: ENV['host']) + "?url=" + URI.escape(url)
       end
     end
