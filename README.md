@@ -60,6 +60,8 @@ Theres a few different ways to set this up (and if you're familiar with Docker p
 # Running
 After following the steps above, ```docker-compose up -d``` should be all you need to run the project.
 
+Please make sure there is a symlink named `docker-compose.yml` in the main project directory, linking ether to `docker-compose-with-nginx.yml` (the default, if in doubt, use that), or `docker-compose-no-nginx.yml` (for bigger deployments that have their own `nginx` or other front-end webserver running somewhere already). The `setup.sh` maintenance script should set it up for you.
+
 # Troubleshooting
 
 - If you get an error like ```ERROR: Couldn't connect to Docker daemon at http+docker://localunixsocket - is it running?``` check that your user is in the ```docker``` group. To do that run ```groups $USER``` If it is, log out and logging back in should fix the problem.

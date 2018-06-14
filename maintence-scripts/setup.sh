@@ -15,6 +15,14 @@ echoc "\n-----------------------------------------------------------------------
 echoc "Setting up a new Push server..." $LIGHT_BLUE
 echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
 
+# making sure a docker-compose.yml file exists
+# if not, let's use some sane defaults
+if basename "$PWD" | grep 'maintence-scripts' > /dev/null; then
+  [ -f ../docker-compose.yml ] || ln -s docker-compose-with-nginx.yml ../docker-compose.yml
+else
+  [ -f docker-compose.yml ] || ln -s docker-compose-with-nginx.yml docker-compose.yml
+fi
+
 if basename "$PWD" | grep 'maintence-scripts' > /dev/null; then
   path='./setup-cms_env.sh'
 else
