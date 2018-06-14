@@ -34,7 +34,6 @@ services:
     stdin_open: true
     networks:
       - default
-      - frontend
 
   # uniqush itself
   uniqush:
