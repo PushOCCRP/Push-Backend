@@ -1,10 +1,5 @@
 version: '2'
-
-networks:
-  frontend:
-    external:
-      name: serverconfig_frontend
-
+    
 services:
 
   #
