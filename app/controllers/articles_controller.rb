@@ -10,7 +10,7 @@ class ArticlesController < ApplicationController
 
     case @cms_mode 
       when :occrp_joomla
-        @response = get_occrp_joomla_articles(params)
+        @response = JoomlaOccrp.articles(params)
       when :wordpress
         @response = Wordpress.articles(params)
         #@response['results'] = clean_up_response @response['results']
@@ -28,25 +28,7 @@ class ArticlesController < ApplicationController
 
   end
 
-  def get_occrp_joomla_articles(params)
-    url = ENV['occrp_joomla_url'] + "&view=articles"
-
-    version = params["v"]
-
-    # Shortcut
-    # We need the request to look like this, so we have to get the correct key.
-    # At the moment it makes the call twice. We need to cache this.
-    @response = Rails.cache.fetch("joomla_articles#{version}", expires_in: 1.hour) do
-      request_response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
-
-      body = JSON.parse(request_response.body)
-      articles = clean_up_response(body['results'])
-      articles = format_occrp_joomla_articles(articles)
-      {results: articles}
-    end
-
-    return @response
-  end
+  
     
   def search
     case @cms_mode
@@ -104,7 +86,7 @@ class ArticlesController < ApplicationController
   def article
     case @cms_mode
       when :occrp_joomla
-        @response = get_occrp_joomla_article
+        @response = JoomlaOccrp.article(params)
       when :wordpress
         @response = Wordpress.article(params)
       when :newscoop
@@ -120,25 +102,7 @@ class ArticlesController < ApplicationController
     end
   end
 
-  def get_occrp_joomla_article
-    url = ENV['occrp_joomla_url'] + "&view=article&id=#{params["id"]}"
-
-    # Shortcut
-    # We need the request to look like this, so we have to get the correct key.
-    # At the moment it makes the call twice. We need to cache this.
-    @response = Rails.cache.fetch("joomla_article_#{params['id']}", expires_in: 1.hour) do
-      request_response = HTTParty.get(url, headers: {'Cookie' => get_cookie()})
-      body = response.body
-
-      body = JSON.parse(request_response.body)
-      articles = clean_up_response(body['results'])
-      articles = format_occrp_joomla_articles(articles)
-      {results: articles}
-    end
-
-    return @response
-
-  end
+  
 
   private
 

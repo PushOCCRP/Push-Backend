@@ -53,7 +53,7 @@ end
 
 unless defined?(Rails::Console) || File.split($0).last == 'rake'
   s.every '1m' do
-    run_update
+    #run_update
   end
 end
 

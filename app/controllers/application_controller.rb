@@ -43,6 +43,14 @@ class ApplicationController < ActionController::Base
     cached = true
     image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
       raw_response = HTTParty.get(url)
+      content_type = raw_response.headers['content-type']
+      #byebug
+
+      if (content_type.blank?)
+       fm = FileMagic.new(FileMAgic::MAGIC_MIME)
+       mime_type = fm.buffer(raw_response.body) 
+       content_type = mime_type
+      end
       image_response = {body: raw_response.body, content_type: raw_response.headers['content-type']}
       cached = false
       image_response
@@ -102,15 +110,14 @@ class ApplicationController < ActionController::Base
     link_host = link_uri.host.gsub('www.', '')
     base_host = base_uri.host.gsub('www.', '')
     
-    if(link_host == base_host)
+    # We check if there's optional urls listed in the secret.env file
+    if(link_host == base_host || allowed_proxy_hosts().include?(link_host))
       return true
     else
       logger.info("Invalid image proxy request #{link_host} vs. #{base_host}")
     end
-    
-    # We check if there's optional urls listed in the secret.env file
-    
-    return true if allowed_proxy_hosts().include?(link_host)
+
+    logger.info("Invalid image proxy request #{link_host} vs. #{base_host}")  
     return false
   end
   
@@ -122,6 +129,7 @@ class ApplicationController < ActionController::Base
     allowed_proxy_subdomains = allowed_proxy_subdomains.gsub(']', '')
     allowed_hosts = allowed_proxy_subdomains.split(',')
     allowed_hosts.map!{|host| host.gsub('"', '').strip}
+
 
     return allowed_hosts
   end
@@ -179,7 +187,7 @@ class ApplicationController < ActionController::Base
 
     case @cms_mode
     when :occrp_joomla
-      response = ArticlesController.new.get_occrp_joomla_articles(params)
+      response = JoomlaOccrp.articles(params)
     when :wordpress
       response = Wordpress.articles(params)
       # @response['results'] = clean_up_response @response['results']

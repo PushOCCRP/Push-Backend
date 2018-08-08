@@ -1,7 +1,7 @@
 FROM ruby:2.4.4-stretch
 
 RUN apt-get update
-RUN apt-get -y install apt-transport-https ca-certificates
+RUN apt-get -y install apt-transport-https ca-certificates libmagic-dev
 
 RUN wget https://dl.yarnpkg.com/debian/pubkey.gpg
 RUN apt-key add pubkey.gpg

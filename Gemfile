@@ -24,6 +24,9 @@ gem 'jbuilder'
 # bundle exec rake doc:rails generates the API under doc/api.
 gem 'sdoc'
 
+#Filemagic to check content type of images or whatever we need
+gem 'ruby-filemagic'
+
 #gem 'thin'
 
 gem 'pg'
