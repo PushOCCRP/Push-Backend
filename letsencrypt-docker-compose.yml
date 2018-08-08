@@ -1,7 +1,7 @@
 version: '2'
 services:
 
- # Adopted from https://git.occrp.org/tech/letsencrypt/blob/master/docker-compose.yml
+ # Adopted from https://git.occrp.org/tech/letsencrypt/blob/master/docker-compose-with-nginx.yml
   #
   # relevant:
   # - https://community.letsencrypt.org/t/nginx-docker-setup-for-le/2621

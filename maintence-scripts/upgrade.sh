@@ -33,9 +33,9 @@ fi
 kill_docker_containers
 
 if basename "$PWD" | grep 'maintence-scripts' > /dev/null; then
-  command='docker-compose -f ../docker-compose.yml up -d'
+  command='docker-compose -f ../docker-compose-with-nginx.yml up -d'
 else
-  command='docker-compose -f docker-compose.yml up -d'
+  command='docker-compose -f docker-compose-with-nginx.yml up -d'
 fi
 
 error=$($command | tee /dev/tty | grep 'The following errors were reported by the server')
