@@ -25,9 +25,9 @@ echoc "Renewing SSL certificates" $GREEN
 echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
 
 if basename "$PWD" | grep 'maintence-scripts' > /dev/null; then
-  command='docker-compose -f ../letsencrypt-docker-compose-with-nginx.yml up'
+  command='docker-compose -f ../letsencrypt-docker-compose.yml up'
 else
-  command='docker-compose -f letsencrypt-docker-compose-with-nginx.yml up'
+  command='docker-compose -f letsencrypt-docker-compose.yml up'
 fi
 
 error=$($command | tee /dev/tty | grep 'The following errors were reported by the server')
