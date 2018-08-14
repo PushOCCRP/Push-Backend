@@ -461,6 +461,8 @@ class Newscoop < CMS
         article['url'] = "" if article['url'].nil?
         
         formatted_article['url'] = article['url']
+        formatted_article['author'] = article['author'].nil? ? "" : article['author']
+        
         formatted_articles << formatted_article
     end
         
