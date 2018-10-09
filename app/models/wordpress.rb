@@ -30,7 +30,7 @@ class Wordpress < CMS
     	end
 
 	    url = get_url "push-occrp=true&occrp_push_type=articles", language, options
-	    
+	   
 	    articles = get_articles url
   	  if(!most_recent_articles.nil? && !Setting.show_most_recent_articles.nil?)
         # There maybe a bug where an array is returned, even if categories are enabled

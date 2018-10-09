@@ -94,89 +94,10 @@ class CMS < ActiveRecord::Base
 
   
   def self.extract_images article
-
-    # Extract all image urls in the article and put them into a single array.
-    if(article['images'] == nil)
-      article['images'] = []
-    end
-    
-    if(article['image_urls'] == nil)
-      article['image_urls'] = []
-    end
-    
-    #Yes, i'm aware this is repetitive code.
-    article['images'].each do |image|
-      raise "Image is nil when processing. Check your custom model, this should not happen." if image.nil?
-      image = rewrite_image_url(image)
-    end
-
-    elements = Nokogiri::HTML article['body']
-    
-    elements.css('img').each do |image|
-      begin
-        image = rewrite_image_url(image)
-        image_address = image.attributes['src'].value
-      rescue
-        # Blox uses data-src for its images. I'm guessing for lazy loading?
-        begin 
-          image_address = image.attributes['data-src'].value
-          image['src'] = image_address
-          image.delete 'data-src'
-        rescue
-          next
-        end
-      end
-
-      if !image_address.starts_with?("http")        
-        full_url = rewrite_url_for_ssl(rewrite_image_url_for_proxy(image.attributes['src'].value))
-        image_object = {url: full_url, start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
-        article['images'] << image_object
-        article['image_urls'] << full_url
-        image['src'] = full_url
-      else
-        if(force_https)
-          uri = Addressable::URI.parse(image_address)
-          uri.scheme = 'https'
-          image_address = rewrite_image_url_for_proxy uri.to_s 
-          image['src'] = image_address
-        end
-
-        image_object = {url: rewrite_url_for_ssl(image_address), start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
-        
-        # If, for some reason, there's an image in the story, but there's not one already in the Array
-        # (there should be, since the plugin should have handled it) add it so it shows up as the top image
-        article['images'] << image_object if article['images'].empty?
-        
-        article['images'] << image_object
-      end
-
-
-      # this is for modifying the urls in the article itself
-      # It's a mess, refactor this please
-      rewritten_url =  image_address
-      image.attributes['src'].value = rewrite_url_for_ssl(rewrite_image_url_for_proxy(rewritten_url))
-
-      # This is a filler for the app itself. Which will replace the text with the images 
-      # (order being the same as in the array)
-      # for versioning we put this in
-      multiple_image_version_required = 1.1
-
-      # Add gravestone
-      image['push'] = ":::"
-    end
-
-    article['body'] = elements.to_html
-
-    # We need to force HTTPS, christ this is annoying
-    host = ENV['host']
-      
-    proxied_image_urls = []
-    article['image_urls'].each do |image_url|
-      proxied_url = rewrite_url_for_ssl image_url
-      proxied_image_urls.push proxied_url
-    end
-
-    article['image_urls'] = proxied_image_urls
+    text, images, image_urls = extract_images_from_string article['body'], article['images'], article['image_urls']
+    article['body'] = text
+    article['images'] = images
+    article['image_urls'] = image_urls
   end
 
   # Parses an article, extracting all <img> links, and putting them, with their range, into
