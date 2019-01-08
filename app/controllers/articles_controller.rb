@@ -20,6 +20,8 @@ class ArticlesController < ApplicationController
         @response = CinsCodeigniter.articles(params)
       when :blox
         @response = Blox.articles(params)
+      when :drupal
+        @response = Drupal.search(params)
     end
     
     respond_to do |format|
