@@ -21,7 +21,7 @@ class ArticlesController < ApplicationController
       when :blox
         @response = Blox.articles(params)
       when :drupal
-        @response = Drupal.search(params)
+        @response = Drupal.articles(params)
     end
     
     respond_to do |format|
