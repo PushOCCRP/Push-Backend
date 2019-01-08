@@ -14,6 +14,8 @@ case ENV['cms_mode']
     Figaro.require_keys("newscoop_client_secret")
   when "cins-codeigniter"
     Figaro.require_keys("codeigniter_url")
+  when "drupal"
+    Figaro.require_keys("drupal_url")
   when "blox"
     Figaro.require_keys("blox_url")
     Figaro.require_keys("blox_publication_name")

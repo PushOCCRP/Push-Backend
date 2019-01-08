@@ -26,6 +26,8 @@ def run_update
           response = controller.get_occrp_joomla_articles({'language' => language, 'categories' => boolean})
         when :wordpress
           response = Wordpress.articles({'language' => language, 'categories' => boolean})
+        when :drupal
+          response = Drupal.articles({'language' => language, 'categories' => boolean})
         when :newscoop
           response = Newscoop.articles({'language' => language, 'categories' => boolean})
         when :cins_codeigniter
