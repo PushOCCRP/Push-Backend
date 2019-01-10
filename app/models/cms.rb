@@ -627,12 +627,18 @@ class CMS < ActiveRecord::Base
 
 
   def self.rewrite_url_for_ssl url, force = true
-    if(url != nil)
-    if(!ENV['force_https'] || url.starts_with?("https://"))
+    # If we pass in a blank url we just return an empty string
+    return '' if url.nil?
+
+    # If we don't have force_https set or the url is already pointing
+    # properly, we just return the url
+    if !ENV['force_https'] || url.starts_with?("https://")
       return url
     end
 
-    if(url.starts_with?('http:'))
+    # Now we build up the https portion depending on how the url is already
+    # formatted. This can be weird so we take into account a bunch of options
+    if url.starts_with?('http:')
       url = url.sub('http:', 'https:')
     else
       prefix = ""
@@ -650,9 +656,7 @@ class CMS < ActiveRecord::Base
       url = prefix + url 
     end
 
-    return url
-   else
-     return ""
+    url
   end
   
   def self.rewrite_image_url_for_proxy url
