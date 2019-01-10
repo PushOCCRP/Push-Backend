@@ -596,6 +596,9 @@ class CMS < ActiveRecord::Base
         url = ENV['newscoop_url']
       when "cins-codeigniter"
         url = ENV['codeigniter_url']
+      when "drupal"
+        url = ENV['drupal_url']
+       # byebug
       else
         raise "CMS type #{cms_type} not valid for this version of Push."
     end
