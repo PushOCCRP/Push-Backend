@@ -168,7 +168,7 @@ class ApplicationController < ActionController::Base
 
       logger.debug message
       respond_to do |format|
-        format.json{ render :json=>  {status: message, code: '503'} }
+        format.json{ render json: {status: message, code: '503'} }
         format.html { render message, status: 503}
       end
       return
