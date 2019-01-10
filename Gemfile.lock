@@ -100,7 +100,7 @@ GEM
     minitest (5.10.3)
     multi_json (1.12.2)
     multi_xml (0.6.0)
-    mysql2 (0.4.9)
+    mysql2 (0.4.10)
     nio4r (2.1.0)
     nokogiri (1.8.1)
       mini_portile2 (~> 2.3.0)
@@ -149,6 +149,7 @@ GEM
     responders (2.4.0)
       actionpack (>= 4.2.0, < 5.3)
       railties (>= 4.2.0, < 5.3)
+    ruby-filemagic (0.7.2)
     rufus-scheduler (3.4.2)
       et-orbi (~> 1.0)
     sass (3.5.3)
@@ -221,6 +222,7 @@ DEPENDENCIES
   rails-settings-cached
   rails_12factor
   rake
+  ruby-filemagic
   rufus-scheduler
   sass-rails
   sdoc
@@ -233,4 +235,4 @@ RUBY VERSION
    ruby 2.4.4p296
 
 BUNDLED WITH
-   1.16.1
+   1.16.2

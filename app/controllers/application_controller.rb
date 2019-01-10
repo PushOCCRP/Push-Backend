@@ -7,6 +7,7 @@ class ApplicationController < ActionController::Base
   before_action :check_for_valid_cms_mode
 
 
+  Figaro.load
   #This is just a passthrough for basic GET commands. Takes a URL, calls it, and returns the body.
   #This should conceivably cache responses at some point
   #Should also require auth token

@@ -25,7 +25,7 @@ echoc "\n-----------------------------------------------------------------------
 echoc "First, what type of CMS do you have?\n"
 # bash options list?
 PS3='Please enter your choice: '
-options=("Wordpress" "Newscoop" "Joomla" "Codeigniter" "Blox")
+options=("Wordpress" "Newscoop" "Joomla" "Codeigniter" "Blox" "Drupal")
 select opt in "${options[@]}"
 do
     case $opt in
@@ -47,6 +47,10 @@ do
             ;;
         "Blox")
             cms='Blox';
+            break
+            ;;
+                  "Drupal")
+            cms='Drupal';
             break
             ;;
         *) echo invalid option;;
