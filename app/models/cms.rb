@@ -78,7 +78,7 @@ class CMS < ActiveRecord::Base
         published_date = DateTime.new(1970,01,01)
       end
 
-      extract_images article
+      #extract_images article
       
       # right now we only support dates on the mobile side, this will be time soon.
       article['publish_date'] = published_date.strftime("%Y%m%d")
@@ -94,37 +94,45 @@ class CMS < ActiveRecord::Base
 
   
   def self.extract_images article
-   
+ 
+    
 
-   
-   text, images, image_urls = extract_images_from_string article['body'], article['images'], article['image_urls']
+  
+    text, images, image_urls = extract_images_from_string article, article['body'], article['images'], article['image_urls']
+
+    #byebug
     article['body'] = text
     article['images'] = images
     article['image_urls'] = image_urls
-  end
+   # Extract all image urls in the article and put them into a single array.
+   
+end
 
   # Parses an article, extracting all <img> links, and putting them, with their range, into
   # an array
-  def self.extract_images_from_string text, images = [], image_urls = []
+  def self.extract_images_from_string article, text, images = [], image_urls = []
 
-    # Extract all image urls in the article and put them into a single array.
-    # if(article['images'] == nil)
-    #   article['images'] = []
-    # end
     
-    # if(article['image_urls'] == nil)
-    #   article['image_urls'] = []
-    # end
+    # Extract all image urls in the article and put them into a single array.
+     if(article['images'] == nil)
+       article['images'] = []
+     end
+    
+     if(article['image_urls'] == nil)
+       article['image_urls'] = []
+     end
     
     #Yes, i'm aware this is repetitive code.
     
 
     
-    images.each do |image|
+     if (images != nil)
+       images.each do |image|
       raise "Image is nil when processing. Check your custom model, this should not happen." if image.nil?
+      
       image = rewrite_image_url(image)
     end
-
+    end
     elements = Nokogiri::HTML text
     elements.css('a').each do |link|
       
@@ -138,6 +146,7 @@ class CMS < ActiveRecord::Base
     elements.css('img').each do |image|
       
       begin
+        
         image = rewrite_image_url(image)
         image_address = image['url']
       rescue Exception => e
@@ -213,7 +222,7 @@ class CMS < ActiveRecord::Base
 
   def self.rewrite_image_url image
     image_address = image['url']
-
+ 
     if(image_address.nil?)
       if(!image[:url].blank?)
         image_address = image[:url]
@@ -586,7 +595,8 @@ class CMS < ActiveRecord::Base
   end
   
   def self.base_url
-    url = nil
+    
+    #url = nil
     case ENV['cms_mode']
       when "occrp-joomla"
         url = ENV['occrp_joomla_url']
@@ -598,12 +608,13 @@ class CMS < ActiveRecord::Base
         url = ENV['codeigniter_url']
       when "drupal"
         url = ENV['drupal_url']
-       # byebug
+       
       else
         raise "CMS type #{cms_type} not valid for this version of Push."
     end
 
     logger.debug("parsing #{url}")
+    
     uri = URI.parse(url)
 
     if(force_https)

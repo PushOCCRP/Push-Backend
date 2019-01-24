@@ -5,6 +5,7 @@ class ApplicationController < ActionController::Base
   
   # Set the cms mode for all controller requests
   before_action :check_for_valid_cms_mode
+  DOUBLE_ESCAPED_EXPR = /%25([0-9a-f]{2})/i
 
 
   Figaro.load
@@ -40,11 +41,16 @@ class ApplicationController < ActionController::Base
     end
   end
   
+  
+
+
+
+
   def passthrough_image url
     cached = true
-    
+   #byebug
     image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
-      raw_response = HTTParty.get(url)
+      raw_response = HTTParty.get(URI.encode(url).gsub(DOUBLE_ESCAPED_EXPR, '%\1'),:verify => false)
       content_type = raw_response.headers['content-type']
       #byebug
 
@@ -94,6 +100,8 @@ class ApplicationController < ActionController::Base
       url = ENV['codeigniter_url']
     when "blox"
       url = ENV['blox_url']
+    when "drupal"
+      url = ENV['drupal_url']
     else
       raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
     end

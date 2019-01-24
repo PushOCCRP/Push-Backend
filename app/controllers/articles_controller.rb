@@ -21,12 +21,15 @@ class ArticlesController < ApplicationController
       when :blox
         @response = Blox.articles(params)
       when :drupal
+    
         @response = Drupal.articles(params)
     end
-    
+      
     respond_to do |format|
       format.json
     end
+
+    #byebug
 
   end
 
