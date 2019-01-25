@@ -34,10 +34,10 @@ class Drupal < CMS
 		  most_recent_articles = articles(most_recent_articles_params)[:results]
 		  end
 
-			url = get_url language, "articles/last", options
-			urlUrgent = get_url language, "articles/urgent", options
-			urlActual = get_url language, "articles/actual", options
-			urlCompany = get_url language, "articles/company", options
+			url = get_url language, "articles/last?", options
+			urlUrgent = get_url language, "articles/urgent?", options
+			urlActual = get_url language, "articles/actual?", options
+			urlCompany = get_url language, "articles/company?", options
 
 			articles = get_articles url
 			articlesUrgent = get_articles urlUrgent
@@ -46,10 +46,16 @@ class Drupal < CMS
 
 
 
-			
-			articles['categories'] = ["Last", "Urgent", "Actual", "Company"]
-			articles[:results] = {"Last":articles[:results], "Urgent":articlesUrgent[:results], "Actual":articlesActual[:results], "Company":articlesCompany[:results]}
-
+      if language == 'tj'
+				 articles['categories'] = ["Гузашта", "Фаврӣ", "Муҳим", "Навгонии ширкатҳо"]
+				 articles[:results] = {"Гузашта":articles[:results], "Фаврӣ":articlesUrgent[:results], "Муҳим":articlesActual[:results], "Навгонии ширкатҳо":articlesCompany[:results]}
+       elsif language == 'ru'
+			   articles['categories'] = ["Последние", "Срочно", "Актуально", "Новости компаний"]
+			   articles[:results] = {"Последние":articles[:results], "Срочно":articlesUrgent[:results], "Актуально":articlesActual[:results], "Новости компаний":articlesCompany[:results]}
+       else
+			   articles['categories'] = ["Last", "Urgent", "Actual", "Company"]
+			   articles[:results] = {"Last":articles[:results], "Urgent":articlesUrgent[:results], "Actual":articlesActual[:results], "Company":articlesCompany[:results]}
+      end
 
 
 
@@ -97,7 +103,7 @@ class Drupal < CMS
 
 	    # If there is more than one language specified (or any language at all for backwards compatibility)
 	    if(languages().count > 1 && languages().include?(language))
-		   url_string = "#{url}#{path}?lang=#{language}&limit=10"
+		   url_string = "#{url}#{path}lang=#{language}&limit=10"
   	  end
 	    
 	    if(!ENV['wp_super_cached_donotcachepage'].blank?)
@@ -226,15 +232,17 @@ class Drupal < CMS
 
  	    query = params['q']
 
+			 
  	    google_search_engine_id = ENV['google_search_engine_id']
  		if(!google_search_engine_id.blank?)
  			logger.debug "Searching google with id: #{google_search_engine_id}"
  			articles_list = search_google_custom query, google_search_engine_id
  			url = get_url "noauth/articles/search?what=#{articles_list.join(',')}", language
  		else
- 		    url = get_url "noauth/articles/search?what=#{query}", language
+				 url = get_url language, "articles/search?what=#{query}&"
+				 
  		end
-
+		 #byebug
  		return get_articles url, {query: query}
  	end
 

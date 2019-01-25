@@ -177,8 +177,11 @@ end
         image_object = {url: rewrite_url_for_ssl(image_address), start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
         
         # If, for some reason, there's an image in the story, but there's not one already in the Array
-        # (there should be, since the plugin should have handled it) add it so it shows up as the top image        
-        images << image_object
+        # (there should be, since the plugin should have handled it) add it so it shows up as the top image  
+        if images.nil?
+        images = [image_object]      
+        end
+
       end
 
 
