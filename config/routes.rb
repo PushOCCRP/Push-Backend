@@ -24,14 +24,20 @@ Rails.application.routes.draw do
   resources :users
 
 
-  get 'articles' => 'articles#index'
-  get 'article' => 'articles#article'
-  get 'search' => 'articles#search'
-  
+  get 'articles' => 'articles#index', :defaults => { :format => 'json' }
+  get 'article' => 'articles#article', :defaults => { :format => 'json' }
+  get 'search' => 'articles#search', :defaults => { :format => 'json' }
+  post 'authenticate' => 'subscriptions#authenticate', :defaults => { :format => 'json' }
+  post 'logout' => 'subscriptions#logout', :defaults => { :format => 'json' }
+    
   get 'preferences' => 'preferences#index'
   put 'preferences' => 'preferences#update'
   
   get 'passthrough' => 'application#passthrough'
+  
+  get 'heartbeat' => 'application#heartbeat'
+  
+  get 'analytics' => 'analytics#index'
 
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".

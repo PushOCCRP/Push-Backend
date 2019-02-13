@@ -12,9 +12,8 @@ class CMS < ActiveRecord::Base
   def self.clean_up_response articles = Array.new, version = 1.0
     articles.delete_if{|article| article['headline'].blank?}
     articles.each do |article|
-      
-      logger.debug("images: #{article["images"].inspect}")
-
+      # Clean up the bylines
+      article['author'] = removeNewLines(article['author'])
       # If there is no body (which is very prevalent in the OCCRP data for some reason)
       # this takes the intro text and makes it the body text
       if((!article.has_key?('body') || !article['body'].nil?) && !article[:body].nil?)
@@ -39,6 +38,8 @@ class CMS < ActiveRecord::Base
 
       elements = Nokogiri::HTML::fragment article['body']
 
+      elements.search('a')
+
       elements.search('img').wrap('<p></p>')
 
       article['body'] = elements.to_html
@@ -54,6 +55,21 @@ class CMS < ActiveRecord::Base
       if(published_date.nil?)
         begin
           published_date = DateTime.strptime(article['publish_date'], '%Y%m%d')
+        rescue => error
+        end
+      end
+      
+      if(published_date.nil?)
+        begin
+          published_date = DateTime.strptime(article['publish_date'], '%Y-%m-%dT%H:%M:%S%z')
+        rescue => error
+        end
+      end
+      
+      if(published_date.nil?)
+        begin
+          cleaned_date = article['publish_date'].gsub(/(nd)|(th)|(rd)/, '').gsub(/[.,]/, '')
+          published_date = DateTime.strptime(cleaned_date, '%A %B %e %Y')
         rescue => error
         end
       end
@@ -76,96 +92,88 @@ class CMS < ActiveRecord::Base
     return articles
   end
 
-    # Parses an article, extracting all <img> links, and putting them, with their range, into
-  # an array
+  
   def self.extract_images article
+    text, images, image_urls = extract_images_from_string article['body'], article['images'], article['image_urls']
+    article['body'] = text
+    article['images'] = images
+    article['image_urls'] = image_urls
+  end
+
+  # Parses an article, extracting all <img> links, and putting them, with their range, into
+  # an array
+  def self.extract_images_from_string text, images = [], image_urls = []
 
     # Extract all image urls in the article and put them into a single array.
-    if(article['images'] == nil)
-      article['images'] = []
-    end
+    # if(article['images'] == nil)
+    #   article['images'] = []
+    # end
     
-    if(article['image_urls'] == nil)
-      article['image_urls'] = []
-    end
-
+    # if(article['image_urls'] == nil)
+    #   article['image_urls'] = []
+    # end
+    
     #Yes, i'm aware this is repetitive code.
-    article['images'].each do |image|
-      image_address = image['url']
-      if(image_address.nil?)
-        if(!image[:url].blank?)
-          image_address = image[:url]
-        elsif(!image['url'].blank?)
-          image_address = image['url']
-        end
-      end
+    
 
-      if !image_address.starts_with?("http")
-        # build up missing parts
-        prefix = ""
-        if(image_address.starts_with?(":"))
-          prefix = 'https'
-        elsif(image_address.starts_with?("//"))
-          prefix = 'https:'
-        elsif(image_address.starts_with?("/"))
-          prefix = base_url
-        else
-          prefix = base_url + "/"
-        end  
-        # Obviously needs to be fixed
-        full_url = prefix + image_address
-
-        image['url'] = full_url
-        image['start'] = 0
-        image['length'] = 0
-
-        article['image_urls'] << full_url
-      else
-        if(force_https)
-          uri = Addressable::URI.parse(image_address)
-          uri.scheme = 'https'
-          image_address = uri.to_s
-        end
-
-        image['url'] = rewrite_image_url_for_proxy image_address
-        image['start'] = 0
-        image['length'] = 0
-      end
+    
+    images.each do |image|
+      raise "Image is nil when processing. Check your custom model, this should not happen." if image.nil?
+      image = rewrite_image_url(image)
     end
 
-    elements = Nokogiri::HTML article['body']
+    elements = Nokogiri::HTML text
+    elements.css('a').each do |link|
+      
+     rewrite_link_url(link)
+     
+    end
+ 
+
+
+
     elements.css('img').each do |image|
-      image_address = image.attributes['src'].value
-
+      
+      begin
+        image = rewrite_image_url(image)
+        image_address = image['url']
+      rescue Exception => e
+        # Blox uses data-src for its images. I'm guessing for lazy loading?
+        begin 
+          image_address = image.attributes['data-src'].value
+          image['src'] = image_address
+          image.delete 'data-src'
+        rescue Exception => e
+          next
+        end
+      end
+      
       if !image_address.starts_with?("http")        
-        full_url = rewrite_url_for_ssl(rewrite_image_url_for_proxy(image.attributes['src']))
+        full_url = rewrite_url_for_ssl(rewrite_image_url_for_proxy(image.attributes['src'].value))
         image_object = {url: full_url, start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
-        article['images'] << image_object
-
-        article['image_urls'] << full_url
-        image['href'] = full_url
+        images << image_object
+        image_urls << full_url
+        image['src'] = full_url
       else
         if(force_https)
           uri = Addressable::URI.parse(image_address)
           uri.scheme = 'https'
           image_address = rewrite_image_url_for_proxy uri.to_s 
-          image['href'] = image_address
+          image['src'] = image_address
         end
 
-        image_object = {url: image_address, start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
+        image_object = {url: rewrite_url_for_ssl(image_address), start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: ""}
         
         # If, for some reason, there's an image in the story, but there's not one already in the Array
-        # (there should be, since the plugin should have handled it) add it so it shows up as the top image
-        article['images'] << image_object if article['images'].empty?
-        
-        article['images'] << image_object
+        # (there should be, since the plugin should have handled it) add it so it shows up as the top image        
+        images << image_object
       end
 
 
       # this is for modifying the urls in the article itself
       # It's a mess, refactor this please
       rewritten_url =  image_address
-      image.attributes['src'].value = rewritten_url
+      image.attributes['src'].value = rewrite_url_for_ssl(rewrite_image_url_for_proxy(rewritten_url))
 
       # This is a filler for the app itself. Which will replace the text with the images 
       # (order being the same as in the array)
@@ -176,18 +184,82 @@ class CMS < ActiveRecord::Base
       image['push'] = ":::"
     end
 
-    article['body'] = elements.to_html
+    text = elements.to_html
 
     # We need to force HTTPS, christ this is annoying
     host = ENV['host']
-      
+     
     proxied_image_urls = []
-    article['image_urls'].each do |image_url|
-      proxied_url = rewrite_url_for_ssl proxied_url
+    image_urls.each do |image_url|
+      proxied_url = rewrite_url_for_ssl image_url
       proxied_image_urls.push proxied_url
     end
 
-    article['image_urls'] = proxied_image_urls
+    image_urls = proxied_image_urls
+
+    return text, images, image_urls
+  end
+  
+
+  def self.rewrite_link_url link
+     link_address = link['href']
+     link_address = rewrite_url_for_ssl link_address, false
+     link['href'] = link_address
+     return link
+  end
+
+  def self.rewrite_image_url image
+    image_address = image['url']
+
+    if(image_address.nil?)
+      if(!image[:url].blank?)
+        image_address = image[:url]
+      elsif(!image['url'].blank?)
+        image_address = image['url']
+      elsif(!image[:src].blank?)
+        image_address = image[:src]
+      elsif(!image['src'].blank?)
+        image_address = image['src']
+      end
+    end
+    
+    if !image_address.starts_with?("http")
+      # build up missing parts
+      prefix = ""
+      if(image_address.starts_with?(":"))
+        prefix = 'https'
+      elsif(image_address.starts_with?("//"))
+        prefix = 'https:'
+      elsif(image_address.starts_with?("/"))
+        prefix = base_url
+      else
+        prefix = base_url + "/"
+      end  
+      # Obviously needs to be fixed
+      full_url = prefix + image_address
+
+      image['url'] = full_url
+      image['start'] = 0
+      image['length'] = 0
+
+    else
+      if(force_https)
+        uri = Addressable::URI.parse(image_address)
+        uri.scheme = 'https'
+        image_address = uri.to_s
+      end
+
+      if(!image[:url].nil?)
+        image[:url] = rewrite_url_for_ssl(rewrite_image_url_for_proxy(image_address))
+      else
+        image['url'] = rewrite_url_for_ssl(rewrite_image_url_for_proxy(image_address))
+      end
+      
+      image['start'] = 0
+      image['length'] = 0
+    end
+    
+    return image
   end
   
   def self.extract_youtube_links article
@@ -200,8 +272,15 @@ class CMS < ActiveRecord::Base
     end
     
     elements.css('a').each do |link|
+      next if link.attributes.has_key?('href') == false
+      
       link_address = link.attributes['href'].value
-      uri = URI(link_address)
+
+      begin
+        uri = URI(link_address)
+      rescue => exception
+        next        
+      end
       
       next if uri.nil? || uri.host.nil?
       
@@ -387,6 +466,12 @@ class CMS < ActiveRecord::Base
     return cleaned
   end
   
+  def self.removeNewLines string
+    cleaned = string
+    string.gsub!("\n", "")
+    return cleaned
+  end
+  
   def self.format_description_text text
     text = ActionView::Base.full_sanitizer.sanitize(text)
     
@@ -433,16 +518,24 @@ class CMS < ActiveRecord::Base
     text.gsub!('<br />', gravestone)
     text.gsub!(/<\/p>[\s]*(mv9da0K3fP)*[\s]*<p>/, gravestone)
 
+    text.gsub!(/(<br>){3,}/, gravestone)    
+
     text.gsub!('<p>', '')
     text.gsub!('</p>', '')
 
+    #byebug if text.include?("Number of pensioners")
+
     text.gsub!(/[\s]*(mv9da0K3fP)+[\s]*/, '<br /><br />')
 
-
+    text.gsub!(/(<br>){3,}/, '')
+    text.gsub!(/(<br \/>){3,}/, '')
     # NOTE: some <p> tags may stay in, especially if there's formatting inlined on it.
     # This removes the <br />s before it
     # We can also assume they're using <p> tags, so, we should add closers, since they were removed
-    text.gsub!(/([\s]*<br \/>[\s]*)+<p/, '</p><p')
+    text.gsub!(/([\s]*(<br \/>)[\s]*)+<p/, '</p><p')
+    
+    text.gsub!(/(<\/div>)(\\n)*((<br>)+|(<br \/>)+)(<div)/, '</div><div')
+  
     
     while(text.start_with?("<br>"))
       text.slice!(0..3)
@@ -471,6 +564,23 @@ class CMS < ActiveRecord::Base
       return elements.to_html
   end
 
+  def self.languages
+    language_string = ENV['languages']
+    languages = language_string.gsub('"', '').gsub("'", '').split(",") if !language_string.nil?
+
+   	languages = ["en"] if languages.nil?
+   	
+   	#byebug
+   	return languages
+  end
+
+  def self.default_language
+    default_language = ENV['default_languages']
+    default_language = languages[0] if default_language.nil?
+    default_language = 'en' if default_language.nil?
+
+    return default_language
+  end
   
   def self.base_url
     url = nil
@@ -481,8 +591,8 @@ class CMS < ActiveRecord::Base
         url = ENV['wordpress_url']
       when "newscoop"
         url = ENV['newscoop_url']
-      when "cins-codeignitor"
-        url = ENV['cins_codeignitor_url']
+      when "cins-codeigniter"
+        url = ENV['codeigniter_url']
       else
         raise "CMS type #{cms_type} not valid for this version of Push."
     end
@@ -511,8 +621,10 @@ class CMS < ActiveRecord::Base
     return value
   end
 
-  def self.rewrite_url_for_ssl url
-    if(!ENV['force_https'])
+
+
+  def self.rewrite_url_for_ssl url, force = true
+    if(!ENV['force_https'] || url.starts_with?("https://"))
       return url
     end
 
@@ -520,10 +632,11 @@ class CMS < ActiveRecord::Base
       url = url.sub('http:', 'https:')
     else
       prefix = ""
+      http_prefix = force ? "https" : "http"
       if(url.starts_with?(":"))
-        prefix = 'https'
+        prefix = force
       elsif(url.starts_with?("//"))
-        prefix = 'https:'
+        prefix = "#{force}:"
       elsif(url.starts_with?("/"))
         prefix = base_url
       else
@@ -539,11 +652,34 @@ class CMS < ActiveRecord::Base
   def self.rewrite_image_url_for_proxy url
     # this is for modifying the urls in the article itself
     # It's a mess, refactor this please
+    
+    rewritten_url = url
+
     if(!ENV['proxy_images'].blank? && ENV['proxy_images'].downcase == 'true')
-      rewritten_url = Rails.application.routes.url_helpers.passthrough_url(host: ENV['host']) + "?url=" + URI.escape(url)
+      passthrough_url = Rails.application.routes.url_helpers.passthrough_url(host: ENV['host'])
+      https_passthrough_url = rewrite_url_for_ssl(passthrough_url) 
+      if(!url.starts_with?(passthrough_url) && !url.starts_with?(https_passthrough_url) )
+       # byebug
+        rewritten_url = Rails.application.routes.url_helpers.passthrough_url(host: ENV['host']) + "?url=" + URI.escape(url)
+      end
     end
     
     return rewritten_url
   end
   
+  def self.translate_phrase phrase, language
+    
+    most_recent = {'az': "ən son", 'en': "Most Recent", 'ru': "самые последние", 'ro': "Cel mai recent", 'sr': "Najnovije", 'bg': "Най-скорошен", 'bs': "Najnovije", 'ka': "უახლესი"}
+    
+    translated = ''
+    case phrase
+      when "most_recent"
+      translated = most_recent[language.to_sym]
+    end
+    
+    translated = "Most Recent" if translated.blank?
+    
+    return translated
+  end
+
 end

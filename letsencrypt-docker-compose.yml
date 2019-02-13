@@ -1,7 +1,7 @@
 version: '2'
 services:
 
- # Adopted from https://git.occrp.org/tech/letsencrypt/blob/master/docker-compose.yml
+ # Adopted from https://git.occrp.org/tech/letsencrypt/blob/master/docker-compose-with-nginx.yml
   #
   # relevant:
   # - https://community.letsencrypt.org/t/nginx-docker-setup-for-le/2621
@@ -47,18 +47,26 @@ services:
          #- nginx_letsencrypt
        entrypoint: certbot
        command: certonly --text --authenticator standalone --webroot-path /var/www/ --keep $LETSENCRYPT_STAGING --domains "$LETSENCRYPT_DOMAINS" --email "$LETSENCRYPT_EMAIL" --agree-tos
-#   
-#   nginx_letsencrypt:
-#       image: nginx
-#       volumes:
-#         - "./.docker/nginx/letsencrypt/:/etc/nginx/:ro"
-  
-  # testing version
-  #testencrypt:
-  #    extends:
-          # using the production version
-  #        file: ./docker-compose.yml
-  #        service: letsencrypt
-  #    environment:
-          # changing the server to staging
-  #        LETSENCRYPT_STAGING: "--staging"
+
+  nginx:
+    build: https://github.com/PushOCCRP/watchful-nginx.git
+    env_file:
+      - ./secrets.env
+    volumes:
+      - "./.docker/nginx/:/etc/nginx/"                            # config
+      - "./.docker/nginx/:/etc/ssl/nginx"
+      - "./.docker/data/secrets/keys:/srv/data"                # dhpram and certs are here
+      - "./.docker/data/secrets/keys/archive/:/etc/letsencrypt/archive"
+      - "./.docker/data/secrets/keys/live/$LETSENCRYPT_DOMAINS:/srv/data/ssl/keys"
+      - "./.docker/data/secrets/keys:/srv/data/"
+      - "./public/:/var/public/"
+
+  devencrypt:
+      image: paulczar/omgwtfssl
+      volumes:
+        - "./.docker/data/secrets/keys/ssl/keys/:/certs/"                 # config, certs, etc
+      environment:
+        - SSL_SUBJECT=dev.pushapp.press
+        - SSL_CERT=fullchain.pem
+        - SSL_KEY=privkey.pem
+        

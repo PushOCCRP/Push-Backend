@@ -1,22 +1,56 @@
 class Wordpress < CMS
 
 	def self.articles params
-
+  	cache = true;
+    cached_articles = Rails.cache.fetch("sections/#{params.to_s}", expires_in: 1.hour) do
+      cache = false;
+      
     	language = language_parameter params['language']
+    	language = default_language if language.blank?
+      raise "Requested language is not enabled"	if !languages().include?(language)
+      
     	options = {}
-
+      articles = {}
+      
     	categories_string = Setting.categories
-    	if(!categories_string.blank? && !params['categories'].blank? && params['categories']=='true')
-    		logger.debug("categories not blank")
-    		categories = categories_string.split('::')
-    		options[:post_types] = categories.join(',')
+    	most_recent_articles = nil
+    	
+    	if(!categories_string.blank? && !params['categories'].blank? && params['categories']=='true' && Setting.consolidated_categories.blank?)
+    		categories = YAML.load(categories_string)
+    		categories[language] = [] if categories[language].nil?
+    		options[:post_types] = categories[language].join(',')
         if(!Setting.consolidated_categories)
           options[:categorized]='true'
         end
+        
+        most_recent_articles_params = params.dup
+        most_recent_articles_params['categories'] = nil
+        
+        most_recent_articles = articles(most_recent_articles_params)[:results]
     	end
 
 	    url = get_url "push-occrp=true&occrp_push_type=articles", language, options
-	    return get_articles url
+	    
+	    articles = get_articles url
+  	  if(!most_recent_articles.nil? && !Setting.show_most_recent_articles.nil?)
+        # There maybe a bug where an array is returned, even if categories are enabled
+        if(articles[:results].is_a?(Array))
+          articles[:results] = {translate_phrase("most_recent", language) => most_recent_articles}
+          articles['categories'] = []
+        else
+  	      articles[:results][translate_phrase("most_recent", language)] = most_recent_articles
+  	    end
+  	    
+  	    articles["categories"].insert(0, translate_phrase("most_recent", language))
+  	  end
+  	  
+  	  articles
+    end
+    
+    logger.debug("/articles.json #{params.to_s} Cache hit") if cache == true
+    logger.debug("/articles.json #{params.to_s} Cache missed") if cache == false
+  
+	  return cached_articles
 	end
 
 	def self.article params
@@ -47,17 +81,35 @@ class Wordpress < CMS
 	end
 
 	def self.categories
-	    response = Rails.cache.fetch("wordpress_categories", expires_in: 1.day) do
-			url = get_url "push-occrp=true&occrp_push_type=post_types", nil
-			logger.debug ("Fetching categories")
-			make_request url
-		end
+  	languages = languages();
+   	languages = ['en'] if(languages.nil? || languages.count == 0)
 
-		if(response.count == 0)
-			response = {post: 'post'}
-		end
+  	
+    categories = {}
 
-		return response.keys
+  	languages.each do |language|
+    	# This is a temp for Kyiv Post, we need to fix the languages properly though...
+  	  response = Rails.cache.fetch("wordpress_categories_#{language}", expires_in: 1.day) do
+  			url = get_url "push-occrp=true&occrp_push_type=post_types", language
+  			logger.debug ("Fetching categories")
+  			make_request url
+  		end
+  		
+#  		byebug
+  		
+	    if(response.class == Hash)
+        categories[language] = response.keys
+      else
+   	    categories[language] = response
+   	  end
+      
+      categories[language] = ['post'] if(response.count == 0)
+    end
+    
+ 
+    
+   	
+ 		return categories
 	end
 
 
@@ -66,7 +118,13 @@ class Wordpress < CMS
 
 	def self.get_url path, language, options = {}
 	    url = ENV['wordpress_url'] 
-	    url_string = "#{url}#{language}?#{path}"
+	    
+ 	    url_string = "#{url}?#{path}"
+
+	    # If there is more than one language specified (or any language at all for backwards compatibility)
+	    if(languages().count > 1 && languages().include?(language))
+   	    url_string = "#{url}/#{language}?#{path}"
+  	  end
 	    
 	    if(!ENV['wp_super_cached_donotcachepage'].blank?)
 	    	options[:donotcachepage] = ENV['wp_super_cached_donotcachepage']
@@ -80,12 +138,20 @@ class Wordpress < CMS
 	end
 
 	def self.make_request url
-
 		logger.debug("Making request to #{url}")
-		response = HTTParty.get(URI.encode(url))
+  		response = HTTParty.get(URI.encode(url))
+    
+    begin
 	    body = JSON.parse response.body
-
-	    return body
+	  rescue => exception
+      logger.debug "Exception parsing JSON from CMS"
+      logger.debug "Statement returned"
+      logger.debug "---------------------------------------"
+      logger.debug response.body
+      logger.debug "---------------------------------------"
+      raise
+    end
+	  return body
 	end
 
 	def self.get_articles url, extras = {},  version = 1
@@ -97,16 +163,21 @@ class Wordpress < CMS
 	    if(body['results'].nil?)
 	    	body['results'] = Array.new
 	    end
-
+      
       if(body['categories'].nil?)
   	    results = clean_up_response(body['results'], version)
    	    results = clean_up_for_wordpress results
   	  else
   	    results = {}
   	    body['categories'].each do |category|
+    	    if(body['results'][category].blank?)
+      	    results[category] = []
+      	    next
+      	  end
+
     	    results[category] = clean_up_response(body['results'][category], version)
     	    results[category] = clean_up_for_wordpress results[category]
-    	  end
+    	  end    	  
   	  end
 
 	    response = {start_date: "19700101",
@@ -125,7 +196,7 @@ class Wordpress < CMS
 
 	def self.language_parameter language
 	    if(!language.blank?)
-	      language = "/#{language}/"
+	      language = language
 	    end
 
 	    return language

@@ -7,6 +7,9 @@
 # Ignore bundler config.
 /.bundle
 
+# ignore the docker-compose.yml symlink
+docker-compose.yml
+
 # Ignore the default SQLite database.
 /db/*.sqlite3
 /db/*.sqlite3-journal
@@ -22,6 +25,7 @@ tmp/*
 
 # Ignore the installed gems
 /vendor/bundle
+/vendor/cache
 
 secrets.env*
 /.docker/postgres/*
@@ -30,11 +34,46 @@ secrets.env*
 /.docker/redis/*
 docker/postgres/*
 .docker/postgres/*
+.docker/nginx/dhparam.pem
 secrets/certs/*
 /secrets/certs/*
 public/assets
 secrets.env
 /cookbooks/*
 .env
+<<<<<<< HEAD
 
 data/dump.rdb
+=======
+.byebug_history
+
+node_modules/
+/actionview/log
+
+/activerecord/sqlnet.log
+
+/activemodel/test/fixtures/fixture_database.sqlite3
+/activesupport/test/fixtures/isolation_test
+/activestorage/test/service/configurations.yml
+/railties/test/500.html
+/railties/test/fixtures/tmp
+/railties/test/initializer/root/log
+/railties/doc
+/railties/tmp
+/guides/output
+
+data/dump.rdb
+
+/.docker/logs/*
+
+# Backups
+/.docker/backups/*
+!/.docker/backups/.keep
+
+
+/.vagrant
+/.idea
+
+# Because macOS
+.DS_Store
+>>>>>>> eb10494aa57787440b8395433b5ca965da570fea

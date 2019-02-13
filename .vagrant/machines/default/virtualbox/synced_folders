@@ -1,1 +1,0 @@
-{"virtualbox":{"/vagrant":{"guestpath":"/vagrant","hostpath":"/Users/christopher/Repositories/Push/Push-Backend","disabled":false,"__vagrantfile":true},"v-csc-2012e70c1":{"id":"v-csc-2012e70c1","guestpath":"/tmp/vagrant-chef/f707a0de2f809c5c590b95d327e685f2/cookbooks","hostpath":"/Users/christopher/Repositories/Push/Push-Backend/cookbooks","disabled":false,"__vagrantfile":true}}}
