@@ -150,7 +150,7 @@ How you decided to implement these is mostly up to you, since every CMS does it 
 
 #### Controller
 
-For every CMS you need to add a switch so that the controller knows which model to use. Right now that's here:
+For every CMS you need to add a switch so that the controller knows which model to use. Right now that's here in the ```/app/controllers/articles_controller.rb``` file:
 
 - ```def index```
 - ```def search```
@@ -163,6 +163,10 @@ There are some leftover stuff from Joomla in the Controller but you can ignore i
 Push uses the [Figaro](https://github.com/laserlemon/figaro) gem for configuation. The config file is at ```/config/initializers/figaro.rb```.
 
 Specifically you have to choose a name for the ```cms_mode``` and then the required variables. This is at least a url for the cms but could be things such as API keys as well.
+
+#### Scripts
+
+As a final help to the community, you shoul add your CMS to the setup scripts as an option. That's found in ```./maintence-scripts/setup-cms_env.sh``` (starting around line 30)
 
 ---
 
