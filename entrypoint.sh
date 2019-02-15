@@ -29,7 +29,7 @@ then
 else
   RAILS_ENV=production
 	echo "Precompiling assets..."
-	rake assets:precompile 
+	bundle exec rake assets:precompile 
 	echo "Done."
 fi
 
