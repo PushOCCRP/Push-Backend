@@ -5,7 +5,6 @@ class ArticlesController < ApplicationController
   before_action :check_api_key
   
   def index
-    
     @response = []
 
     case @cms_mode 
@@ -20,6 +19,8 @@ class ArticlesController < ApplicationController
         @response = CinsCodeigniter.articles(params)
       when :blox
         @response = Blox.articles(params)
+      when :snworks
+        @response = SNWorksCEO.articles(params)
     end
     
     respond_to do |format|
@@ -28,8 +29,6 @@ class ArticlesController < ApplicationController
 
   end
 
-  
-    
   def search
     case @cms_mode
       when :occrp_joomla
@@ -42,6 +41,8 @@ class ArticlesController < ApplicationController
         @response = CinsCodeigniter.search(params)
       when :blox
         @response = Blox.search(params)
+      when :snworks
+        @response = SNWorksCEO.search(params)
     end 
     
     respond_to do |format|
@@ -95,6 +96,8 @@ class ArticlesController < ApplicationController
         @response = CinsCodeigniter.article(params)
       when :blox
         @response = Blox.article(params)
+      when :snworks
+        @response = SNWorksCEO.article(params)
     end 
     
     respond_to do |format|

@@ -73,6 +73,8 @@ class ApplicationController < ActionController::Base
         @cms_mode = :cins_codeigniter
       when "blox"
         @cms_mode = :blox
+      when "snworks"
+        @cms_mode = :snworks
       else
         raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
     end

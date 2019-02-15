@@ -1,4 +1,4 @@
-class Wordpress < CMS
+class SNWorksCEO < CMS
 
 	def self.articles params
   	cache = true;
