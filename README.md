@@ -158,6 +158,8 @@ For every CMS you need to add a switch so that the controller knows which model 
 
 There are some leftover stuff from Joomla in the Controller but you can ignore it for implementation purposes.
 
+You also need to add a new switch to the ```check_for_valid_cms_mode``` in ```/app/controllers/application_controller.rb```
+
 #### Environment Variables
 
 Push uses the [Figaro](https://github.com/laserlemon/figaro) gem for configuation. The config file is at ```/config/initializers/figaro.rb```.
