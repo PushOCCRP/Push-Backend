@@ -185,7 +185,7 @@ class Drupal < CMS
       
 	    response = {start_date: "19700101",
 	               end_date: DateTime.now.strftime("%Y%m%d"),
-	               total_results: 4,
+	               total_results: 3,
 	               page: "1",
 	               results: results
 	              }
