@@ -34,27 +34,29 @@ class Drupal < CMS
 		  most_recent_articles = articles(most_recent_articles_params)[:results]
 		  end
 
-			url = get_url language, "articles/last?", options
-			urlUrgent = get_url language, "articles/urgent?", options
+			url = get_url language, "articles/urgent?", options
 			urlActual = get_url language, "articles/actual?", options
 			urlCompany = get_url language, "articles/company?", options
 
 			articles = get_articles url
-			articlesUrgent = get_articles urlUrgent
 			articlesActual = get_articles urlActual
 			articlesCompany = get_articles urlCompany
 
 
 
-      if language == 'tj'
-				 articles['categories'] = ["Гузашта", "Фаврӣ", "Муҳим", "Навгонии ширкатҳо"]
-				 articles[:results] = {"Гузашта":articles[:results], "Фаврӣ":articlesUrgent[:results], "Муҳим":articlesActual[:results], "Навгонии ширкатҳо":articlesCompany[:results]}
-       elsif language == 'ru'
-			   articles['categories'] = ["Последние", "Срочно", "Актуально", "Новости компаний"]
-			   articles[:results] = {"Последние":articles[:results], "Срочно":articlesUrgent[:results], "Актуально":articlesActual[:results], "Новости компаний":articlesCompany[:results]}
-       else
-			   articles['categories'] = ["Last", "Urgent", "Actual", "Company"]
-			   articles[:results] = {"Last":articles[:results], "Urgent":articlesUrgent[:results], "Actual":articlesActual[:results], "Company":articlesCompany[:results]}
+			if language == 'tj'
+				articles['categoriesOrder'] = { "Фаврӣ" => "1", "Муҳим" => "2", "Навгонии ширкатҳо" => "3" } 
+				#articles['categoriesOrder'] = { "Фаврӣ" : "0" , "Муҳим" : "1" , "Навгонии ширкатҳо" : "2"}
+				 articles['categories'] = [ "Фаврӣ", "Муҳим", "Навгонии ширкатҳо"]
+				 articles[:results] = {"Фаврӣ":articles[:results], "Муҳим":articlesActual[:results], "Навгонии ширкатҳо":articlesCompany[:results]}
+			 elsif language == 'ru'
+				articles['categoriesOrder'] = { "Срочно" => "1", "Актуально" => "2", "Новости компаний" => "3" } 
+			   articles['categories'] = ["Срочно", "Актуально", "Новости компаний"]
+			   articles[:results] = {"Срочно":articles[:results], "Актуально":articlesActual[:results], "Новости компаний":articlesCompany[:results]}
+			 else
+				articles['categoriesOrder'] = { "Urgent" => "1", "Actual" => "2", "Company" => "3" } 
+			   articles['categories'] = ["Urgent", "Actual", "Company"]
+			   articles[:results] = {"Urgent":articles[:results], "Actual":articlesActual[:results], "Company":articlesCompany[:results]}
       end
 
 
