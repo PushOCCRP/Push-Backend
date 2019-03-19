@@ -48,11 +48,26 @@ class ApplicationController < ActionController::Base
 
   def passthrough_image url
     cached = true
-   #byebug
+
     image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
-      raw_response = HTTParty.get(URI.encode(url).gsub(DOUBLE_ESCAPED_EXPR, '%\1'),:verify => false)
+      url_encoded = url
+      if url_encoded == URI.encode(url_encoded).gsub(DOUBLE_ESCAPED_EXPR, '%\1') 
+        while url_encoded != URI.decode(url_encoded) do
+          url_encoded = URI.decode(url_encoded)
+        end
+      
+      else 
+        while url_encoded != URI.encode(url_encoded).gsub(DOUBLE_ESCAPED_EXPR, '%\1') do
+          #byebug
+          url_encoded = URI.encode(url_encoded).gsub(DOUBLE_ESCAPED_EXPR, '%\1')
+        end
+          
+      end
+      url_encoded = URI.encode(url_encoded).gsub(DOUBLE_ESCAPED_EXPR, '%\1')
+        
+      raw_response = HTTParty.get(url_encoded,:verify => false)
       content_type = raw_response.headers['content-type']
-      #byebug
+      
 
       if (content_type.blank?)
        fm = FileMagic.new(FileMAgic::MAGIC_MIME)
