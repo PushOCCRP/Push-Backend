@@ -1,4 +1,4 @@
-class Consumer < ActiveRecord::Base
+class Consumer < ApplicationRecord
   
   has_many :consumer_events
   

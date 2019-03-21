@@ -1,4 +1,4 @@
-class PushDevice < ActiveRecord::Base
+class PushDevice < ApplicationRecord
   
   module Status
     ACTIVE = 0

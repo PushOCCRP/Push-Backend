@@ -258,6 +258,37 @@ if [[ $cms == 'Blox' ]]; then
   done
 fi
 
+# If SNWorks CEO
+if [[ $cms == 'SNWorks' ]]; then
+
+  echoc "\nFor SNWorks we need the authentication keys provided by the CMS."
+  echoc "To do that follow step 1 here http://static.getsnworks.com/ceo/api/"
+  
+  while true
+  do
+    echo -en "Public Key? "
+    read snworks_public_api_key
+    
+    if [[ -z "${snworks_public_api_key// }" ]]; then
+      echoc "Please enter a valid Public Key"
+    else
+      break
+    fi
+  done
+  
+  while true
+  do
+    echo -en "Private Key? "
+    read snworks_private_api_key
+    
+    if [[ -z "${snworks_private_api_key// }" ]]; then
+      echoc "Please enter a valid Private Key"
+    else
+      break
+    fi
+  done
+fi
+
 # Ask for languages
 echo "What langauges does your app provide?\n"
 echo "We currently support:"
@@ -425,4 +456,22 @@ blox_editorial_secret=$blox_editorial_secret
 EOT
 
 fi
+
+if [[ $cms == 'SNWorks' ]]; then
+cat <<EOT >> secrets.env
+#########################################
+#
+# SNWorks CEO API access variables
+# Instructions to generate these at 
+# http://static.getsnworks.com/ceo/api/
+# 
+#########################################
+
+snworks_public_api_key=$snworks_public_api_key
+snworks_private_api_key=$snworks_private_api_key
+
+EOT
+
+fi
+
 echo "Finished! If they're already running, please restart your docker containers to update them."

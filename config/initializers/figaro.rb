@@ -30,7 +30,8 @@ case ENV['cms_mode']
     languages = ENV['languages'].delete('"').split(',')
     raise "Blox only supports one language at a time right now" if languages.count > 1\
   when "snworks"
-    #Figaro.require_keys["xxxxx"]
+    Figaro.require_keys("snworks_public_api_key")
+    Figaro.require_keys("snworks_private_api_key")
   else
   	raise "No valid cms mode, please fix the environment variable \"cms_mode\""
 end

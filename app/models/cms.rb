@@ -1,4 +1,4 @@
-class CMS < ActiveRecord::Base
+class CMS
 
   def self.search_google_custom query, google_search_engine_ids
     # Get the search results from Google

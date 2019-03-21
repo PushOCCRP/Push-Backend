@@ -1,4 +1,4 @@
-class ConsumerEvent < ActiveRecord::Base
+class ConsumerEvent < ApplicationRecord
   
   belongs_to :consumer
   has_one :article

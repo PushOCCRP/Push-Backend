@@ -24,6 +24,9 @@ gem 'jbuilder'
 # bundle exec rake doc:rails generates the API under doc/api.
 gem 'sdoc'
 
+gem 'bootsnap'
+gem 'listen'
+
 #Filemagic to check content type of images or whatever we need
 gem 'ruby-filemagic'
 
@@ -75,3 +78,4 @@ gem "rails-settings-cached"
 
 gem "fcm"
 gem "rufus-scheduler"
+gem "jwt"
