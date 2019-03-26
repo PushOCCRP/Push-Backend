@@ -3,7 +3,7 @@ ruby '2.4.4'
 source 'https://rubygems.org'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '5.1.4'
+gem 'rails', '5.2.2'
 # Use sqlite3 as the database for Active Record
 #gem 'sqlite3'
 # Use SCSS for stylesheets
@@ -28,7 +28,6 @@ gem 'sdoc'
 gem 'ruby-filemagic'
 
 #gem 'thin'
-
 gem 'pg'
 gem 'rake'
 
@@ -56,7 +55,7 @@ group :development, :test do
   gem 'mysql2'
 
 end
-
+gem 'redis'
 gem 'le'
 gem 'rails_12factor'
 gem 'httparty'

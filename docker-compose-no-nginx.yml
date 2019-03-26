@@ -24,6 +24,7 @@ services:
     depends_on:
       - db
       - uniqush
+      - redis
     env_file:
       - ./secrets.env
     environment:
