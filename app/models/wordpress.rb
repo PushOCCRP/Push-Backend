@@ -43,10 +43,16 @@ class Wordpress < CMS
   	    
   	    articles["categories"].insert(0, translate_phrase("most_recent", language))
   	  end
-  	  
+			if language == 'rs'
+				articles['categoriesOrder'] = { "Vesti" => "1", "Blog" => "2", "Istraživanja" => "3" } 
+				
+			 else
+				articles['categoriesOrder'] = { "News" => "1", "Investigations" => "2" } 
+			end
+			
   	  articles
     end
-    
+
     logger.debug("/articles.json #{params.to_s} Cache hit") if cache == true
     logger.debug("/articles.json #{params.to_s} Cache missed") if cache == false
   
