@@ -41,6 +41,10 @@ public/assets
 secrets.env
 /cookbooks/*
 .env
+<<<<<<< HEAD
+
+data/dump.rdb
+=======
 .byebug_history
 
 node_modules/
@@ -72,3 +76,4 @@ data/dump.rdb
 
 # Because macOS
 .DS_Store
+>>>>>>> eb10494aa57787440b8395433b5ca965da570fea
