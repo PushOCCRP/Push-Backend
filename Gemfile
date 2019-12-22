@@ -1,11 +1,13 @@
-ruby '2.5.3'
+# frozen_string_literal: true
+
+ruby '2.5.7'
 
 source 'https://rubygems.org'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '5.2.2'
 # Use sqlite3 as the database for Active Record
-#gem 'sqlite3'
+# gem 'sqlite3'
 # Use SCSS for stylesheets
 gem 'sass-rails'
 # Use Uglifier as compressor for JavaScript assets
@@ -24,10 +26,10 @@ gem 'jbuilder'
 # bundle exec rake doc:rails generates the API under doc/api.
 gem 'sdoc'
 
-#Filemagic to check content type of images or whatever we need
+# Filemagic to check content type of images or whatever we need
 gem 'ruby-filemagic'
 
-#gem 'thin'
+# gem 'thin'
 
 gem 'pg'
 gem 'rake'
@@ -37,7 +39,7 @@ gem 'rake'
 
 # Use Unicorn as the app server
 # gem 'unicorn'
-#gem 'thin'
+# gem 'thin'
 
 # Use Capistrano for deployment
 # gem 'capistrano-rails', group: :development
@@ -50,28 +52,27 @@ end
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug'
+  gem 'mysql2'
 
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
-  gem 'mysql2'
-
 end
 
-gem 'le'
-gem 'rails_12factor'
-gem 'httparty'
+gem 'dalli'
 gem 'figaro'
+gem 'htmlentities'
+gem 'httparty'
+gem 'le'
+gem 'memcachier'
+gem 'mini_magick'
 gem 'nokogiri'
 gem 'puma'
-gem 'dalli'
-gem 'memcachier'
-gem "mini_magick"
-gem 'htmlentities'
+gem 'rails_12factor'
 
-gem "addressable"
-gem "devise"
+gem 'addressable'
+gem 'devise'
 
-gem "rails-settings-cached"
+gem 'rails-settings-cached'
 
-gem "fcm"
-gem "rufus-scheduler"
+gem 'fcm'
+gem 'rufus-scheduler'

@@ -1,5 +1,5 @@
 version: '2'
-    
+
 services:
 
   #
@@ -18,7 +18,10 @@ services:
     build: .
     command: bundle exec rails s -p 3000 -b '0.0.0.0'
     volumes:
-      - .:/push
+      - ".:/push:cached"
+      # - "rails_cache:/app/tmp/cache"
+      # - "node_modules:/app/node_modules"
+      # - "packs:/app/public/packs"
     expose:
       - "3000"
     depends_on:

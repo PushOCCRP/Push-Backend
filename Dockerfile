@@ -1,4 +1,4 @@
-FROM ruby:2.5.3-stretch
+FROM ruby:2.5.7-stretch
 
 RUN apt-get update
 RUN apt-get -y install apt-transport-https ca-certificates libmagic-dev

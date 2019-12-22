@@ -1,4 +1,4 @@
-#!/bin/bash    
+#!/bin/bash
 bundle config build.nokogiri --use-system-libraries
 bundle install --path vendor/bundle
 
@@ -29,9 +29,11 @@ then
 else
   RAILS_ENV=production
 	echo "Precompiling assets..."
-	bundle exec rake assets:precompile 
+	bundle exec rake assets:precompile
 	echo "Done."
 fi
+
+echo "If you're on a mac, please wait for awhile now."
 
 #if psql -lqt | cut -d \| -f 1 | grep -qw 'development'; then
 #    echo "database already exists"
