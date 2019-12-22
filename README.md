@@ -12,7 +12,7 @@ This consists of five systems.
 -- Set up to be a basic proxy server to insure SSL connectivity and passthrough to the Puma server running the Rails app.
 - Postgres
 -- The database that the app uses. Utterly vanilla installation.
-- Uniqush 
+- Uniqush
 -- A really great open source push notification server that handles all the certificates, devices settings and actual pushing of notifications.
 - Redis
 -- Used by Uniqush to save data.
@@ -21,10 +21,10 @@ This consists of five systems.
 -- This file contains all the data to customize the server. The code is commented appropriately.
 
 # Setup
-Theres a few different ways to set this up (and if you're familiar with Docker probably a bunch more). However, this will be the best way to get going from scratch. 
+Theres a few different ways to set this up (and if you're familiar with Docker probably a bunch more). However, this will be the best way to get going from scratch.
 
 
-## Setup From Scratch 
+## Setup From Scratch
 #### (Skip to next section if you're using the AWS setup [scripts](https://github.com/PushOCCRP/Push-AWS-Launcher)
 
 #### Some Notes
@@ -104,7 +104,7 @@ For our project we use a system called Uniqush. This is an open sourced push not
 
 1. From the backend of your app go to "Notifications" -> "Preferences" and click "GCM Management". **Note:** This now uses Google's Firebase but I haven't gotten around to changing the labels yet.
 
-1. Going back to the Firebase Console you should see a bunch of identifying information. Copy the text next to "Project ID". It will be a version of your apps name with dashes like ```sample-push-app``` 
+1. Going back to the Firebase Console you should see a bunch of identifying information. Copy the text next to "Project ID". It will be a version of your apps name with dashes like ```sample-push-app```
 
 1. Go back to your apps backend and paste it into the "Project ID" field.
 
@@ -119,7 +119,7 @@ For our project we use a system called Uniqush. This is an open sourced push not
 # Notes
 
 ### DNS HOST
-A DNS host entry is what tells the internet that your URL (e.g. https://www.example.com) points to your server's IP (e.g. 192.168.1.1). Depending on your hosting company this is can be set automatically or sometimes has to be linked from the company you bought your domain from to your server. 
+A DNS host entry is what tells the internet that your URL (e.g. https://www.example.com) points to your server's IP (e.g. 192.168.1.1). Depending on your hosting company this is can be set automatically or sometimes has to be linked from the company you bought your domain from to your server.
 
 Since every host is different If you don't know how to do this it's best to ask someone who does or pay someone for an hour's worth of time.
 
@@ -129,6 +129,17 @@ WP Super Cache is a plugin for Wordpress that makes your site sometimes load muc
 Steps to get key forthcoming here...
 
 # Development
+
+## Setup Instructions
+
+### Mac
+Developmet on a Mac is a bit tiresome, mostly because getting the containers running means waiting a
+long time for them to boot (it's a Mac only thing, no idea why).
+
+A few other things,
+1. Before you run bundle install the first time you'll need to install the libmagic library.
+   This is best done using [Homebrew](https://brew.sh/), so set that up if you don't have it already
+   then run `brew install libmagic`
 
 ## Adding Support For New CMS
 

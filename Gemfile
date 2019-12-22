@@ -29,20 +29,64 @@ gem 'sdoc'
 # Filemagic to check content type of images or whatever we need
 gem 'ruby-filemagic'
 
-# gem 'thin'
-
+# Postgres, for databases
 gem 'pg'
+
+# Rake, because it's what Ruby and Rails uses for all automation.
 gem 'rake'
+
+# Elasticsearch integration
+gem 'dalli'
+
+# Figaro is used to insure that environment variables exist on boot instead of silently failing later
+gem 'figaro'
+
+# Not sure
+gem 'htmlentities'
+
+# For making HTTP calls
+gem 'httparty'
+
+# Unsure
+gem 'le'
+
+# Memcache is used for caching our requests and such
+gem 'memcachier'
+
+# Binding for ImageMagick for manipulating images, resizing etc.
+gem 'mini_magick'
+
+# Nokogiri is an XML/HTML parser used for cleaning up the html
+gem 'nokogiri'
+
+# The server we use
+gem 'puma'
+
+# Not sure
+gem 'rails_12factor'
+
+# Not Sure
+gem 'addressable'
+
+# Authentication gem to handle users
+gem 'devise'
+
+# Unsure
+gem 'rails-settings-cached'
+
+# Unsure
+gem 'fcm'
+
+# Unsure.
+gem 'rufus-scheduler'
+
+# Rubocop is used as a linter
+gem 'rubocop', '~> 0.78.0', require: false
+# Use Rails's default rubocop rulse
+gem "rubocop-rails_config"
 
 # Use ActiveModel has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
-
-# Use Unicorn as the app server
-# gem 'unicorn'
-# gem 'thin'
-
-# Use Capistrano for deployment
-# gem 'capistrano-rails', group: :development
 
 group :development do
   # Access an IRB console on exception pages or by using <%= console %> in views
@@ -56,22 +100,3 @@ group :development, :test do
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
 end
-
-gem 'dalli'
-gem 'figaro'
-gem 'htmlentities'
-gem 'httparty'
-gem 'le'
-gem 'memcachier'
-gem 'mini_magick'
-gem 'nokogiri'
-gem 'puma'
-gem 'rails_12factor'
-
-gem 'addressable'
-gem 'devise'
-
-gem 'rails-settings-cached'
-
-gem 'fcm'
-gem 'rufus-scheduler'
