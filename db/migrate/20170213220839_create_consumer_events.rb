@@ -8,10 +8,9 @@ class CreateConsumerEvents < ActiveRecord::Migration[4.2]
       t.string    :language
       t.string    :search_phrase
       t.integer   :length
-      t.timestamps                  null: false
-      
+      t.timestamps null: false
     end
-    
+
     add_index :consumer_events, :consumer_id
     add_index :consumer_events, :event_type_id
     add_index :consumer_events, :article_id

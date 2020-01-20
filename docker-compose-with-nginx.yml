@@ -18,18 +18,20 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-
     env_file:
       - ./secrets.env
     volumes:
-      - "./.docker/nginx/:/etc/nginx/:ro"                            # config
-      - "./.docker/nginx/:/etc/ssl/nginx:ro"
-      - "./.docker/data/secrets/keys:/srv/data:ro"                # dhpram and certs are here
+      - "./.docker/nginx/:/etc/nginx/"                            # config
+      - "./.docker/nginx/:/etc/ssl/nginx"
+      - "./.docker/data/secrets/keys:/srv/data"                # dhpram and certs are here
       #- "./.docker/data/secrets/keys/live/`ls`:/srv/data/ssl/keys:ro"
-      - "./.docker/data/secrets/keys/archive/:/etc/letsencrypt/archive:ro"
-      - "./.docker/data/secrets/keys/live/$LETSENCRYPT_DOMAINS:/srv/data/ssl/keys:ro"
-      - "./.docker/data/secrets/keys:/srv/data/:ro"
+      - "./.docker/data/secrets/keys/archive/:/etc/letsencrypt/archive"
+      # - "./.docker/data/secrets/keys/live/$LETSENCRYPT_DOMAINS:/srv/data/ssl/keys"
+      - "./.docker/data/secrets/keys/live/offline-dev.pushapp.press:/srv/data/ssl/keys:rw"
       - "./public/:/var/public/:ro"
+
+
+
   db:
     image: postgres
     restart: always
@@ -128,3 +130,8 @@ services:
       - LOGROTATE_CRONSCHEDULE=0 0 * * * *
       - LOGROTATE_COMPRESSION=compress
       - LOGROTATE_COPIES=5
+
+volumes:
+  rails_cache:
+  node_modules:
+  packs:

@@ -11,6 +11,9 @@ AllCops:
     - 'redis-stable/**/*'
     - 'bin/**/*'
     - 'vendor/**/*'
+    - 'cookbooks/**/*'
+    - 'tmp/**/*'
+    - 'log/**/*'
   TargetRubyVersion: 2.5
 
 # Join tables don't really need timestamps

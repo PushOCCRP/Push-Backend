@@ -1,4 +1,4 @@
-#!/bin/bash          
+#!/bin/bash
 DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/includes.sh"
@@ -14,7 +14,7 @@ function check_host_resolution {
 }
 
 echoc "So I guess we're going to make your server secure with Lets Encrypt (good choice)...\n" $GREEN
- 
+
 # Ask the email of the main user
 
 while true
@@ -36,7 +36,7 @@ do
     fi
   fi
 done
- 
+
 # Ask the name of the site
 
 echoc "\n-------------------------------------------------------------------------------------------------------------\n" $LIGHT_BLUE
@@ -50,13 +50,13 @@ do
   echo -en "What is the host name for this installation (e.g. testapp.pushapp.press)? "
   read host
   if [[ "$OSTYPE" == "darwin"* ]]; then
-    if ! echo "$host" | egrep -qiE "^[A-z0-9]*[\.]*[A-z0-9]+[\.][A-z]{2,}$" ;then
+    if ! echo "$host" | egrep -qiE "^[A-z0-9-]*[\.]*[A-z0-9]+[\.][A-z]{2,}$" ;then
       echo "Sorry, I can't seem to parse your url because it's not a valid URL format. Please try again." $RED
     else
       break
     fi
   else
-    if ! echo "$host" | grep -qiP "^[A-z0-9]*[\.]*[A-z0-9]+[\.][A-z]{2,}$" ;then
+    if ! echo "$host" | grep -qiP "^[A-z0-9-]*[\.]*[A-z0-9]+[\.][A-z]{2,}$" ;then
       echoc "Sorry, I can't seem to parse your url because it's not a valid URL format. Please try again." $RED
     else
       break

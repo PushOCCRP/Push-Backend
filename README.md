@@ -80,6 +80,23 @@ Please make sure there is a symlink named `docker-compose.yml` in the main proje
 # Setting Up Push Notifiations
 For our project we use a system called Uniqush. This is an open sourced push notification manager that lets us manage the system without paying or using a service such as Urban airship. Because iOS and Android use different systems we need to set them up seperately, but in the end this will let us send the same message to all devices.
 
+## Local Development
+If you're trying to set up this for local development the SSL keys get a bit off. There's two options
+1. Use the `docker-compose-no-nginx-dev.yml` docker-compose file (preferred unless you know what you're doing).
+1. Set up the Lets Encrypt certs yourself. Instructions are coming for this method.
+
+#### Local Mac Setup
+
+1. Install LetsEncrypt's Certbot tool `brew install letsencrypt`
+1. Generate basic cert `sudo certbot certonly --standalone`
+  - If you get an error like "Problem binding to port 80: Could not bind to IPv4 or IPv6." on a mac try `sudo apachectl stop`.
+  - Afterwards if `curl localhost:80` returns `curl: (7) Failed to connect to localhost port 80: Connection refused` then try again.
+1. Copy the certs from the folders listed in the export to the appropriate `.docker` folder.
+  - `sudo mkdir ./.docker/data/secrets/keys/live/test.pushapp.press`
+  - `sudo cp /etc/letsencrypt/live/test.pushapp.press/fullchain.pem ./.docker/data/secrets/keys/live/test.pushapp.press/fullchain.pem`
+  - `sudo cp /etc/letsencrypt/live/test.pushapp.press/privkey.pem ./.docker/data/secrets/keys/live/test.pushapp.press/privkey.pem`
+1. Make sure the permsissions are set right `sudo chmod -R 644 ./.docker/data/secrets/keys/live/test.pushapp.press/`
+
 ### iOS
 
 1. This is done using the generator scripts. Specifically run the generator with the -c command an it will create and convert the files for you automatically.

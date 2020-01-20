@@ -16,8 +16,15 @@ cat >/etc/logrotate.conf <<EOL
 EOL
 
 # make sure the last run is cleared
-rm /push/tmp/pids/server.pid
+FILE=/push/tmp/pids/server.pid
+if test -f "$FILE"; then
+  echo "Previous PID file found @ $FILE"
+  echo "Deleting PID file..."
+  rm /push/tmp/pids/server.pid
+fi
 
+echo ""
+echo "Booting Rails in $RAILS_ENV mode"
 if [[ $RAILS_ENV = "development" ]]
 then
 	RAILS_ENV=development
@@ -33,15 +40,29 @@ else
 	echo "Done."
 fi
 
-echo "If you're on a mac, please wait for awhile now."
+echo "Checking database status... 🔎"
+output="$(bundle exec rake db:abort_if_pending_migrations 2>&1 | grep -ci "ActiveRecord::NoDatabaseError")"
+if [[ $output = "1" ]]
+then
+  echo "Database not found, creating it now..."
+  bundle exec rake db:create
+  echo "Database created, moving onward 🎈"
+else
+  echo "Database exists, moving onward ➡️"
+fi
 
-#if psql -lqt | cut -d \| -f 1 | grep -qw 'development'; then
-#    echo "database already exists"
-#else
-#	rake db:create
-#fi
+echo "Checking database migration status..."
+output="$(bundle exec rake db:abort_if_pending_migrations 2>&1 | grep -ci "update your database then try again.")"
+if [[ $output = "1" ]]
+then
+  echo "Database not up to date, running migrations..."
+  bundle exec rake db:migrate
+  echo "Database migrated, going forward 🎈"
+else
+  echo "Database up to date, going forward ➡️"
+fi
 
-#rake db:reset
-#rake db:migrate
+echo "Database checks all done! 🔥"
+echo "If you're on a mac, please wait for awhile now..."
 
 exec $@
