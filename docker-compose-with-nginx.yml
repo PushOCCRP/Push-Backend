@@ -1,7 +1,6 @@
 version: '2'
 services:
 
-  #
   # nginx, working as a front-end proxy for uniqush
   # we need it for only allowing certain endpoints to be available
   nginx:
@@ -18,20 +17,22 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-
     env_file:
       - ./secrets.env
     volumes:
-      - "./.docker/nginx/:/etc/nginx/:ro"                            # config
-      - "./.docker/nginx/:/etc/ssl/nginx:ro"
-      - "./.docker/data/secrets/keys:/srv/data:ro"                # dhpram and certs are here
+      - "./.docker/nginx/:/etc/nginx/"                            # config
+      - "./.docker/nginx/:/etc/ssl/nginx"
+      - "./.docker/data/secrets/keys:/srv/data"                # dhpram and certs are here
       #- "./.docker/data/secrets/keys/live/`ls`:/srv/data/ssl/keys:ro"
-      - "./.docker/data/secrets/keys/archive/:/etc/letsencrypt/archive:ro"
-      - "./.docker/data/secrets/keys/live/$LETSENCRYPT_DOMAINS:/srv/data/ssl/keys:ro"
-      - "./.docker/data/secrets/keys:/srv/data/:ro"
+      - "./.docker/data/secrets/keys/archive/:/etc/letsencrypt/archive"
+      # - "./.docker/data/secrets/keys/live/$LETSENCRYPT_DOMAINS:/srv/data/ssl/keys"
+      - "./.docker/data/secrets/keys/live/offline-dev.pushapp.press:/srv/data/ssl/keys:rw"
       - "./public/:/var/public/:ro"
+
+
+
   db:
-    image: postgres
+    image: postgres:9.6
     restart: always
     volumes:
       - "./.docker/postgres:/data/postgres"
@@ -52,7 +53,10 @@ services:
     command: bundle exec rails s -p 3000 -b '0.0.0.0'
     restart: always
     volumes:
-      - .:/push
+      - ".:/push:cached"
+      - "rails_cache:/app/tmp/cache"
+      - "node_modules:/app/node_modules"
+      - "packs:/app/public/packs"
     expose:
       - "3000"
     ports:
@@ -74,10 +78,6 @@ services:
         max-size: "10m"
         max-file: "3"
 
-#    extra_hosts:                            # For dev purposes only
-#      - "rise.md:213.133.100.136"
-#      - "www.rise.md:213.133.100.136"
-
 
   # uniqush itself
   uniqush:
@@ -93,8 +93,8 @@ services:
       depends_on:
           - redis
       volumes:
-          - "./secrets:/secrets"
-          - "./log/uniqush:/var/log/uniqush"
+          - "./secrets:/secrets:cached"
+          - "./log/uniqush:/var/log/uniqush:cached"
       logging:
         driver: "json-file"
         options:
@@ -104,9 +104,9 @@ services:
   # the redis db server
   redis:
       image: redis
-      restart: always      
+      restart: always
       volumes:
-          - "./.docker/redis:/data"
+          - "./.docker/redis:/data:cached"
       command: ["redis-server", "--appendonly", "yes"]
       logging:
         driver: "json-file"
@@ -118,10 +118,15 @@ services:
     image: blacklabelops/logrotate
     restart: always
     volumes:
-      - ./log:/logs
+      - "./log:/logs"
     environment:
       - LOGS_DIRECTORIES=/logs
       - LOGROTATE_SIZE=5M
       - LOGROTATE_CRONSCHEDULE=0 0 * * * *
       - LOGROTATE_COMPRESSION=compress
       - LOGROTATE_COPIES=5
+
+volumes:
+  rails_cache:
+  node_modules:
+  packs:
