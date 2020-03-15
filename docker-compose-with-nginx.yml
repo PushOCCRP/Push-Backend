@@ -1,7 +1,6 @@
 version: '2'
 services:
 
-  #
   # nginx, working as a front-end proxy for uniqush
   # we need it for only allowing certain endpoints to be available
   nginx:
@@ -33,7 +32,7 @@ services:
 
 
   db:
-    image: postgres
+    image: postgres:9.6
     restart: always
     volumes:
       - "./.docker/postgres:/data/postgres"
@@ -78,10 +77,6 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-
-#    extra_hosts:                            # For dev purposes only
-#      - "rise.md:213.133.100.136"
-#      - "www.rise.md:213.133.100.136"
 
 
   # uniqush itself

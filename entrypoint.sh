@@ -1,4 +1,7 @@
 #!/bin/bash
+echo ""
+echo "Running Bundler... 🎁"
+
 bundle config build.nokogiri --use-system-libraries
 bundle install --path vendor/bundle
 
@@ -24,7 +27,7 @@ if test -f "$FILE"; then
 fi
 
 echo ""
-echo "Booting Rails in $RAILS_ENV mode"
+echo "🔺🔺🔺 Booting Rails in $RAILS_ENV mode 🔺🔺🔺"
 if [[ $RAILS_ENV = "development" ]]
 then
 	RAILS_ENV=development
@@ -35,9 +38,10 @@ then
   echo "Skipping precompile in test"
 else
   RAILS_ENV=production
-	echo "Precompiling assets..."
+	echo "Precompiling assets... 📦"
 	bundle exec rake assets:precompile
-	echo "Done."
+  bundle exec rails webpacker:compile
+	echo "Done. 🎀"
 fi
 
 echo "Checking database status... 🔎"
@@ -63,6 +67,6 @@ else
 fi
 
 echo "Database checks all done! 🔥"
-echo "If you're on a mac, please wait for awhile now..."
+echo "If you're on a mac, please wait for awhile now... ⏳⏳⏳"
 
 exec $@

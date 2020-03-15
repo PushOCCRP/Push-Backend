@@ -40,6 +40,27 @@ services:
     networks:
       - default
 
+  webpack:
+    build: .
+    command: ./bin/webpack-dev-server
+    volumes:
+      - ".:/push:cached"
+    ports:
+      - "3035:3035"
+    expose:
+      - "3035"
+    env_file:
+      - ./secrets.env
+    environment:
+      - RAILS_ENV=development
+      - proxy_images=true
+      - WEBPACKER_DEV_SERVER_HOST=0.0.0.0
+    tty: true
+    stdin_open: true
+    entrypoint: /push/entrypoint_webpacker.sh
+    networks:
+      - default
+
   # uniqush itself
   uniqush:
       build: https://github.com/beevelop/docker-uniqush.git

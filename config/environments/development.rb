@@ -42,4 +42,11 @@ Rails.application.configure do
   config.cache_store = :null_store
 
   config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
+
+  config.middleware.insert_before 0, Rack::Cors do
+    allow do
+      origins "*"
+      resource "*", headers: :any, methods: [:get, :post, :options]
+    end
+  end
 end

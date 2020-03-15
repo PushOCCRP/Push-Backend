@@ -1,4 +1,4 @@
-class SNWorksCEO < CMS
+class Wordpress < CMS
   def self.articles(params)
     cache = true
     cached_articles = Rails.cache.fetch("sections/#{params}", expires_in: 1.hour) do
@@ -210,10 +210,21 @@ class SNWorksCEO < CMS
         article["body"] = scrubSpecialCharactersFromSingleLinesInHTMLString article["body"]
         article["body"] = scrubHTMLSpecialCharactersInHTMLString article["body"]
         article["body"] = normalizeSpacing article["body"]
+        article["body"] = handle_paragraph_tags article["body"]
 
         article["headline"] = HTMLEntities.new.decode(article["headline"])
       end
 
       articles
+    end
+
+    # Wordpress will sometimes use `wp:paragraph --&gt` for paragraphs, which should instead be <p>
+    # `/wp:paragraph --&gt` should be </p>
+    def self.handle_paragraph_tags(text)
+      # Run this first to handle all closing tags (since the start and end share a lot of the same string)
+      text = text.gsub "/wp:paragraph --&gt;", "</p>"
+      # Handle open tags
+      text = text.gsub "wp:paragraph --&gt;", "<p>"
+      text
     end
 end
