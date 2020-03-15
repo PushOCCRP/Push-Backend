@@ -1,29 +1,28 @@
+# frozen_string_literal: true
+
 class Notification < ActiveRecord::Base
-	
-	has_one :user
+  has_one :user
 
-	def display_language
+  def display_language
+    language = case language
+               when "en"
+                 "English"
+               when "bg"
+                 "Bulgarian"
+               when "ru"
+                 "Russian"
+               when "az"
+                 "Azerbaijani"
+               when "sr"
+                 "Serbian"
+               when "ro"
+                 "Romanian"
+               else
+                 "Not Found"
+    end
 
-		case self.language
-		when "en"
-			language = "English"
-		when "bg"
-			language = "Bulgarian"
-		when "ru"
-			language = "Russian"
-		when "az"
-			language = "Azerbaijani"
-		when "sr"
-			language = "Serbian"
-		when "ro"
-			language = "Romanian"
-		else
-			language = "Not Found"
-		end
+    language
+  end
 
-		return language
-	end
-
-	private
-	
+  private
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreateConsumers < ActiveRecord::Migration[4.2]
   def change
     create_table :consumers do |t|
@@ -6,7 +8,7 @@ class CreateConsumers < ActiveRecord::Migration[4.2]
       t.integer   :times_seen, null: false, default: 0
       t.timestamps             null: false
     end
-    
+
     add_index :consumers, :uuid, unique: true
   end
 end
