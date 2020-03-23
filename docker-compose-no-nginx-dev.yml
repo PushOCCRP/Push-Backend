@@ -1,0 +1,90 @@
+version: '2'
+
+services:
+
+  #
+  # nginx, working as a front-end proxy for uniqush
+  # we need it for only allowing certain endpoints to be available
+  db:
+    image: postgres:9.6
+    volumes:
+      - "./.docker/postgres:/data/postgres"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - PGDATA=/data/postgres
+
+  web:
+    build: .
+    command: bundle exec rails s -p 3000 -b '0.0.0.0'
+    volumes:
+      - ".:/push:cached"
+      # - "rails_cache:/app/tmp/cache"
+      # - "node_modules:/app/node_modules"
+      # - "packs:/app/public/packs"
+    expose:
+      - "3000"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - uniqush
+    env_file:
+      - ./secrets.env
+    environment:
+      - RAILS_ENV=development
+      - proxy_images=true
+    entrypoint: /push/entrypoint.sh
+    tty: true
+    stdin_open: true
+    networks:
+      - default
+
+  webpack:
+    build: .
+    command: ./bin/webpack-dev-server
+    volumes:
+      - ".:/push:cached"
+    ports:
+      - "3035:3035"
+    expose:
+      - "3035"
+    env_file:
+      - ./secrets.env
+    environment:
+      - RAILS_ENV=development
+      - proxy_images=true
+      - WEBPACKER_DEV_SERVER_HOST=0.0.0.0
+    tty: true
+    stdin_open: true
+    entrypoint: /push/entrypoint_webpacker.sh
+    networks:
+      - default
+
+  # uniqush itself
+  uniqush:
+      build: https://github.com/beevelop/docker-uniqush.git
+      environment:
+          # this is the default, but let's be explicit here
+          UNIQUSH_DATABASE_HOST: "redis"
+#          UNIQUSH_LOGFILE:       "/srv/logs/gurac/uniqush.log"
+          UNIQUSH_LOGLEVEL:      "verbose"
+          UNIQUSH_GID:           "60001"
+          UNIQUSH_UID:           "60001"
+      depends_on:
+          - redis
+      volumes:
+          - "./secrets:/secrets"
+          #- "/srv/logs/gurac/:/srv/logs/gurac/"
+
+  # the redis db server
+  redis:
+      image: redis
+      volumes:
+          - "./.docker/redis:/data"
+      command: ["redis-server", "--appendonly", "yes"]
+
+volumes:
+  rails_cache:
+  node_modules:
+  packs:
