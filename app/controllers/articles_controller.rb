@@ -20,7 +20,7 @@ class ArticlesController < ApplicationController
       when :blox
         @response = Blox.articles(params)
       when :snworks
-        @response = SNWorksCEO.articles(params)
+        @response = SnWorksCeo.articles(params)
     end
     
     respond_to do |format|
@@ -42,7 +42,7 @@ class ArticlesController < ApplicationController
       when :blox
         @response = Blox.search(params)
       when :snworks
-        @response = SNWorksCEO.search(params)
+        @response = SnWorksCeo.search(params)
     end 
     
     respond_to do |format|
@@ -97,7 +97,7 @@ class ArticlesController < ApplicationController
       when :blox
         @response = Blox.article(params)
       when :snworks
-        @response = SNWorksCEO.article(params)
+        @response = SnWorksCeo.article(params)
     end 
     
     respond_to do |format|
