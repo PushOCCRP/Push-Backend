@@ -20,11 +20,11 @@ services:
   # nginx certificate config (say, for www.example.com domain):
   #  ssl_certificate     /srv/data/secrets/letsencrypt/live/www.example.com/fullchain.pem;
   #  ssl_certificate_key /srv/data/secrets/letsencrypt/live/www.example.com/privkey.pem;
-  #  
+  #
   # if using docker-compose < 1.7.0, remember to run:
   #  export $( cat your-env-file.env )
   # ...before running docker-compose
-  # 
+  #
   # if running docker-compose >= 1.7.0, put your env vars in .env file
   #
   letsencrypt:
@@ -58,7 +58,6 @@ services:
       - "./.docker/data/secrets/keys:/srv/data"                # dhpram and certs are here
       - "./.docker/data/secrets/keys/archive/:/etc/letsencrypt/archive"
       - "./.docker/data/secrets/keys/live/$LETSENCRYPT_DOMAINS:/srv/data/ssl/keys"
-      - "./.docker/data/secrets/keys:/srv/data/"
       - "./public/:/var/public/"
 
   devencrypt:
@@ -69,4 +68,4 @@ services:
         - SSL_SUBJECT=dev.pushapp.press
         - SSL_CERT=fullchain.pem
         - SSL_KEY=privkey.pem
-        
+

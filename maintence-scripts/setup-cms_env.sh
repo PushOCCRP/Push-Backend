@@ -1,4 +1,4 @@
-#!/bin/bash          
+#!/bin/bash
 DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 . "$DIR/includes.sh"
@@ -95,13 +95,13 @@ do
   echo -en "What is the host name for this installation (e.g. testapp.pushapp.press)? "
   read host
   if [[ "$OSTYPE" == "darwin"* ]]; then
-    if ! echo "$host" | egrep -qiE "^[A-z0-9]*[\.]*[A-z0-9]+[\.][A-z]{2,}$" ;then
+    if ! echo "$host" | egrep -qiE "^[A-z0-9-]*[\.]*[A-z0-9]+[\.][A-z]{2,}$" ;then
       echoc "Sorry, I can't seem to parse your url because it's not a valid URL format. Please try again." $RED
     else
       break
     fi
   else
-    if ! echo "$host" | grep -qiP "^[A-z0-9]*[\.]*[A-z0-9]+[\.][A-z]{2,}$" ;then
+    if ! echo "$host" | grep -qiP "^[A-z0-9-]*[\.]*[A-z0-9]+[\.][A-z]{2,}$" ;then
       echoc "Sorry, I can't seem to parse your url because it's not a valid URL format. Please try again." $RED
     else
       break
@@ -117,7 +117,7 @@ echoc "if there's a Google logo you probably do.\n"
 google_search=$(askyn "Do you use Google Search?" $google_search)
 
 # If they use google search ask for the google search id
-if [ "$google_search" = true ]; then 
+if [ "$google_search" = true ]; then
   echo "Since you use Google search for your CMS, we need the search engine id."
   if [[ $cms == 'Wordpress' ]]; then
     echo "You can probably find this in the settings in your Wordpress search plugin."
@@ -128,7 +128,7 @@ if [ "$google_search" = true ]; then
   do
     echo -en "What is the Google Search Engine ID? "
     read google_search_engine_id
-    
+
     if [[ -z "${google_search_engine_id// }" ]]; then
       echoc "Please type in a Google Search Engine ID."
     else
@@ -140,27 +140,27 @@ fi
 # If wordpress
 if [[ $cms == 'Wordpress' ]]; then
 
-  # If they use the wp_super_cached_donotcachepage plugin (it's rare) 
+  # If they use the wp_super_cached_donotcachepage plugin (it's rare)
   echo "Does your Wordpress installation use the WP Super Cache plugin?"
   echo "There will be an entry underneathe your Wordpress's 'Settings' menu."
   echo "You can find more information about this in the README.md appendix section."
 
   supercache=$(askyn 'Does your Wordpress plugin use the WP Super Cache Plugin?')
 
-  if [ "$supercache" = true ]; then 
+  if [ "$supercache" = true ]; then
     # If wordpress && supercache
 
-    # If they use the wp_super_cached_donotcachepage plugin (it's rare) 
+    # If they use the wp_super_cached_donotcachepage plugin (it's rare)
     echo "Does your Wordpress Super Cache installation use 'donotcache' feature?"
     # Check out Bivol's installation
     echo "It is a feature that must be enabled under the do not cache page."
 
     donotcacheplugin=$(askyn 'Does your Wordpress Super Cache installation use 'donotcache' feature?')
 
-    if [ "$donotcacheplugin" = true ]; then 
+    if [ "$donotcacheplugin" = true ]; then
       # If wordpress && supercache && wordpress_super_cache_donotcachepage
 
-      # If they use the wp_super_cached_donotcachepage plugin (it's rare) 
+      # If they use the wp_super_cached_donotcachepage plugin (it's rare)
       echo "What is the hash key for the donotcache feature?"
       # Check out Bivol's installation
       echo "There will be an entry underneathe your Wordpress's 'Settings' menu."
@@ -170,7 +170,7 @@ if [[ $cms == 'Wordpress' ]]; then
       do
         echo -en "What is the the donotcache hash key? "
         read donotcacheplugin_hash
-        
+
         if [[ -z "${donotcacheplugin_hash// }" ]]; then
           echoc "Please type in a Do Not Cache hash key."
         else
@@ -189,12 +189,12 @@ if [[ $cms == 'Blox' ]]; then
   echoc "You probably have on created already, but steps 1 and 2 here will show"
   echoc "how to find the name. Please use the words under \"Publication\".\n"
   echoc "https://help.bloxcms.com/knowledge-base/applications/editorial/e-editions/tasks/article_4cdcf908-6939-11e5-9de0-ff4540da429f.html\n"
-  
+
   while true
   do
     echo -en "\"Publication\" name? "
     read blox_publication_name
-    
+
     if [[ -z "${blox_publication_name// }" ]]; then
       echoc "Please enter a valid \"Publication\" name."
     else
@@ -202,54 +202,54 @@ if [[ $cms == 'Blox' ]]; then
     fi
   done
 
-   
+
   echoc "\nFor Blox we need two types of API authentication keys."
   echoc "You need to make an \"eedition\" and an \"editorial\" key/secret set.\n"
   echoc "Instructions to do that are at https://help.bloxcms.com/knowledge-base/applications/settings/webservice_keys/workspace/article_a73d51da-2bd7-11e5-8dfd-e7325582d658.html\n"
-  
+
   # eedition and editorial both require a "key" and a "secret"
 
   while true
   do
     echo -en "\"eedition\" key? "
     read blox_eedition_key
-    
+
     if [[ -z "${blox_eedition_key// }" ]]; then
       echoc "Please enter a valid \"eedition\" key."
     else
       break
     fi
   done
-  
+
   while true
   do
     echo -en "\"eedition\" secret? "
     read blox_eedition_secret
-    
+
     if [[ -z "${blox_eedition_secret// }" ]]; then
       echoc "Please enter a valid \"eedition\" secret."
     else
       break
     fi
   done
-  
+
   while true
   do
     echo -en "\"editorial\" key? "
     read blox_editorial_key
-    
+
     if [[ -z "${blox_editorial_key// }" ]]; then
       echoc "Please enter a valid \"eedition\" key."
     else
       break
     fi
   done
-  
+
   while true
   do
     echo -en "\"editorial\" secret? "
     read blox_editorial_secret
-    
+
     if [[ -z "${blox_editorial_secret// }" ]]; then
       echoc "Please enter a valid \"editorial\" secret."
     else
@@ -350,8 +350,8 @@ do
       esac
   done
 
-  if [ "$finish" = true ]; then 
-    if [[ ${#languages[@]} == 0 ]] ; then  
+  if [ "$finish" = true ]; then
+    if [[ ${#languages[@]} == 0 ]] ; then
       echoc "\nPlease choose at least one language for your app.\n" $RED
     else
       break
@@ -381,7 +381,7 @@ else
     default_language=$opt
     break
   done
-fi  
+fi
 
 
 # join the language strings Here
@@ -442,9 +442,9 @@ cat <<EOT >> secrets.env
 #########################################
 #
 # TownNews BLOX API access variables
-# Instructions to generate these at 
+# Instructions to generate these at
 # https://help.bloxcms.com/knowledge-base/applications/settings/webservice_keys/workspace/article_a73d51da-2bd7-11e5-8dfd-e7325582d658.html
-# 
+#
 #########################################
 
 blox_publication_name=$blox_publication_name
