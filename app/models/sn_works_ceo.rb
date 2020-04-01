@@ -5,7 +5,8 @@ class SNWorksCEO < CMS
    :images, :image_urls, :videos, :captions, :author) do
     def to_json(a = nil)
       hash = self.to_h
-      hash[:publish_date] = self.publish_date.strftime("%Y%j")
+      hash[:publish_date] = self.publish_date.strftime("%Y%m%d")
+      hash[:description]  = CMS.format_description_text self.body[0..140]
       hash.to_json
     end
   end
@@ -22,6 +23,10 @@ class SNWorksCEO < CMS
     language = "en"
     url = get_url "/v3/content", language
     articles = get_articles url
+
+    logger.debug "Articels : #{articles}"
+    # Insure that the top article always has an image.
+    articles = rearrange_articles_for_images articles
 
     { start_date: 19700101,
      end_date: 201901001,
@@ -154,38 +159,11 @@ class SNWorksCEO < CMS
         # We really only want 'article' for the moment
 
         if item["type"] == "article"
-          articles << article_from_json_response(item)
+          article = article_from_json_response(item)
+          articles << article
         end
       end
-    #
-    #       if(body['categories'].nil?)
-    #         results = clean_up_response(body['results'], version)
-    #          results = clean_up_for_wordpress results
-    #       else
-    #         results = {}
-    #         body['categories'].each do |category|
-    #           if(body['results'][category].blank?)
-    #             results[category] = []
-    #             next
-    #           end
-    #
-    #           results[category] = clean_up_response(body['results'][category], version)
-    #           results[category] = clean_up_for_wordpress results[category]
-    #         end
-    #       end
-    #
-    #       response = {start_date: "19700101",
-    #                   end_date: DateTime.now.strftime("%Y%m%d"),
-    #                   total_results: results.size,
-    #                   page: "1",
-    #                   results: results
-    #                  }
-    #
-    #       response['categories'] = body['categories'] if !body['categories'].nil?
-    #
-    #       # add in any extras from the call, query string etc.
-    #       response = response.merge(extras)
-    #       return response
+
     articles
   end
 

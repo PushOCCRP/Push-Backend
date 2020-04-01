@@ -1,4 +1,6 @@
 class CMS < ActiveRecord::Base
+  include Rearrangeable
+
   def self.search_google_custom(query, google_search_engine_ids)
     # Get the search results from Google
     url = "https://www.googleapis.com/customsearch/v1?key=AIzaSyCahDlxYxTgXsPUV85L91ytd7EV1_i72pc&cx=#{google_search_engine_ids}&q=#{query}"

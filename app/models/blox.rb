@@ -411,19 +411,6 @@ private
     text
   end
 
-  # Rearrange articles so the first has an image. If none do, then return the original array
-  def self.rearrange_articles_for_images(articles)
-    article_with_image = articles.find { |article| article["images"].count > 0 }
-
-    # Because I'm a good CS student I make sure we don't do unncessary array modification
-    return articles if article_with_image.nil? || article_with_image == articles.first
-
-    articles.delete(article_with_image)
-    articles.unshift(article_with_image)
-
-    articles
-  end
-
   # options are :eedition and :editorial
   def self.auth_credentials(service = :eedition)
     case service
