@@ -20,8 +20,7 @@ class SNWorksCEO < CMS
 
   # Don't forget to add caching!
   def self.articles(params)
-    language = "en"
-    url = get_url "/v3/content", language
+    url = get_url "/v3/content"
     articles = get_articles url
 
     logger.debug "Articels : #{articles}"
@@ -38,9 +37,8 @@ class SNWorksCEO < CMS
   end
 
   def self.article(params)
-    language = language_parameter params["language"]
     article_id = params["id"]
-    url = get_url "push-occrp=true&occrp_push_type=article&article_id=#{article_id}", language
+    url = get_url "push-occrp=true&occrp_push_type=article&article_id=#{article_id}"
 
     logger.debug("Fetching article id: article_id")
 
@@ -48,20 +46,18 @@ class SNWorksCEO < CMS
   end
 
   def self.search(params)
-    language = language_parameter params["language"]
-
     query = params["q"]
 
-    google_search_engine_id = ENV["google_search_engine_id"]
-    if !google_search_engine_id.blank?
-      logger.debug "Searching google with id: #{google_search_engine_id}"
-      articles_list = search_google_custom query, google_search_engine_id
-      url = get_url "push-occrp=true&occrp_push_type=urllookup&u=#{articles_list.join(',')}", language
-    else
-      url = get_url "push-occrp=true&occrp_push_type=search&q=#{query}", language
-    end
+    url = get_url "/v3/search", { type: "content", keywords: query }
+    articles = get_articles url, { query: query }
 
-    get_articles url, { query: query }
+    { start_date: 19700101,
+      end_date: 201901001,
+      total_results: articles.count,
+      total_pages: 1,
+      page: 0,
+      results: articles
+    }
   end
 
   def self.categories
@@ -74,7 +70,7 @@ class SNWorksCEO < CMS
     languages.each do |language|
        # This is a temp for Kyiv Post, we need to fix the languages properly though...
        response = Rails.cache.fetch("wordpress_categories_#{language}", expires_in: 1.day) do
-         url = get_url "push-occrp=true&occrp_push_type=post_types", language
+         url = get_url "push-occrp=true&occrp_push_type=post_types"
          logger.debug ("Fetching categories")
          make_request url
        end
@@ -113,9 +109,16 @@ class SNWorksCEO < CMS
     token
   end
 
-  def self.get_url(path, language, options = {})
+  def self.get_url(path, options = {})
     url = ENV["snworks_url"]
     url_string = "#{url}#{path}"
+
+    unless options.blank?
+      url_string += "?"
+      options_array = options.map { |(key, value)| "#{key}=#{value}" }
+      url_string += options_array.join "&"
+    end
+
     url_string
   end
 
@@ -133,11 +136,11 @@ class SNWorksCEO < CMS
     begin
       body = JSON.parse response.body
     rescue
-      #       logger.debug "Exception parsing JSON from CMS"
-      #       logger.debug "Statement returned"
-      #       logger.debug "---------------------------------------"
-      #       logger.debug response.body
-      #       logger.debug "---------------------------------------"
+      logger.debug "Exception parsing JSON from CMS"
+      logger.debug "Statement returned"
+      logger.debug "---------------------------------------"
+      logger.debug response.body
+      logger.debug "---------------------------------------"
       raise
     end
     body
@@ -175,7 +178,7 @@ class SNWorksCEO < CMS
   end
 
   def self.url_for_article_uuid(uuid)
-    "#{self.get_url '', 'en'}/v3/content/#{uuid}"
+    "#{self.get_url ''}/v3/content/#{uuid}"
   end
 
   # SnWorksCEO, like a lot of news cms's (for reasons I will never fucking understand)

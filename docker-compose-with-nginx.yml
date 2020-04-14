@@ -29,8 +29,6 @@ services:
       - "./.docker/data/secrets/keys/live/offline-dev.pushapp.press:/srv/data/ssl/keys:rw"
       - "./public/:/var/public/:ro"
 
-
-
   db:
     image: postgres:9.6
     restart: always
@@ -46,7 +44,6 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-
 
   web:
     build: .
@@ -77,7 +74,6 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-
 
   # uniqush itself
   uniqush:
