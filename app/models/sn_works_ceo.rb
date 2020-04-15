@@ -2,7 +2,7 @@ class SNWorksCEO < CMS
   # Trying something new and better here to use structs instead of weird
   # json hashes everywhere
   Article = Struct.new(:id, :headline, :body, :description, :publish_date, :header_image,
-   :images, :image_urls, :videos, :captions, :author) do
+   :images, :image_urls, :videos, :captions, :author, :url) do
     def to_json(a = nil)
       hash = self.to_h
       hash[:publish_date] = self.publish_date.strftime("%Y%m%d")
@@ -185,21 +185,24 @@ class SNWorksCEO < CMS
   # doesn't provide full content when lising articles.
   # So now, we have to loop through and make individual requests. SOB....
   def self.article_from_json_response(json)
-    json = self.get_article(json["uuid"]).first
+    article_json = self.get_article(json["uuid"]).first
 
     article = Article.new
-    article.id = json["id"]
-    article.headline = json["title"]
-    article.description = ActionView::Base.full_sanitizer.sanitize(json["abstract"])
-    article.body = json["content"]
-    article.publish_date = DateTime.parse(json["published_at"])
-    article.author = json["authors"].map { |a| a["name"] }.join(", ")
+    article.id = article_json["id"]
+    article.headline = article_json["title"]
+    article.description = ActionView::Base.full_sanitizer.sanitize(article_json["abstract"])
+    article.body = article_json["content"]
+    article.publish_date = DateTime.parse(article_json["published_at"])
+    article.author = article_json["authors"].map { |a| a["name"] }.join(", ")
     article.images = []
     article.captions = []
     article.videos = []
 
-    unless json["dominantAttachment"].blank?
-      image = self.image_from_json_response json["dominantAttachment"]
+    # This is a standin until I hear back from SNWorks, since this is REALLY smelly code
+    article.url = "#{ENV["host_url"]}/article/#{article.publish_date.year}/#{format('%02d', article.publish_date.month)}/#{article_json["slug"]}"
+
+    unless article_json["dominantAttachment"].blank?
+      image = self.image_from_json_response article_json["dominantAttachment"]
       article.header_image = image
     else
       article.header_image = {}
