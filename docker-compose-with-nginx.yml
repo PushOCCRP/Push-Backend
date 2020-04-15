@@ -26,7 +26,7 @@ services:
       #- "./.docker/data/secrets/keys/live/`ls`:/srv/data/ssl/keys:ro"
       - "./.docker/data/secrets/keys/archive/:/etc/letsencrypt/archive"
       # - "./.docker/data/secrets/keys/live/$LETSENCRYPT_DOMAINS:/srv/data/ssl/keys"
-      - "./.docker/data/secrets/keys/live/offline-dev.pushapp.press:/srv/data/ssl/keys:rw"
+      - "./.docker/data/secrets/keys/live/dailycardinal.pushapp.press:/srv/data/ssl/keys:rw"
       - "./public/:/var/public/:ro"
 
   db:
