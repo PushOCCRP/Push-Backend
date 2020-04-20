@@ -63,26 +63,28 @@ services:
 
   # uniqush itself
   uniqush:
-      build: https://github.com/beevelop/docker-uniqush.git
-      environment:
-          # this is the default, but let's be explicit here
-          UNIQUSH_DATABASE_HOST: "redis"
-#          UNIQUSH_LOGFILE:       "/srv/logs/gurac/uniqush.log"
-          UNIQUSH_LOGLEVEL:      "verbose"
-          UNIQUSH_GID:           "60001"
-          UNIQUSH_UID:           "60001"
-      depends_on:
-          - redis
-      volumes:
-          - "./secrets:/secrets"
-          #- "/srv/logs/gurac/:/srv/logs/gurac/"
+    build: https://github.com/PushOCCRP/docker-uniqush.git
+    environment:
+      # this is the default, but let's be explicit here
+      UNIQUSH_DATABASE_HOST: "redis"
+      UNIQUSH_LOGFILE:       "/srv/logs/gurac/uniqush.log"
+      UNIQUSH_LOGLEVEL:      "verbose"
+      UNIQUSH_GID:           "60001"
+      UNIQUSH_UID:           "60001"
+    ports:
+      - "9898:9898"
+    depends_on:
+      - redis
+    volumes:
+      - "./secrets:/secrets"
+      - "./log/uniqush/:/srv/logs/gurac/"
 
   # the redis db server
   redis:
-      image: redis
-      volumes:
-          - "./.docker/redis:/data"
-      command: ["redis-server", "--appendonly", "yes"]
+    image: redis
+    volumes:
+      - "./.docker/redis:/data"
+    command: ["redis-server", "--appendonly", "yes"]
 
 volumes:
   rails_cache:

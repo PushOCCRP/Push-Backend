@@ -14,8 +14,8 @@ Rails.application.routes.draw do
   get "notifications/cert_upload" => "notifications#cert_upload"
   post "notifications/cert_upload" => "notifications#process_cert"
 
-  get "notifications/gcm" => "notifications#gcm"
-  post "notifications/gcm" => "notifications#process_gcm"
+  get "notifications/fcm" => "notifications#fcm"
+  post "notifications/fcm" => "notifications#process_fcm"
 
   get "notifications/:id/push" => "notifications#push", as: :push
   resources :notifications

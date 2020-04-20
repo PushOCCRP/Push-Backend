@@ -99,7 +99,7 @@ If you're trying to set up this for local development the SSL keys get a bit off
 
 ### iOS
 
-1. This is done using the generator scripts. Specifically run the generator with the -c command an it will create and convert the files for you automatically.
+1. This is done using the generator scripts. Specifically run the generator with the -c command and it will create and convert the files for you automatically.
 
 1. From the back end go to "Notifications" -> "Preferences" and click "APNS Cert Upload".
 

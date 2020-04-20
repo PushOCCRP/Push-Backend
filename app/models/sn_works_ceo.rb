@@ -23,7 +23,6 @@ class SNWorksCEO < CMS
     url = get_url "/v3/content"
     articles = get_articles url
 
-    logger.debug "Articels : #{articles}"
     # Insure that the top article always has an image.
     articles = rearrange_articles_for_images articles
 
@@ -37,12 +36,15 @@ class SNWorksCEO < CMS
   end
 
   def self.article(params)
-    article_id = params["id"]
-    url = get_url "push-occrp=true&occrp_push_type=article&article_id=#{article_id}"
+    article_json = article_from_uuid params["id"]
 
-    logger.debug("Fetching article id: article_id")
-
-    get_articles url
+    { start_date: 19700101,
+      end_date: 201901001,
+      total_results: 1,
+      total_pages: 1,
+      page: 0,
+      results: [article_json]
+    }
   end
 
   def self.search(params)
@@ -143,6 +145,7 @@ class SNWorksCEO < CMS
       logger.debug "---------------------------------------"
       raise
     end
+
     body
   end
 
@@ -185,10 +188,14 @@ class SNWorksCEO < CMS
   # doesn't provide full content when lising articles.
   # So now, we have to loop through and make individual requests. SOB....
   def self.article_from_json_response(json)
-    article_json = self.get_article(json["uuid"]).first
+    article_from_uuid(json["uuid"])
+  end
+
+  def self.article_from_uuid(uuid)
+    article_json = self.get_article(uuid).first
 
     article = Article.new
-    article.id = article_json["id"]
+    article.id = article_json["uuid"]
     article.headline = article_json["title"]
     article.description = ActionView::Base.full_sanitizer.sanitize(article_json["abstract"])
     article.body = article_json["content"]

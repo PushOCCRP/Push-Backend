@@ -209,15 +209,13 @@ class NotificationsController < ApplicationController
   #   return response
   # end
 
-  # This is a page for updating GCM credentials from the Firebase Console
-  # There's some stuff in here for FCM but it is not supported, and might never be at this point
-  # DO NOT USE FCM, the old style works just fine for now.
-  def gcm
+  # This is a page for updating FCM credentials from the Firebase Console
+  def fcm
     # The product id. It'll look like "install-test-28f2e"
-    @gcm_project_id = Setting.gcm_project_id
-    # The API key. Google referes to this as the "legacy" key, and it's found on the "Cloud Messaging"
-    # tab in the Firebase Console.
-    @gcm_api_key = Setting.gcm_api_key
+    # @fcm_project_id = Setting.fcm_project_id
+    # # The API key. Google referes to this as the "legacy" key, and it's found on the "Cloud Messaging"
+    # # tab in the Firebase Console.
+    # @fcm_api_key = Setting.fcm_api_key
 
     @fcm_api_key_sandbox = Setting.fcm_api_key_sandbox       # Ignore these
     @fcm_api_key_production = Setting.fcm_api_key_production # Ignore these
@@ -225,39 +223,39 @@ class NotificationsController < ApplicationController
 
   # This will save and process the GCM keys, persisting them to memory, and calling
   # the Uniqush commands to create it.
-  def process_gcm
-    Setting.gcm_project_id = params["project_id"]
-    Setting.gcm_api_key = params["gcm_api_key"]
+  def process_fcm
+    Setting.fcm_project_id = params["project_id"]
+    Setting.fcm_api_key = params["fcm_api_key"]
 
     Setting.fcm_api_key_sandbox = params["fcm_api_key_production"]    # Ignore these
     Setting.fcm_api_key_production = params["fcm_api_key_production"] # Ignore these
-    response_json = create_gcm_project
+    response_json = create_fcm_project
 
     if response_json["status"] == 1
-      flash[:error] = "Error updating gcm: #{response_json}"
-      redirect_to :gcm
+      flash[:error] = "Error updating fcm: #{response_json}"
+      redirect_to :fcm
     else
       flash[:notice] = "Successfully updated gcm and fcm"
     end
 
-    redirect_to action: :gcm
+    redirect_to action: :fcm
   end
 
   # Here we call the Uniqush commands. Might be better to put this in a helper?
-  private def create_gcm_project
+  private def create_fcm_project
     # First we pull the saved credentials
-    project_id = Setting.gcm_project_id
-    api_key = Setting.gcm_api_key
+    project_id = Setting.fcm_project_id
+    api_key = Setting.fcm_api_key
 
     # If something went terribly wrong raise an error.
-    raise "GCM Credentials not properly stored" if project_id.nil? || api_key.nil?
+    raise "FCM Credentials not properly stored" if project_id.nil? || api_key.nil?
 
-    # GCM only uses one pipe, so we can just make the name here.
+    # FCM only uses one pipe, so we can just make the name here.
     service_name = PushDevice.service_name("android")
 
     # Create the options for the GCM services
     options = { "service": service_name,
-       "pushservicetype": PushDevice::UniqushServiceType::GCM,
+       "pushservicetype": PushDevice::UniqushServiceType::FCM,
        "projectid": project_id,
        "apikey": api_key
     }
@@ -267,19 +265,19 @@ class NotificationsController < ApplicationController
     response_json = JSON.parse(response.body)
 
     logger.debug("*************************************")
-    logger.debug("Create_gcm response: #{response_json}")
+    logger.debug("Create_fcm response: #{response_json}")
     logger.debug("*************************************")
 
 
     if response_json["status"] == 1
       logger.debug("*************************************")
-      logger.debug("Error Creating GCM service: #{response_json}")
+      logger.debug("Error Creating FCM service: #{response_json}")
       logger.debug("*************************************")
 
-      raise("Error creating GCM service: #{response_json}")
+      raise("Error creating FCM service: #{response_json}")
     else
       # Save it to the persistent memory
-      Setting.gcm_name = service_name
+      Setting.fcm_name = service_name
     end
 
     # Send it back up
@@ -414,28 +412,29 @@ class NotificationsController < ApplicationController
     @notification = Notification.new
     # This is to show only available languages
     @languages = CMS.languages()
+
+    @articles = articles
   end
 
   # Create a new notification here
   def create
     # Save all the notifications coming through
-
-    # TODO: Check languages here
-    error_message = "Message cannot be empty" if params[:notification][:message].blank?
-    error_message = "Language cannot be empty" if params[:notification][:language].blank?
-    error_message = "Article ID cannot be empty" if params[:notification][:article_id].blank?
-
-    if !error_message.blank?
-      flash.now[:alert] = error_message
-      render :new
-      return
-    end
-
     @notification = Notification.new
+    @notification.headline = params[:notification][:headline]
     @notification.message = params[:notification][:message]
     @notification.language = params[:notification][:language].downcase
     @notification.article_id = params[:notification][:article_id]
-    @notification.save!
+    @notification.save
+
+    unless @notification.valid?
+      messages = @notification.errors.messages.map { |key, value| "#{key} #{value}" }
+      flash.now[:alert] = messages.join(", ")
+      @languages = CMS.languages()
+      @articles = articles
+
+      render :new
+      return
+    end
 
     redirect_to @notification
   end
@@ -507,16 +506,23 @@ class NotificationsController < ApplicationController
   # Get the options for the push call given the fields
   def options_for_push(push_service_name, platform, notification, sandbox = false)
     options = { "service": push_service_name,
-       "subscriber": "*.#{notification.language}",
-       "msg": notification.message,
-       "sound": "default",
-       "article_id": notification.article_id,
-       "language": notification.language
+      "subscriber": "*.#{notification.language}",
+      "title": notification.headline,
+      "msg": notification.message,
+      "sound": "default",
+      "article_id": notification.article_id,
+      "language": notification.language,
     }
 
     # If we're pushing to an android device then we need to check the sandbox
     if platform == "android"
       options[:subscriber] += ".sandbox" if sandbox == true
+
+      # Android requires a seperate set of code for the notification vs the data delivered to the app.
+      options["uniqush.notification.fcm"] = {
+        "title": notification.headline,
+        "body": notification.message
+      }.to_json
     end
 
     options
@@ -525,8 +531,10 @@ class NotificationsController < ApplicationController
   # Make the actual call and handle errors
   def push_call(options, platform)
     logger.debug("Sending #{platform} push with options: #{options}")
+    url = "http://uniqush:9898/push?#{options.to_query}"
+    logger.debug("Calling url: #{url}")
 
-    response = HTTParty.post("http://uniqush:9898/push?#{options.to_query}")
+    response = HTTParty.get(url)
     response_json = JSON.parse(response.body)
 
     logger.debug("*************************************")
@@ -674,5 +682,25 @@ private
     # We explicity check for each key
     required_keys.each { |key| return false if !service.has_key?(key) }
     true
+  end
+
+  def articles
+    # This needs refactoring since it's also used in the articles_controller
+    case @cms_mode
+    when :occrp_joomla
+      @response = JoomlaOccrp.articles(params)
+    when :wordpress
+      @response = Wordpress.articles(params)
+    when :newscoop
+      @response = Newscoop.articles(params)
+    when :cins_codeigniter
+      @response = CinsCodeigniter.articles(params)
+    when :blox
+      @response = Blox.articles(params)
+    when :snworks
+      @response = SNWorksCEO.articles(params)
+    end
+
+    @response[:results].map { |article| [article.headline, article.id] }
   end
 end

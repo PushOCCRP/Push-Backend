@@ -1,6 +1,11 @@
 class Notification < ActiveRecord::Base
   has_one :user
 
+  validates :headline, presence: true
+  validates :message, presence: true
+  validates :language, presence: true
+  validates :article_id, presence: true
+
   def display_language
     case self.language
     when "en"
