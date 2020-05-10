@@ -27,6 +27,7 @@ services:
     depends_on:
       - db
       - uniqush
+      - redis
     env_file:
       - ./secrets.env
     environment:
@@ -56,7 +57,12 @@ services:
 
   # the redis db server
   redis:
-      image: redis
-      volumes:
-          - "./.docker/redis:/data"
-      command: ["redis-server", "--appendonly", "yes"]
+    image: redis
+    volumes:
+      - "./.docker/redis:/data"
+    command: ["redis-server", "--appendonly", "yes"]
+
+volumes:
+  rails_cache:
+  node_modules:
+  packs:
