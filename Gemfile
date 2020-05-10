@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-ruby "2.6.5"
+ruby "2.6.6"
 
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem "rails", "~>5.2.4"
+gem "rails", "~>5"
 # Use SCSS for stylesheets
 gem "sass-rails"
 # Use Uglifier as compressor for JavaScript assets
@@ -84,13 +84,17 @@ gem "rubocop-rails_config"
 # gem 'bcrypt', '~> 3.1.7'
 
 # We're using modern Webpacker to handle our Javascript assets now
-gem "webpacker", "~> 4"
+gem "webpacker", "~> 5"
 
 # Sprockets for asset management
 gem "sprockets-rails"
 
 # JWT is used by SNWorks for authentication
 gem "jwt"
+
+# This is for a work around in SEOWorks to determine image size if it's not returned
+# If the bug for this is fixed, this can be removed
+gem "rmagick"
 
 group :development do
   # Access an IRB console on exception pages or by using <%= console %> in views
