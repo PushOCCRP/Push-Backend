@@ -21,30 +21,35 @@ class SNWorksCEO < CMS
   # Don't forget to add caching!
   def self.articles(params)
     url = get_url "/v3/content"
-    articles = get_articles url
+    Rails.cache.fetch(url, expires_in: 5.minutes) do
+      articles = get_articles url
 
-    # Insure that the top article always has an image.
-    articles = rearrange_articles_for_images articles
+      # Insure that the top article always has an image.
+      articles = rearrange_articles_for_images articles
 
-    { start_date: 19700101,
-     end_date: 201901001,
-     total_results: articles.count,
-     total_pages: 1,
-     page: 0,
-     results: articles
-   }
+      { start_date: 19700101,
+        end_date: 201901001,
+        total_results: articles.count,
+        total_pages: 1,
+        page: 0,
+        results: articles
+      }
+    end
   end
 
   def self.article(params)
-    article_json = article_from_uuid params["id"]
+    id = params["id"]
+    Rails.cache.fetch("single_article/#{id}", expires_in: 5.minutes) do
+      article_json = article_from_uuid id
 
-    { start_date: 19700101,
-      end_date: 201901001,
-      total_results: 1,
-      total_pages: 1,
-      page: 0,
-      results: [article_json]
-    }
+      { start_date: 19700101,
+        end_date: 201901001,
+        total_results: 1,
+        total_pages: 1,
+        page: 0,
+        results: [article_json]
+      }
+    end
   end
 
   def self.search(params)
@@ -62,32 +67,6 @@ class SNWorksCEO < CMS
     }
   end
 
-  def self.categories
-    languages = languages()
-    languages = ["en"] if languages.nil? || languages.count == 0
-
-
-    categories = {}
-
-    languages.each do |language|
-       # This is a temp for Kyiv Post, we need to fix the languages properly though...
-       response = Rails.cache.fetch("wordpress_categories_#{language}", expires_in: 1.day) do
-         url = get_url "push-occrp=true&occrp_push_type=post_types"
-         logger.debug ("Fetching categories")
-         make_request url
-       end
-
-       if response.class == Hash
-         categories[language] = response.keys
-       else
-         categories[language] = response
-       end
-
-       categories[language] = ["post"] if response.count == 0
-     end
-
-    categories
-  end
 
   #   private
 
@@ -132,18 +111,21 @@ class SNWorksCEO < CMS
       'Authorization': "Bearer #{self.bearer_token}"
     }
 
+    puts "Getting url: #{url}"
     options = { headers: header }
+    puts "Options: #{options}"
+
     response = HTTParty.get(url, options)
 
     begin
       body = JSON.parse response.body
-    rescue
+    rescue Exception => e
       logger.debug "Exception parsing JSON from CMS"
       logger.debug "Statement returned"
       logger.debug "---------------------------------------"
       logger.debug response.body
       logger.debug "---------------------------------------"
-      raise
+      raise e
     end
 
     body
@@ -218,20 +200,36 @@ class SNWorksCEO < CMS
     article
   end
 
+  # Return an `Image` OpenStruct object for a `json` response from a call to the SEOWorks API
   def self.image_from_json_response(json)
-    # Turns out the content call is the same for images and articles
-    # image_json = self.get_article json["uuid"].first
-
     image = Image.new
 
     image.url = json["attachment"]["public_url"]
     image.caption = ActionView::Base.full_sanitizer.sanitize(json["content"])
-
-    # image.byline = json['authors'].map{|a| a['name']}.join(', ') unless json['authors'].blank?
-
     image.byline = json["authors"].nil? ? "" : json["authors"].first["name"]
     image.height = json["attachment"]["height"]
     image.width = json["attachment"]["width"]
+
+    # There's a weird bug in SEOWorks where images which have valid URLs sometimes have dimensions
+    # set to null. This uses ImageMagick to download the images and then check their dimensions
+    # ourselved.
+    #
+    # This is a SUPER heavy way to do it, and requires us to install ImageMagick and the Rmagick
+    # gem. Which is not good. I've reached out to SEOWorks and we'll see if they will fix this
+    # bug on their side.
+    #
+    # If there's no image found at the `public_url` we'll just return an empty obejct, because
+    # otherwise it crashes the app, which is bad.
+    if image.height.nil?
+      logger.debug ">>> Image dimensions are nil, getting them from ImageMagick"
+      dimensions = get_image_dimensions json["attachment"]["public_url"]
+      # Return an empty object if we can't find a valid URL
+      return {} if dimensions.nil?
+
+      # Set the image dimensions we get from ImageMagick
+      image.height = dimensions[:height]
+      image.width = dimensions[:width]
+    end
 
     image.length = 0
     image.start = 0
@@ -239,6 +237,27 @@ class SNWorksCEO < CMS
     image
   end
 
+  # Download the the image at `url`, returning nil if there's not a response or it's blank.
+  # Otherwise, use ImageMagick to get the dimentions of the blob that's downloaded.
+  #
+  # Note: We'd like to get rid of this ASAP if SEOWorks can fix the bug on their backend where
+  # dimensions are returns as null from the API request.
+  def self.get_image_dimensions(url)
+    # Download URL to blob, return nil if it doesn't work
+    response = HTTParty.get(url, follow_redirects: true)
+    return nil if response.code != 200 || response.body.blank?
+
+    # Image is created from the response body
+    begin
+      img = Magick::Image.from_blob(response.body).first
+    rescue StandardErorr
+      # If there's an error with the image, for instance if the url doesn't point to an image,
+      # we just want to return nothing, it'll be a problem on SEOWork's side
+      return {}
+    end
+
+    { height: img.rows, width: img.columns }
+  end
 
   def self.clean_up_for_wordpress(articles)
     articles.each do |article|
