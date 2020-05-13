@@ -1,5 +1,5 @@
 class JoomlaOccrp < CMS
-  def self.articles(params)
+  def self.articles(params = {})
     cache = true
     cached_articles = Rails.cache.fetch("sections/#{params}", expires_in: 1.hour) do
        cache = false

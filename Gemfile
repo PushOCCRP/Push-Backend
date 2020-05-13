@@ -96,6 +96,12 @@ gem "jwt"
 # If the bug for this is fixed, this can be removed
 gem "rmagick"
 
+# This allows us to schedule jobs to keep the caches hot specifically
+gem "clockwork"
+
+# Sidekiq is great for running background jobs
+gem "sidekiq"
+
 group :development do
   # Access an IRB console on exception pages or by using <%= console %> in views
   gem "web-console"

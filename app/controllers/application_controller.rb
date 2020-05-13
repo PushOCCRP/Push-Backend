@@ -52,23 +52,25 @@ class ApplicationController < ActionController::Base
   end
 
   def check_for_valid_cms_mode
-    case ENV["cms_mode"]
-    when "occrp-joomla"
-      @cms_mode = :occrp_joomla
-    when "wordpress"
-      @cms_mode = :wordpress
-    when "newscoop"
-      @cms_mode = :newscoop
-    when "cins-codeigniter"
-      @cms_mode = :cins_codeigniter
-    when "blox"
-      @cms_mode = :blox
-    when "snworks"
-      @cms_mode = :snworks
-    else
-      raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
-    end
+    @cms_mode = helpers.check_for_valid_cms_mode
   end
+  #   case ENV["cms_mode"]
+  #   when "occrp-joomla"
+  #     @cms_mode = :occrp_joomla
+  #   when "wordpress"
+  #     @cms_mode = :wordpress
+  #   when "newscoop"
+  #     @cms_mode = :newscoop
+  #   when "cins-codeigniter"
+  #     @cms_mode = :cins_codeigniter
+  #   when "blox"
+  #     @cms_mode = :blox
+  #   when "snworks"
+  #     @cms_mode = :snworks
+  #   else
+  #     raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
+  #   end
+  # end
 
   def cms_url
     case ENV["cms_mode"]

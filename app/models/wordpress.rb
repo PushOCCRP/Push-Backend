@@ -1,5 +1,5 @@
 class Wordpress < CMS
-  def self.articles(params)
+  def self.articles(params = {})
     cache = true
     cached_articles = Rails.cache.fetch("sections/#{params}", expires_in: 1.hour) do
       cache = false
@@ -52,7 +52,7 @@ class Wordpress < CMS
     cached_articles
   end
 
-  def self.article(params)
+  def self.article(params = {})
     language = language_parameter params["language"]
     article_id = params["id"]
     url = get_url "push-occrp=true&occrp_push_type=article&article_id=#{article_id}", language
@@ -62,7 +62,7 @@ class Wordpress < CMS
     get_articles url
   end
 
-  def self.search(params)
+  def self.search(params = {})
     language = language_parameter params["language"]
 
     query = params["q"]

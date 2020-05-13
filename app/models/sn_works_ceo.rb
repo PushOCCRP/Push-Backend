@@ -19,7 +19,7 @@ class SNWorksCEO < CMS
 
 
   # Don't forget to add caching!
-  def self.articles(params)
+  def self.articles(params = {})
     url = get_url "/v3/content"
     Rails.cache.fetch(url, expires_in: 5.minutes) do
       articles = get_articles url
@@ -37,7 +37,7 @@ class SNWorksCEO < CMS
     end
   end
 
-  def self.article(params)
+  def self.article(params = {})
     id = params["id"]
     Rails.cache.fetch("single_article/#{id}", expires_in: 5.minutes) do
       article_json = article_from_uuid id
@@ -52,7 +52,7 @@ class SNWorksCEO < CMS
     end
   end
 
-  def self.search(params)
+  def self.search(params = {})
     query = params["q"]
 
     url = get_url "/v3/search", { type: "content", keywords: query }

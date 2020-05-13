@@ -82,5 +82,12 @@ Rails.application.configure do
 
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
-  config.force_ssl = true
+
+  # For testing purposes we probably want to disable FORCE_SSL, but let's make it explicit
+  # Set `FORCE_SSL` in the docker-compose `web` section to override
+  # config.force_ssl = ENV["FORCE_SSL"].nil? ? true : ENV["FORCE_SSL"]
+  config.force_ssl = false
+
+  # Active job is used for caches, we'll use Sidekiq, since we already have Redis setup
+  config.active_job.queue_adapter = :sidekiq
 end

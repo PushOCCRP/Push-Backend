@@ -1,5 +1,5 @@
 class Blox < CMS
-  def self.articles(params)
+  def self.articles(params = {})
     results, categories = Rails.cache.fetch("articles", expires_in: 1.hour) do
       get_articles
     end
@@ -15,7 +15,7 @@ class Blox < CMS
     response
   end
 
-  def self.article(params)
+  def self.article(params = {})
     asset = get_asset({ "id" => params["id"] })
     article = format_article(asset)
     response = { start_date: "19700101",
@@ -28,7 +28,7 @@ class Blox < CMS
     response
   end
 
-  def self.search(params)
+  def self.search(params = {})
     cache = true
     cached_articles = Rails.cache.fetch("search_#{params['q']}", expires_in: 1.minutes) do
       cache = false

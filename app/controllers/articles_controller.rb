@@ -4,21 +4,21 @@ class ArticlesController < ApplicationController
   before_action :check_api_key
 
   def index
-    @response = []
-
-    case @cms_mode
-    when :occrp_joomla
-      @response = JoomlaOccrp.articles(params)
-    when :wordpress
-      @response = Wordpress.articles(params)
-    when :newscoop
-      @response = Newscoop.articles(params)
-    when :cins_codeigniter
-      @response = CinsCodeigniter.articles(params)
-    when :blox
-      @response = Blox.articles(params)
-    when :snworks
-      @response = SNWorksCEO.articles(params)
+    @response = case @cms_mode
+                when :occrp_joomla
+                  JoomlaOccrp.articles(params)
+                when :wordpress
+                  Wordpress.articles(params)
+                when :newscoop
+                  Newscoop.articles(params)
+                when :cins_codeigniter
+                  CinsCodeigniter.articles(params)
+                when :blox
+                  Blox.articles(params)
+                when :snworks
+                  SNWorksCEO.articles(params)
+                else
+                  []
     end
 
     respond_to do |format|
@@ -27,19 +27,19 @@ class ArticlesController < ApplicationController
   end
 
   def search
-    case @cms_mode
-    when :occrp_joomla
-      @response = search_occrp_joomla
-    when :wordpress
-      @response = Wordpress.search(params)
-    when :newscoop
-      @response = Newscoop.search(params)
-    when :cins_codeigniter
-      @response = CinsCodeigniter.search(params)
-    when :blox
-      @response = Blox.search(params)
-    when :snworks
-      @response = SNWorksCEO.search(params)
+    @response = case @cms_mode
+                when :occrp_joomla
+                  search_occrp_joomla
+                when :wordpress
+                  Wordpress.search(params)
+                when :newscoop
+                  Newscoop.search(params)
+                when :cins_codeigniter
+                  CinsCodeigniter.search(params)
+                when :blox
+                  Blox.search(params)
+                when :snworks
+                  SNWorksCEO.search(params)
     end
 
     respond_to do |format|

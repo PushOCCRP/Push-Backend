@@ -1,5 +1,5 @@
 class CinsCodeigniter < CMS
-  def self.articles(params)
+  def self.articles(params = {})
     url = get_url "/api/articles"
     language = params["language"]
     if language.blank?
@@ -20,7 +20,7 @@ class CinsCodeigniter < CMS
     end
   end
 
-  def self.article(params)
+  def self.article(params = {})
     url = get_url "/api/article"
     language = params["language"]
     if language.blank?
@@ -40,7 +40,7 @@ class CinsCodeigniter < CMS
     end
   end
 
-  def self.search(params)
+  def self.search(params = {})
     url = get_url "/api/search"
     language = params["language"]
     if language.blank?

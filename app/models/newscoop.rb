@@ -78,7 +78,7 @@ class NewscoopSingleton
 end
 
 class Newscoop < CMS
-  def self.articles(params)
+  def self.articles(params = {})
     access_token = Newscoop.get_auth_token
     url = ENV["newscoop_url"] + "/api/articles.json"
     language = params["language"]
@@ -159,7 +159,7 @@ class Newscoop < CMS
     @response
   end
 
-  def self.most_recent_articles(params)
+  def self.most_recent_articles(params = {})
     access_token = Newscoop.get_auth_token
     url = ENV["newscoop_url"] + "/api/articles.json"
     language = params["language"]
@@ -182,7 +182,7 @@ class Newscoop < CMS
     response
   end
 
-  def self.search(params)
+  def self.search(params = {})
     query = params["q"]
 
     access_token = Newscoop.get_auth_token
@@ -200,7 +200,7 @@ class Newscoop < CMS
     @response = format_newscoop_response(body)
   end
 
-  def self.article(params)
+  def self.article(params = {})
     article_id = params["id"]
 
     access_token = Newscoop.get_auth_token
