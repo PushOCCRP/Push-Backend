@@ -1,10 +1,9 @@
-require "sidekiq/web"
+# require "sidekiq/web" # Uncomment if testing or debugging Sidekiq
 
 Rails.application.routes.draw do
   devise_for :users
 
-  # Probably shouldn't keep this in here, but it's for testing purposes
-  mount Sidekiq::Web => "/sidekiq"
+  # mount Sidekiq::Web => "/sidekiq" # Uncomment if testing or debugging Sidekiq
 
   root to: "home#index"
 
