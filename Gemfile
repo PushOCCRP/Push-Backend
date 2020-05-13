@@ -102,6 +102,9 @@ gem "clockwork"
 # Sidekiq is great for running background jobs
 gem "sidekiq"
 
+# Redis is good for caching, we're already using it for Sidekiq and Uniqush
+gem "redis"
+
 group :development do
   # Access an IRB console on exception pages or by using <%= console %> in views
   gem "web-console"

@@ -271,6 +271,7 @@ DEPENDENCIES
   rails-settings-cached!
   rails_12factor
   rake
+  redis
   rmagick
   rubocop (~> 0.78.0)
   rubocop-rails_config
