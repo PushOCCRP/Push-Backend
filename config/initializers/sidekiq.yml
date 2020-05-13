@@ -5,7 +5,7 @@ production:
 :queues:
   - [urgent, 2]
   - default
-  - chewy
+  - scheduled_tasks
 
 :verbose: true
 :timeout: 8
