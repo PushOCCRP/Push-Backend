@@ -55,12 +55,43 @@ services:
           - "./secrets:/secrets"
           #- "/srv/logs/gurac/:/srv/logs/gurac/"
 
-  # the redis db server
+  # The Redis server. This is used for both Sidekiq and Uniqush
   redis:
     image: redis
+    restart: always
     volumes:
-      - "./.docker/redis:/data"
+        - "./.docker/redis:/data:cached"
     command: ["redis-server", "--appendonly", "yes"]
+    expose:
+      - "6379"
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Sidekiq is used for the ActiveJob backend
+  sidekiq:
+    build: .
+    command: bundle exec sidekiq
+    volumes:
+      - ".:/push:cached"
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - ./secrets.env
+    environment:
+      - RAILS_ENV=production
+      - proxy_images=true
+      - FORCE_SSL=false
+      - REDIS_URL=redis://redis:6379
+    tty: true
+    stdin_open: true
+    entrypoint: /push/entrypoint_sidekiq.sh
+    networks:
+      - default
 
 volumes:
   rails_cache:
