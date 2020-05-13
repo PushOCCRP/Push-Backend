@@ -78,6 +78,29 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # Run ActiveJobs on a schedule using the Clockwork gem
+  scheduled_jobs:
+    build: .
+    command: bundle exec clockwork ./scheduler.rb
+    volumes:
+      - ".:/push:cached"
+    env_file:
+      - ./secrets.env
+    environment:
+      - RAILS_ENV=production
+      - proxy_images=true
+      - FORCE_SSL=false
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - db
+      - redis
+      - sidekiq
+    entrypoint: /push/entrypoint_scheduled_jobs.sh
+    tty: true
+    stdin_open: true
+    networks:
+      - default
+
   # uniqush itself
   uniqush:
     build: https://github.com/beevelop/docker-uniqush.git
