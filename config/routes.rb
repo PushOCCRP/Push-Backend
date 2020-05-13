@@ -1,5 +1,11 @@
+require "sidekiq/web"
+
 Rails.application.routes.draw do
   devise_for :users
+
+  # Probably shouldn't keep this in here, but it's for testing purposes
+  mount Sidekiq::Web => "/sidekiq"
+
   root to: "home#index"
 
   get "admin" => "administration#index"
