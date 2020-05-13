@@ -61,6 +61,9 @@ services:
     depends_on:
       - db
       - uniqush
+      - redis
+      - sidekiq
+      - scheduled_jobs
     env_file:
       - ./secrets.env
     environment:
@@ -99,14 +102,13 @@ services:
 
   # The Redis server. This is used for both Sidekiq and Uniqush
   redis:
-    image: redis
+    image: redis:buster
     restart: always
     volumes:
         - "./.docker/redis:/data:cached"
     command: ["redis-server", "--appendonly", "yes"]
     expose:
       - "6379"
-
     logging:
       driver: "json-file"
       options:
