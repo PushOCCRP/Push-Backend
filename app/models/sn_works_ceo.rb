@@ -17,11 +17,10 @@ class SNWorksCEO < CMS
     end
   end
 
-
   # Don't forget to add caching!
   def self.articles(params = {})
     url = get_url "/v3/content"
-    Rails.cache.fetch(url, expires_in: 1.minutes) do
+    Rails.cache.fetch(url, expires_in: 5.minutes) do
       articles = get_articles url
 
       # Insure that the top article always has an image.
@@ -56,15 +55,18 @@ class SNWorksCEO < CMS
     query = params["q"]
 
     url = get_url "/v3/search", { type: "content", keywords: query }
-    articles = get_articles url, { query: query }
 
-    { start_date: 19700101,
-      end_date: 201901001,
-      total_results: articles.count,
-      total_pages: 1,
-      page: 0,
-      results: articles
-    }
+    Rails.cache.fetch("/v3/search/#{query}", expires_in: 5.minutes) do
+      articles = get_articles url, { query: query }
+
+      { start_date: 19700101,
+        end_date: 201901001,
+        total_results: articles.count,
+        total_pages: 1,
+        page: 0,
+        results: articles
+      }
+    end
   end
 
 

@@ -29,7 +29,7 @@ module ScheduledTasks
           SNWorksCEO.articles({})
         end
 
-        puts "Warming cache took #{time - Time.now}"
+        puts "Warming cache took #{Time.now - time}"
       end
     end
   end
