@@ -40,6 +40,7 @@ services:
       - RAILS_ENV=production
       - proxy_images=true
       - FORCE_SSL=false
+      - REDIS_URL=redis://redis:6379/0
     entrypoint: /push/entrypoint.sh
     tty: true
     stdin_open: true
@@ -134,7 +135,7 @@ services:
       - RAILS_ENV=production
       - proxy_images=true
       - FORCE_SSL=false
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://redis:6379/0
     tty: true
     stdin_open: true
     entrypoint: /push/entrypoint_sidekiq.sh

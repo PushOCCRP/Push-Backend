@@ -1,8 +1,6 @@
 version: '2'
 
 services:
-
-  #
   # nginx, working as a front-end proxy for uniqush
   # we need it for only allowing certain endpoints to be available
   db:
@@ -50,8 +48,8 @@ services:
     environment:
       - RAILS_ENV=production
       - proxy_images=true
+      - REDIS_URL=redis://redis:6379/0
       - FORCE_SSL=false
-      - REDIS_URL=redis://redis:6379
     depends_on:
       - db
       - redis
@@ -108,7 +106,7 @@ services:
       - RAILS_ENV=production
       - proxy_images=true
       - FORCE_SSL=false
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://redis:6379/0
     tty: true
     stdin_open: true
     entrypoint: /push/entrypoint_sidekiq.sh
