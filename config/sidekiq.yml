@@ -1,0 +1,11 @@
+development:
+  :concurrency: 5
+production:
+  :concurrency: 6
+:queues:
+  - [urgent, 2]
+  - default
+  - chewy
+
+:verbose: true
+:timeout: 8
