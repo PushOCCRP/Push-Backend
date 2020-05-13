@@ -21,7 +21,7 @@ class SNWorksCEO < CMS
   # Don't forget to add caching!
   def self.articles(params = {})
     url = get_url "/v3/content"
-    Rails.cache.fetch(url, expires_in: 5.minutes) do
+    Rails.cache.fetch(url, expires_in: 1.minutes) do
       articles = get_articles url
 
       # Insure that the top article always has an image.
