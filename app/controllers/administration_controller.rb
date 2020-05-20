@@ -1,8 +1,6 @@
 class AdministrationController < ApplicationController
+  before_action :authenticate_user!
 
-	before_action :authenticate_user!
-
-	def index
-	end
-
+  def index
+  end
 end

@@ -12,7 +12,7 @@ This consists of five systems.
 -- Set up to be a basic proxy server to insure SSL connectivity and passthrough to the Puma server running the Rails app.
 - Postgres
 -- The database that the app uses. Utterly vanilla installation.
-- Uniqush 
+- Uniqush
 -- A really great open source push notification server that handles all the certificates, devices settings and actual pushing of notifications.
 - Redis
 -- Used by Uniqush to save data.
@@ -21,10 +21,10 @@ This consists of five systems.
 -- This file contains all the data to customize the server. The code is commented appropriately.
 
 # Setup
-Theres a few different ways to set this up (and if you're familiar with Docker probably a bunch more). However, this will be the best way to get going from scratch. 
+Theres a few different ways to set this up (and if you're familiar with Docker probably a bunch more). However, this will be the best way to get going from scratch.
 
 
-## Setup From Scratch 
+## Setup From Scratch
 #### (Skip to next section if you're using the AWS setup [scripts](https://github.com/PushOCCRP/Push-AWS-Launcher)
 
 #### Some Notes
@@ -80,9 +80,26 @@ Please make sure there is a symlink named `docker-compose.yml` in the main proje
 # Setting Up Push Notifiations
 For our project we use a system called Uniqush. This is an open sourced push notification manager that lets us manage the system without paying or using a service such as Urban airship. Because iOS and Android use different systems we need to set them up seperately, but in the end this will let us send the same message to all devices.
 
+## Local Development
+If you're trying to set up this for local development the SSL keys get a bit off. There's two options
+1. Use the `docker-compose-no-nginx-dev.yml` docker-compose file (preferred unless you know what you're doing).
+1. Set up the Lets Encrypt certs yourself. Instructions are coming for this method.
+
+#### Local Mac Setup
+
+1. Install LetsEncrypt's Certbot tool `brew install letsencrypt`
+1. Generate basic cert `sudo certbot certonly --standalone`
+  - If you get an error like "Problem binding to port 80: Could not bind to IPv4 or IPv6." on a mac try `sudo apachectl stop`.
+  - Afterwards if `curl localhost:80` returns `curl: (7) Failed to connect to localhost port 80: Connection refused` then try again.
+1. Copy the certs from the folders listed in the export to the appropriate `.docker` folder.
+  - `sudo mkdir ./.docker/data/secrets/keys/live/test.pushapp.press`
+  - `sudo cp /etc/letsencrypt/live/test.pushapp.press/fullchain.pem ./.docker/data/secrets/keys/live/test.pushapp.press/fullchain.pem`
+  - `sudo cp /etc/letsencrypt/live/test.pushapp.press/privkey.pem ./.docker/data/secrets/keys/live/test.pushapp.press/privkey.pem`
+1. Make sure the permsissions are set right `sudo chmod -R 644 ./.docker/data/secrets/keys/live/test.pushapp.press/`
+
 ### iOS
 
-1. This is done using the generator scripts. Specifically run the generator with the -c command an it will create and convert the files for you automatically.
+1. This is done using the generator scripts. Specifically run the generator with the -c command and it will create and convert the files for you automatically.
 
 1. From the back end go to "Notifications" -> "Preferences" and click "APNS Cert Upload".
 
@@ -104,7 +121,7 @@ For our project we use a system called Uniqush. This is an open sourced push not
 
 1. From the backend of your app go to "Notifications" -> "Preferences" and click "GCM Management". **Note:** This now uses Google's Firebase but I haven't gotten around to changing the labels yet.
 
-1. Going back to the Firebase Console you should see a bunch of identifying information. Copy the text next to "Project ID". It will be a version of your apps name with dashes like ```sample-push-app``` 
+1. Going back to the Firebase Console you should see a bunch of identifying information. Copy the text next to "Project ID". It will be a version of your apps name with dashes like ```sample-push-app```
 
 1. Go back to your apps backend and paste it into the "Project ID" field.
 
@@ -119,7 +136,7 @@ For our project we use a system called Uniqush. This is an open sourced push not
 # Notes
 
 ### DNS HOST
-A DNS host entry is what tells the internet that your URL (e.g. https://www.example.com) points to your server's IP (e.g. 192.168.1.1). Depending on your hosting company this is can be set automatically or sometimes has to be linked from the company you bought your domain from to your server. 
+A DNS host entry is what tells the internet that your URL (e.g. https://www.example.com) points to your server's IP (e.g. 192.168.1.1). Depending on your hosting company this is can be set automatically or sometimes has to be linked from the company you bought your domain from to your server.
 
 Since every host is different If you don't know how to do this it's best to ask someone who does or pay someone for an hour's worth of time.
 
@@ -129,6 +146,17 @@ WP Super Cache is a plugin for Wordpress that makes your site sometimes load muc
 Steps to get key forthcoming here...
 
 # Development
+
+## Setup Instructions
+
+### Mac
+Developmet on a Mac is a bit tiresome, mostly because getting the containers running means waiting a
+long time for them to boot (it's a Mac only thing, no idea why).
+
+A few other things,
+1. Before you run bundle install the first time you'll need to install the libmagic library.
+   This is best done using [Homebrew](https://brew.sh/), so set that up if you don't have it already
+   then run `brew install libmagic`
 
 ## Adding Support For New CMS
 
@@ -176,7 +204,7 @@ As a final help to the community, you shoul add your CMS to the setup scripts as
 
 The Push Backend serves up an API that can be consumed by Push client apps. Right now that's only the iOS and Android apps, but could be things such as TV apps or other readers.
 
-Here are the main consumptionAPIs, there's a few other that I have yet to document, but they are for internal purposes and are not need by the apps.
+Here are the main consumption APIs, there's a few other that I have yet to document, but they are for internal purposes and are not needed by the apps.
 
 ### Parameters
 
