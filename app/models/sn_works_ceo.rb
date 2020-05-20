@@ -141,19 +141,55 @@ class SNWorksCEO < CMS
     articles = []
 
     body["items"].each do |item|
-        # Let's ignore it if there's no publish date (since it hasn't been published)
-        next if item["published_at"].blank?
+      # Let's ignore it if there's no publish date (since it hasn't been published)
+      next if item["published_at"].blank?
 
-        # There are a few different types from SNNews
-        # 'article' and 'media' are what I'm aware of now
-        # We really only want 'article' for the moment
-
-        if item["type"] == "article"
-          article = article_from_json_response(item)
-          articles << article
-        end
+      # There are a few different types from SNNews
+      # 'article' and 'media' are what I'm aware of now
+      # We really only want 'article' for the moment
+      if item["type"] == "article"
+        article = article_from_json_response(item)
+        articles << article
       end
+    end
 
+    # Make sure we have a real article at the top, not a paid advertisment
+    articles = rearrange_articles_for_native_advertising articles
+
+    articles
+  end
+
+  # The original organization that this integration was created for does paid native advertising.
+  # The only way to determine which is paid however is to look at the author, which in the original
+  # case is 'Scholarship Media'. This will rearrange the articles so that the paid ad is never at
+  # the top.
+  #
+  # NOTE: This hasn't really been... tested. Within the 30 minutes it took me to write it a new
+  # article was published on the backend.
+  def self.rearrange_articles_for_native_advertising(articles)
+    paid_author_name = "Scholarship Media"
+    # If the top article is not the designated author then just return
+    return articles unless articles.first.author == paid_author_name
+
+    # Go through the array until we find an article not authored by the name. Just in case there
+    # are two or more in a row.
+    first_real_article = nil
+    first_real_article_index = nil
+    articles.each_with_index do |article, index|
+      # If the article's author is the paid one, just skip to the next element in the array
+      next unless article.author != paid_author_name
+
+      first_real_article = article
+      first_real_article_index = index
+    end
+
+    # Just a quick rescue in case our logic is weird, shouldn't be odd.
+    return articles if first_real_article.nil?
+
+    # Remove the element we want to be at the front
+    articles.delete_at first_real_article_index
+    # Now insert the element to the front
+    articles.insert 0, first_real_article
     articles
   end
 
@@ -261,20 +297,20 @@ class SNWorksCEO < CMS
     { height: img.rows, width: img.columns }
   end
 
-  def self.clean_up_for_wordpress(articles)
-    articles.each do |article|
-       article["body"] = scrubCDataTags article["body"]
-       article["body"] = scrubScriptTagsFromHTMLString article["body"]
-       article["body"] = scrubWordpressTagsFromHTMLString article["body"]
-       # article['body'] = cleanUpNewLines article['body']
-       article["body"] = scrubJSCommentsFromHTMLString article["body"]
-       article["body"] = scrubSpecialCharactersFromSingleLinesInHTMLString article["body"]
-       article["body"] = scrubHTMLSpecialCharactersInHTMLString article["body"]
-       article["body"] = normalizeSpacing article["body"]
+  # def self.clean_up_for_wordpress(articles)
+  #   articles.each do |article|
+  #      article["body"] = scrubCDataTags article["body"]
+  #      article["body"] = scrubScriptTagsFromHTMLString article["body"]
+  #      article["body"] = scrubWordpressTagsFromHTMLString article["body"]
+  #      # article['body'] = cleanUpNewLines article['body']
+  #      article["body"] = scrubJSCommentsFromHTMLString article["body"]
+  #      article["body"] = scrubSpecialCharactersFromSingleLinesInHTMLString article["body"]
+  #      article["body"] = scrubHTMLSpecialCharactersInHTMLString article["body"]
+  #      article["body"] = normalizeSpacing article["body"]
 
-       article["headline"] = HTMLEntities.new.decode(article["headline"])
-     end
+  #      article["headline"] = HTMLEntities.new.decode(article["headline"])
+  #    end
 
-    articles
-  end
+  #   articles
+  # end
 end
