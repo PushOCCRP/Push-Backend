@@ -163,9 +163,6 @@ class SNWorksCEO < CMS
   # The only way to determine which is paid however is to look at the author, which in the original
   # case is 'Scholarship Media'. This will rearrange the articles so that the paid ad is never at
   # the top.
-  #
-  # NOTE: This hasn't really been... tested. Within the 30 minutes it took me to write it a new
-  # article was published on the backend.
   def self.rearrange_articles_for_native_advertising(articles)
     paid_author_name = "Scholarship Media"
     # If the top article is not the designated author then just return
@@ -179,8 +176,12 @@ class SNWorksCEO < CMS
       # If the article's author is the paid one, just skip to the next element in the array
       next unless article.author != paid_author_name
 
+      # Set the variables for later processing
       first_real_article = article
       first_real_article_index = index
+
+      # We don't want to keep going, so we break
+      break
     end
 
     # Just a quick rescue in case our logic is weird, shouldn't be odd.
@@ -189,7 +190,7 @@ class SNWorksCEO < CMS
     # Remove the element we want to be at the front
     articles.delete_at first_real_article_index
     # Now insert the element to the front
-    articles.insert 0, first_real_article
+    articles.unshift first_real_article
     articles
   end
 
