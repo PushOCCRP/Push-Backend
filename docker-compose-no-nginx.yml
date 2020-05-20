@@ -1,8 +1,6 @@
 version: '2'
-    
-services:
 
-  #
+services:
   # nginx, working as a front-end proxy for uniqush
   # we need it for only allowing certain endpoints to be available
   db:
@@ -18,12 +16,16 @@ services:
     build: .
     command: bundle exec rails s -p 3000 -b '0.0.0.0'
     volumes:
-      - .:/push
+      - ".:/push:cached"
+      - "rails_cache:/app/tmp/cache"
+      - "node_modules:/app/node_modules"
+      - "packs:/app/public/packs"
     expose:
       - "3000"
     depends_on:
       - db
       - uniqush
+      - redis
     env_file:
       - ./secrets.env
     environment:
@@ -35,25 +37,83 @@ services:
     networks:
       - default
 
+  # Run ActiveJobs on a schedule using the Clockwork gem
+  scheduled_jobs:
+    build: .
+    command: bundle exec clockwork ./scheduler.rb
+    volumes:
+      - ".:/push:cached"
+    env_file:
+      - ./secrets.env
+    environment:
+      - RAILS_ENV=production
+      - proxy_images=true
+      - REDIS_URL=redis://redis:6379/0
+      - FORCE_SSL=false
+    depends_on:
+      - db
+      - redis
+      - sidekiq
+    entrypoint: /push/entrypoint_scheduled_jobs.sh
+    tty: true
+    stdin_open: true
+    networks:
+      - default
+
   # uniqush itself
   uniqush:
-      build: https://github.com/beevelop/docker-uniqush.git
-      environment:
-          # this is the default, but let's be explicit here
-          UNIQUSH_DATABASE_HOST: "redis"
-#          UNIQUSH_LOGFILE:       "/srv/logs/gurac/uniqush.log"
-          UNIQUSH_LOGLEVEL:      "verbose"
-          UNIQUSH_GID:           "60001"
-          UNIQUSH_UID:           "60001"
-      depends_on:
-          - redis
-      volumes:
-          - "./secrets:/secrets"
-          #- "/srv/logs/gurac/:/srv/logs/gurac/"
+    build: https://github.com/beevelop/docker-uniqush.git
+    environment:
+      # this is the default, but let's be explicit here
+      UNIQUSH_DATABASE_HOST: "redis"
+#     UNIQUSH_LOGFILE:       "/srv/logs/gurac/uniqush.log"
+      UNIQUSH_LOGLEVEL:      "verbose"
+      UNIQUSH_GID:           "60001"
+      UNIQUSH_UID:           "60001"
+    depends_on:
+      - redis
+    volumes:
+      - "./secrets:/secrets"
+      #- "/srv/logs/gurac/:/srv/logs/gurac/"
 
-  # the redis db server
+  # The Redis server. This is used for both Sidekiq and Uniqush
   redis:
-      image: redis
-      volumes:
-          - "./.docker/redis:/data"
-      command: ["redis-server", "--appendonly", "yes"]
+    image: redis:buster
+    restart: always
+    volumes:
+        - "./.docker/redis:/data:cached"
+    command: ["redis-server", "--appendonly", "yes"]
+    expose:
+      - "6379"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Sidekiq is used for the ActiveJob backend
+  sidekiq:
+    build: .
+    command: bundle exec sidekiq -C config/sidekiq.yml
+    volumes:
+      - ".:/push:cached"
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - ./secrets.env
+    environment:
+      - RAILS_ENV=production
+      - proxy_images=true
+      - FORCE_SSL=false
+      - REDIS_URL=redis://redis:6379/0
+    tty: true
+    stdin_open: true
+    entrypoint: /push/entrypoint_sidekiq.sh
+    networks:
+      - default
+
+volumes:
+  rails_cache:
+  node_modules:
+  packs:

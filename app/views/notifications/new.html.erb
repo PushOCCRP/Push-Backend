@@ -1,31 +1,38 @@
 <div class="container">
-	<div class="page-header col-md-12">
-			<div class="col-md-10"><span class="h1">New Notification</span></div>
-			<div class="col-md-2 vertical-center"><%= link_to "All Notifications", "/notifications" %></div>
-	</div>
+  <div class="page-header col-md-12">
+    <div class="col-md-10"><span class="h1">New Notification</span></div>
+    <div class="col-md-2 vertical-center"><%= link_to "All Notifications", "/notifications" %></div>
+  </div>
 </div>
 
 <div class="container">
-	<div class="col-md-8">
-		<%= form_for @notification, url: {action: "create"} do |f| %>
-			<div class="form-group">
+  <div class="col-md-8">
+    <%= form_for @notification, url: {action: "create"} do |f| %>
+      <div class="form-group">
+       <%= f.label :headline %>
+       <%= f.text_field :headline, class: "form-control" %><br>
+     </div>
+     <div class="form-group">
+       <%= f.label :message %>
+       <%= f.text_area :message, size: "60x5", class: "form-control" %><br>
+     </div>
+     <% if @languages.count > 1 %>
+     <div class="form-group">
+       <%= f.label :language_for_notification %><br>
+       <% options = []
+       @languages.each{|language| options << [display_name_for_language(language), language]} %>
+       <%= f.select :language, options_for_select(options) %>
+     </div>
+     <% else %>
+     <%= f.hidden_field :language, value: @languages.first %>
+     <% end %>
+     <div class="form-group">
+       <%= f.label :article_id %>
+       The article id from your CMS.
+       <%= f.select :article_id, options_for_select(@articles), {class: "form-control"} %>
+     </div>
 
-		  		<%= f.label :message %>
-				<%= f.text_area :message, size: "60x5", class: "form-control" %><br />
-			</div>
-		  	<div class="form-group">
-          <%= f.label :language_for_notification %><br>
-  		  	<% options = []
-    		  	 @languages.each{|language| options << [display_name_for_language(language), language]} %>
-  		  	<%= f.select :language, options_for_select=(options) %>
-			</div>
-			<div class="form-group">
-		  		<%= f.label :article_id %>
-		  		The article id from your CMS.
-		  		<%= f.text_field :article_id, class: "form-control" %>
-		  	</div>
-
-			<%= f.submit "Create", class:"btn btn-default" %>
-		<% end %>	
-	</div>
+     <%= f.submit "Create", class:"btn btn-default" %>
+   <% end %>
+ </div>
 </div>

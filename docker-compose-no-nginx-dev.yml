@@ -1,0 +1,148 @@
+version: '2'
+
+services:
+  # This configuration excludes NGINX for development purposes so you don't accidently run a full
+  # web server on your own machine and accidently screw up your ports or what have you.
+  #
+  # If you're running in production and don't need NGINX (for instance, if you're on a multi-Docker setup)
+  # then use `docker-compose-no-ngix.yml`. Otherwise, you probably want `docker-compose-with-nginx.yml`
+
+  db:
+    image: postgres:9.6
+    volumes:
+      - "./.docker/postgres:/data/postgres"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - PGDATA=/data/postgres
+
+  web:
+    build: .
+    command: bundle exec rails s -p 3000 -b '0.0.0.0'
+    volumes:
+      - ".:/push:cached"
+      # - "rails_cache:/app/tmp/cache"
+      # - "node_modules:/app/node_modules"
+      # - "packs:/app/public/packs"
+    expose:
+      - "3000"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - uniqush
+      - redis
+      - sidekiq
+      - scheduled_jobs
+    env_file:
+      - ./secrets.env
+    environment:
+      - RAILS_ENV=production
+      - proxy_images=true
+      - FORCE_SSL=false
+      - REDIS_URL=redis://redis:6379/0
+    entrypoint: /push/entrypoint.sh
+    tty: true
+    stdin_open: true
+    networks:
+      - default
+
+  # Since this is the dev setup this starts the webpack-dev-server. It shouldn't be in any of the
+  # production configurations.
+  webpack:
+    build: .
+    command: ./bin/webpack-dev-server
+    volumes:
+      - ".:/push:cached"
+    ports:
+      - "3035:3035"
+    expose:
+      - "3035"
+    env_file:
+      - ./secrets.env
+    environment:
+      - RAILS_ENV=development # This should always be development for this config, even if web is set to production.
+      - proxy_images=true
+      - WEBPACKER_DEV_SERVER_HOST=0.0.0.0
+    tty: true
+    stdin_open: true
+    entrypoint: /push/entrypoint_webpacker.sh
+    networks:
+      - default
+
+  # Run ActiveJobs on a schedule using the Clockwork gem
+  scheduled_jobs:
+    build: .
+    command: bundle exec clockwork ./scheduler.rb
+    volumes:
+      - ".:/push:cached"
+    env_file:
+      - ./secrets.env
+    environment:
+      - RAILS_ENV=production
+      - proxy_images=true
+      - FORCE_SSL=false
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - db
+      - redis
+      - sidekiq
+    entrypoint: /push/entrypoint_scheduled_jobs.sh
+    tty: true
+    stdin_open: true
+    networks:
+      - default
+
+  # Uniqush is used for managing push notifications ourselves
+  uniqush:
+    build: https://github.com/PushOCCRP/docker-uniqush.git
+    environment:
+      # this is the default, but let's be explicit here
+      UNIQUSH_DATABASE_HOST: "redis"
+      UNIQUSH_LOGFILE:       "/srv/logs/gurac/uniqush.log"
+      UNIQUSH_LOGLEVEL:      "verbose"
+      UNIQUSH_GID:           "60001"
+      UNIQUSH_UID:           "60001"
+    ports:
+      - "9898:9898"
+    depends_on:
+      - redis
+    volumes:
+      - "./secrets:/secrets"
+      - "./log/uniqush/:/srv/logs/gurac/"
+
+  # The Redis server. This is used for both Sidekiq and Uniqush
+  redis:
+    image: redis
+    expose:
+      - "6379"
+    volumes:
+      - "./.docker/redis:/data"
+    command: ["redis-server", "--appendonly", "yes"]
+
+  # Sidekiq is used for the ActiveJob backend
+  sidekiq:
+    build: .
+    command: bundle exec sidekiq -C config/sidekiq.yml
+    volumes:
+      - ".:/push:cached"
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - ./secrets.env
+    environment:
+      - RAILS_ENV=production
+      - proxy_images=true
+      - FORCE_SSL=false
+      - REDIS_URL=redis://redis:6379/0
+    tty: true
+    stdin_open: true
+    entrypoint: /push/entrypoint_sidekiq.sh
+    networks:
+      - default
+
+volumes:
+  rails_cache:
+  node_modules:
+  packs:
