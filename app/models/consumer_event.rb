@@ -1,5 +1,4 @@
-class ConsumerEvent < ApplicationRecord
-  
+class ConsumerEvent < ActiveRecord::Base
   belongs_to :consumer
   has_one :article
   has_one :notification
@@ -11,6 +10,4 @@ class ConsumerEvent < ApplicationRecord
     NOTIFICATION_CLICK = 3
     SOCIAL_MEDIA_SHARE = 4
   end
-
-
 end

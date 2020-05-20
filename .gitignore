@@ -77,3 +77,10 @@ data/dump.rdb
 # Because macOS
 .DS_Store
 >>>>>>> eb10494aa57787440b8395433b5ca965da570fea
+
+/public/packs
+/public/packs-test
+/node_modules
+/yarn-error.log
+yarn-debug.log*
+.yarn-integrity
