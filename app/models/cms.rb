@@ -405,10 +405,12 @@ class CMS < ActiveRecord::Base
       html_string
     end
 
-    def self.scrubCDataTags(html_string) # rubocop:disable Naming/MethodName
-      # scrubbed = html_string.gsub("// <![CDATA[", "")
-      # scrubbed = scrubbed.gsub("// ]]", "")
-    end
+    # For some reason this is commented out, I'm going to comment the whole thing, and if it breaks
+    # stuff we'll get errors at least
+    # def self.scrubCDataTags(html_string) # rubocop:disable Naming/MethodName
+    #   # scrubbed = html_string.gsub("// <![CDATA[", "")
+    #   # scrubbed = scrubbed.gsub("// ]]", "")
+    # end
 
     # \/\/.+
     def self.scrubJSCommentsFromHTMLString(html_string) # rubocop:disable Naming/MethodName
@@ -421,8 +423,12 @@ class CMS < ActiveRecord::Base
       scrubbed
     end
 
+    # For some reason this is commented out, I'm going to comment the whole thing, and if it breaks
+    # stuff we'll get errors at least
     def self.scrubHTMLSpecialCharactersInHTMLString(html_string) # rubocop:disable Naming/MethodName
       # scrubbed = html_string.gsub(/^&[a-z0-9]+;/, "")
+      # scrubbed
+      html_string
     end
 
     def self.scrubScriptTagsFromHTMLString(html_string) # rubocop:disable Naming/MethodName
