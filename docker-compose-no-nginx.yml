@@ -20,12 +20,16 @@ services:
       - "rails_cache:/app/tmp/cache"
       - "node_modules:/app/node_modules"
       - "packs:/app/public/packs"
+    ports:
+      - "3000:3000"
     expose:
       - "3000"
     depends_on:
       - db
       - uniqush
       - redis
+      - scheduled_jobs
+      - sidekiq
     env_file:
       - ./secrets.env
     environment:

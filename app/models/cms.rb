@@ -596,7 +596,6 @@ class CMS < ActiveRecord::Base
         raise "CMS type #{cms_type} not valid for this version of Push."
       end
 
-      logger.debug("parsing #{url}")
       uri = URI.parse(url)
 
       if force_https

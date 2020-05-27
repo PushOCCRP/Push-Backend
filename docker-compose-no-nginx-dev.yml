@@ -33,11 +33,11 @@ services:
       - uniqush
       - redis
       - sidekiq
-      - scheduled_jobs
+      # - scheduled_jobs
     env_file:
       - ./secrets.env
     environment:
-      - RAILS_ENV=production
+      - RAILS_ENV=development
       - proxy_images=true
       - FORCE_SSL=false
       - REDIS_URL=redis://redis:6379/0
@@ -132,7 +132,7 @@ services:
     env_file:
       - ./secrets.env
     environment:
-      - RAILS_ENV=production
+      - RAILS_ENV=development
       - proxy_images=true
       - FORCE_SSL=false
       - REDIS_URL=redis://redis:6379/0
