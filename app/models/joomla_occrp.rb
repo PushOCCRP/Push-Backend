@@ -172,7 +172,9 @@ class JoomlaOccrp < CMS
 
     def self.clean_up_for_wordpress(articles)
       articles.each do |article|
-        article["body"] = scrubCDataTags article["body"]
+        # This is being commented out for archive purposes instead of deleting it. Please try
+        # Joomla before deleting fully
+        # article["body"] = scrubCDataTags article["body"]
         article["body"] = scrubScriptTagsFromHTMLString article["body"]
         article["body"] = scrubWordpressTagsFromHTMLString article["body"]
         # article['body'] = cleanUpNewLines article['body']

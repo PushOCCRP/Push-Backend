@@ -138,7 +138,7 @@ class Wordpress < CMS
 
     def self.make_request(url)
       logger.debug("Making request to #{url}")
-      response = HTTParty.get(CGI.encode(url))
+      response = HTTParty.get(url)
 
       begin
         body = JSON.parse response.body
@@ -202,13 +202,11 @@ class Wordpress < CMS
 
     def self.clean_up_for_wordpress(articles)
       articles.each do |article|
-        article["body"] = scrubCDataTags article["body"]
         article["body"] = scrubScriptTagsFromHTMLString article["body"]
         article["body"] = scrubWordpressTagsFromHTMLString article["body"]
         # article['body'] = cleanUpNewLines article['body']
         article["body"] = scrubJSCommentsFromHTMLString article["body"]
         article["body"] = scrubSpecialCharactersFromSingleLinesInHTMLString article["body"]
-        article["body"] = scrubHTMLSpecialCharactersInHTMLString article["body"]
         article["body"] = normalizeSpacing article["body"]
         article["body"] = handle_paragraph_tags article["body"]
 

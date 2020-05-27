@@ -201,7 +201,6 @@ private
         article["body"] = scrubScriptTagsFromHTMLString article["body"]
         article["body"] = scrubJSCommentsFromHTMLString article["body"]
         article["body"] = scrubSpecialCharactersFromSingleLinesInHTMLString article["body"]
-        article["body"] = scrubHTMLSpecialCharactersInHTMLString article["body"]
         article["headline"] = HTMLEntities.new.decode(article["headline"])
       end
 
