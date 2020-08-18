@@ -2,8 +2,6 @@ module ScheduledTasks
   module Caching
     class WarmCacheJob < ScheduledTask
       def perform
-        puts "Warming cache.... ☀️"
-
         # Get the CMS mode that's set up for this instance
         cms_mode = ApplicationController.helpers.check_for_valid_cms_mode
 
@@ -13,7 +11,6 @@ module ScheduledTasks
         # We're not passing in params, which means multiple pages and such won't be cached. What we care
         # about is speed right now. So that's fine for the moment. We could conceive of caching a few
         # pages at anytime, but that's for another time.
-        time = Time.now
         case cms_mode
         when :occrp_joomla
           JoomlaOccrp.articles({})
@@ -28,8 +25,6 @@ module ScheduledTasks
         when :snworks
           SNWorksCEO.articles({})
         end
-
-        puts "Warming cache took #{Time.now - time}"
       end
     end
   end

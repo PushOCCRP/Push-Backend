@@ -119,4 +119,7 @@ group :development, :test do
 
   # Allow connections for the webpack-dev-server
   gem "rack-cors", require: "rack/cors"
+
+  # Add error handling and monitoring
+  gem "sentry-raven"
 end
