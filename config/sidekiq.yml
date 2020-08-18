@@ -7,5 +7,5 @@ production:
   - default
   - scheduled_tasks
 
-:verbose: true
+:verbose: false
 :timeout: 8

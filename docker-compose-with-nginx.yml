@@ -102,6 +102,12 @@ services:
     stdin_open: true
     networks:
       - default
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 
   # uniqush itself
   uniqush:
@@ -161,6 +167,11 @@ services:
     entrypoint: /push/entrypoint_sidekiq.sh
     networks:
       - default
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   logrotate:
     image: blacklabelops/logrotate
