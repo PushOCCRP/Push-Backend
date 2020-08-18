@@ -251,7 +251,7 @@ class SNWorksCEO < CMS
 
     # There's a weird bug in SEOWorks where images which have valid URLs sometimes have dimensions
     # set to null. This uses ImageMagick to download the images and then check their dimensions
-    # ourselved.
+    # ourselves.
     #
     # This is a SUPER heavy way to do it, and requires us to install ImageMagick and the Rmagick
     # gem. Which is not good. I've reached out to SEOWorks and we'll see if they will fix this
@@ -315,3 +315,4 @@ class SNWorksCEO < CMS
   #   articles
   # end
 end
+

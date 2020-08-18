@@ -208,6 +208,8 @@ GEM
     sdoc (1.1.0)
       rdoc (>= 5.0)
     semantic_range (2.3.0)
+    sentry-raven (2.13.0)
+      faraday (>= 0.7.6, < 1.0)
     sidekiq (6.0.7)
       connection_pool (>= 2.2.2)
       rack (~> 2.0)
@@ -279,6 +281,7 @@ DEPENDENCIES
   rufus-scheduler
   sass-rails
   sdoc
+  sentry-raven
   sidekiq
   spring
   sprockets-rails
