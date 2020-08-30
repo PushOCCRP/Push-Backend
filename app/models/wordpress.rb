@@ -105,13 +105,8 @@ class Wordpress < CMS
       categories[language] = ["post"] if response.count == 0
     end
 
-
-
-
     categories
   end
-
-
 
   private
 

@@ -69,8 +69,14 @@ class SNWorksCEO < CMS
     end
   end
 
+  # SNWorks uses tags to indicate categories. This pulls them all.
+  # Note: we don't cache this since it can change pretty often and isn't used by the apps.
+  def self.categories(params = {})
+    categories = Setting["snworks_categories"]
+    categories
+  end
 
-  #   private
+private
 
   def self.headers_for_request
     {
@@ -153,7 +159,7 @@ class SNWorksCEO < CMS
       end
     end
 
-    # Make sure we have a real article at the top, not a paid advertisment
+    # Make sure we have a real article at the top, not a paid advertisement
     articles = rearrange_articles_for_native_advertising articles
 
     articles
@@ -194,26 +200,27 @@ class SNWorksCEO < CMS
     articles
   end
 
-  def self.get_article(uuid)
-    url = self.url_for_article_uuid uuid
+  def self.get_content(uuid)
+    url = self.url_for_content_uuid uuid
     article_json = self.make_request url
 
     article_json
   end
 
-  def self.url_for_article_uuid(uuid)
+  def self.url_for_content_uuid(uuid)
     "#{self.get_url ''}/v3/content/#{uuid}"
   end
 
-  # SnWorksCEO, like a lot of news cms's (for reasons I will never fucking understand)
-  # doesn't provide full content when lising articles.
+  # SnWorksCEO, like a lot of news CMS's (for reasons I will never fucking understand)
+  # doesn't provide full content when listing articles.
   # So now, we have to loop through and make individual requests. SOB....
+  # Additional note: Same thing for stuff like images. It'll return the caption, but not the bylines.
   def self.article_from_json_response(json)
     article_from_uuid(json["uuid"])
   end
 
   def self.article_from_uuid(uuid)
-    article_json = self.get_article(uuid).first
+    article_json = self.get_content(uuid).first
 
     article = Article.new
     article.id = article_json["uuid"]
@@ -223,29 +230,37 @@ class SNWorksCEO < CMS
     article.publish_date = DateTime.parse(article_json["published_at"])
     article.author = article_json["authors"].map { |a| a["name"] }.join(", ")
     article.images = []
+    article.image_urls = []
     article.captions = []
     article.videos = []
 
-    # This is a standin until I hear back from SNWorks, since this is REALLY smelly code
+    # This is a stand in until I hear back from SNWorks, since this is REALLY smelly code
+    # Update: this is the correct way to do it. Yes, it's janky.
     article.url = "#{ENV["host_url"]}/article/#{article.publish_date.year}/#{format('%02d', article.publish_date.month)}/#{article_json["slug"]}"
 
     unless article_json["dominantAttachment"].blank?
-      image = self.image_from_json_response article_json["dominantAttachment"]
+      image = self.image_from_uuid article_json["dominantAttachment"]["uuid"]
       article.header_image = image
     else
       article.header_image = {}
     end
 
+    # This extracts all image tags and gets us a bunch of the info in them.
+    article = self.extract_images(article)
+    # Now that we've pulled all the images out, we need to get more information for them. Yep, this
+    # is awful, but it's only available via *another* request :-)
+    article.images = article.images.map { |i| image_from_uuid(i[:uuid]) }
+
     article
   end
 
-  # Return an `Image` OpenStruct object for a `json` response from a call to the SEOWorks API
-  def self.image_from_json_response(json)
+  def self.image_from_uuid(uuid)
+    json = self.get_content(uuid).first
     image = Image.new
 
     image.url = json["attachment"]["public_url"]
     image.caption = ActionView::Base.full_sanitizer.sanitize(json["content"])
-    image.byline = json["authors"].nil? ? "" : json["authors"].first["name"]
+    image.byline = json["authors"].map { |author| author["name"] }.join(", ")
     image.height = json["attachment"]["height"]
     image.width = json["attachment"]["width"]
 
@@ -253,11 +268,11 @@ class SNWorksCEO < CMS
     # set to null. This uses ImageMagick to download the images and then check their dimensions
     # ourselves.
     #
-    # This is a SUPER heavy way to do it, and requires us to install ImageMagick and the Rmagick
+    # This is a SUPER heavy way to do it, and requires us to install ImageMagick and the RMagick
     # gem. Which is not good. I've reached out to SEOWorks and we'll see if they will fix this
     # bug on their side.
     #
-    # If there's no image found at the `public_url` we'll just return an empty obejct, because
+    # If there's no image found at the `public_url` we'll just return an empty object, because
     # otherwise it crashes the app, which is bad.
     if image.height.nil?
       logger.debug ">>> Image dimensions are nil, getting them from ImageMagick"
@@ -277,7 +292,7 @@ class SNWorksCEO < CMS
   end
 
   # Download the the image at `url`, returning nil if there's not a response or it's blank.
-  # Otherwise, use ImageMagick to get the dimentions of the blob that's downloaded.
+  # Otherwise, use ImageMagick to get the dimensions of the blob that's downloaded.
   #
   # Note: We'd like to get rid of this ASAP if SEOWorks can fix the bug on their backend where
   # dimensions are returns as null from the API request.
@@ -297,22 +312,4 @@ class SNWorksCEO < CMS
 
     { height: img.rows, width: img.columns }
   end
-
-  # def self.clean_up_for_wordpress(articles)
-  #   articles.each do |article|
-  #      article["body"] = scrubCDataTags article["body"]
-  #      article["body"] = scrubScriptTagsFromHTMLString article["body"]
-  #      article["body"] = scrubWordpressTagsFromHTMLString article["body"]
-  #      # article['body'] = cleanUpNewLines article['body']
-  #      article["body"] = scrubJSCommentsFromHTMLString article["body"]
-  #      article["body"] = scrubSpecialCharactersFromSingleLinesInHTMLString article["body"]
-  #      article["body"] = scrubHTMLSpecialCharactersInHTMLString article["body"]
-  #      article["body"] = normalizeSpacing article["body"]
-
-  #      article["headline"] = HTMLEntities.new.decode(article["headline"])
-  #    end
-
-  #   articles
-  # end
 end
-

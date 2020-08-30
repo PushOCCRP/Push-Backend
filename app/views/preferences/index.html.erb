@@ -1,99 +1,97 @@
 <div class="container">
-	<div class="page-header col-md-12">
-		<div class="col-md-10"><span class="h1">Preferences</span></div>
-	</div>
+  <div class="page-header col-md-12">
+    <div class="col-md-10"><span class="h1">Preferences</span></div>
+  </div>
 </div>
 
 <div class="container">
-	<div class="col-md-12">
-		<% if(!@categories.nil?) %>
-  			<%= form_tag({action: :update}, method: :put) do %>
- 				<% @categories.keys.each do |language| %>
-  			  <div class="row">
-           <h2><%= language%></h2>
-
+  <div class="col-md-12">
+    <% if(!@categories.nil?) %>
+        <%= form_tag({action: :update}, method: :put) do %>
+        <% @categories.keys.each do |language| %>
+          <div class="row">
+            <h2><%= language %></h2>
             <div class="col-md-6">
               <div class="form-group">
                 <label for="cms_category">CMS Category</label>
                 <% categories = @categories[language] %>
                 <% selected_categories = @selected_categories[language].nil? ? nil : @selected_categories[language][0] %>
                 <%= select_tag "category[#{language}][]", options_for_select(categories, selected_categories), {include_blank: true, class: "form-control"} %>
-  
               </div>
             </div>
-            <div class="col-md-6">  
+            <div class="col-md-6">
               <label for="cms_category_name">CMS Category Display Name</label>
               <% category_names = @category_names[language].nil? ? nil : @category_names[language][0] %>
               <%= text_field_tag "category_name[#{language}][]", category_names,  {class: "form-control"} %>
             </div>
-  			  </div>
+          </div>
           <div class="row">
             <div class="col-md-6">
               <div class="form-group">
                 <label for="cms_category">CMS Category</label>
                 <% selected_category = @selected_categories[language].nil? ? nil : @selected_categories[language][1] %>
                 <%= select_tag "category[#{language}][]", options_for_select(categories, selected_category), {include_blank: true, class: "form-control"} %>
-  
+
               </div>
             </div>
-            <div class="col-md-6">  
+            <div class="col-md-6">
               <label for="cms_category_name">CMS Category Display Name</label>
               <% category_names = @category_names[language].nil? ? nil : @category_names[language][1] %>
               <%= text_field_tag "category_name[#{language}][]",category_names, {class: "form-control"} %>
             </div>
-  			  </div>
-  			  <div class="row">
+          </div>
+          <div class="row">
             <div class="col-md-6">
               <div class="form-group">
                 <label for="cms_category">CMS Category</label>
                 <% selected_category = @selected_categories[language].nil? ? nil : @selected_categories[language][2] %>
                 <%= select_tag "category[#{language}][]", options_for_select(categories, selected_category), {include_blank: true, class: "form-control"} %>
-  
+
               </div>
             </div>
-            <div class="col-md-6">  
+            <div class="col-md-6">
               <label for="cms_category_name">CMS Category Display Name</label>
               <% category_names = @category_names[language].nil? ? nil : @category_names[language][2] %>
               <%= text_field_tag "category_name[#{language}][]",category_names, {class: "form-control"} %>
             </div>
-  			  </div>
+          </div>
           <div class="row">
             <div class="col-md-6">
               <div class="form-group">
                 <label for="cms_category">CMS Category</label>
                 <% selected_category = @selected_categories[language].nil? ? nil : @selected_categories[language][3] %>
                 <%= select_tag "category[#{language}][]", options_for_select(categories, selected_category), {include_blank: true, class: "form-control"} %>
-  
+
               </div>
             </div>
-            <div class="col-md-6">  
+            <div class="col-md-6">
               <label for="cms_category_name">CMS Category Display Name</label>
               <% category_names = @category_names[language].nil? ? nil : @category_names[language][3] %>
               <%= text_field_tag "category_name[#{language}][]",category_names, {class: "form-control"} %>
             </div>
           </div>
         <% end %>
-        
+
         <div class="row">
           <div class="col-md-5">
             <label for="consolidated">Show Most Recent Articles Category?</label>
             <%= check_box_tag 'show_most_recent', "1", !@show_most_recent.nil?, {class: "form-control"} %>
           </div>
         </div>
-        
+
         <div class="row">
           <div class="col-md-5">
             <label for="consolidated">Consolidated Categories</label>
             <%= check_box_tag 'consolidated', "1", !@consolidated.nil?, {class: "form-control"} %>
           </div>
         </div>
-        
+
         <div class="row">
           <div class="col-md-5">
           <%= submit_tag "Save Categories", {class: "btn btn-primary"} %>
           </div>
         </div>
-			<% end %>
-		<% end %>
-	</div>
+      <% end %>
+    <% end %>
+  </div>
 </div>

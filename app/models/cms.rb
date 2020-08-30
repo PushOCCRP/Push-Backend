@@ -99,6 +99,7 @@ class CMS < ActiveRecord::Base
     article["body"] = text
     article["images"] = images
     article["image_urls"] = image_urls
+    article
   end
 
   # Parses an article, extracting all <img> links, and putting them, with their range, into
@@ -145,9 +146,16 @@ class CMS < ActiveRecord::Base
         end
       end
 
+      # SNWorks adds a separate `uuid` key, which is most efficient to add here.
+      if ENV["cms_mode"] == "snworks"
+        uuid = image.attributes["data-uuid"]
+      end
+
       if !image_address.starts_with?("http")
         full_url = rewrite_url_for_ssl(rewrite_image_url_for_proxy(image.attributes["src"].value))
         image_object = { url: full_url, start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: "" }
+        image_object[:uuid] = uuid unless uuid.nil?
+
         images << image_object
         image_urls << full_url
         image["src"] = full_url
@@ -160,12 +168,12 @@ class CMS < ActiveRecord::Base
         end
 
         image_object = { url: rewrite_url_for_ssl(image_address), start: image.line, length: image.to_s.length, caption: "", width: "", height: "", byline: "" }
+        image_object[:uuid] = uuid unless uuid.nil?
 
         # If, for some reason, there's an image in the story, but there's not one already in the Array
         # (there should be, since the plugin should have handled it) add it so it shows up as the top image
         images << image_object
       end
-
 
       # this is for modifying the urls in the article itself
       # It's a mess, refactor this please

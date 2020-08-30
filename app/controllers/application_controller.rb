@@ -84,6 +84,8 @@ class ApplicationController < ActionController::Base
       url = ENV["codeigniter_url"]
     when "blox"
       url = ENV["blox_url"]
+    when "snworks"
+      url = ENV["snworks_url"]
     else
       raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
     end

@@ -75,6 +75,8 @@ private
       # Not implemented yet
     when :blox
       response = Blox.categories
+    when :snworks
+      response = SNWorksCEO.categories
     end
 
     response

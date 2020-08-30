@@ -150,13 +150,25 @@ Steps to get key forthcoming here...
 ## Setup Instructions
 
 ### Mac
-Developmet on a Mac is a bit tiresome, mostly because getting the containers running means waiting a
-long time for them to boot (it's a Mac only thing, no idea why).
+Developmet on a Mac is a bit tiresome, if you use just straight Docker it takes literally 20-30 minutes to boot. This is well known and discussed [here](https://github.com/docker/for-mac/issues/77).
+There's a possibility this may be fixed soon ([here](https://www.jeffgeerling.com/blog/2020/revisiting-docker-macs-performance-nfs-volumes)) but for now, it's broken to hell.
+So instead, we use Vagrant to boot up an Linux box, and run Docker in there.
+
+1. Install [Vagrant](https://www.vagrantup.com/). You can use VirtualBox (free) or another backer, except Docker, obviously.
+1. After cloning the repo run `vagrant up` and it'll create the Linux box and set everything up for you.
+1. Enter the Vagrant box `vagrant ssh`
+1. The box automatically shares the project directly at `/docker` so you can `cd /docker`
+1. Run docker to boot everything up `sudo docker-compose up -d`. You can also specify a specific compose file via `sudo docker-compose --file=docker-compose-no-nginx-dev.yml up -d`. Note that `sudo` is required for anything involving Docker.
+1. To exit and shut down the whole thing just run `exit` to get to your main machine then `vagrant suspend` to pause the Vagrant box.
 
 A few other things,
 1. Before you run bundle install the first time you'll need to install the libmagic library.
    This is best done using [Homebrew](https://brew.sh/), so set that up if you don't have it already
    then run `brew install libmagic`
+1. To attach to a container for development purposes (such as using `byebug`)
+   1. `sudo docker-compose up -d`
+   1. `docker attach docker_web_1`
+   1. To cleanly detach without shutting down the container (which `CTRL-C` does) use `CTRL-P`followed by `CTRL-Q`
 
 ## Adding Support For New CMS
 

@@ -14,9 +14,9 @@ RUN apt-get install -y build-essential libpq-dev nodejs yarn
 # This is for a work around in SEOWorks where some image's dimensions are returned as null
 # We don't want that to happen, so we need to determine them ourselves
 # This can be removed later if we get that bug fixed
-RUN apt-get install libmagickwand-dev
+RUN apt-get install -y libmagickwand-dev
 
 RUN gem install bundler
-RUN RAILS_ENV=production
+RUN RAILS_ENV=development
 WORKDIR /push
-CMD ["rails", "s", "-b", "0.0.0.0", "--production", "-p", "80"]
+CMD ["rails", "s", "-b", "0.0.0.0", "-p", "80"]

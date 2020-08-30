@@ -105,6 +105,9 @@ gem "sidekiq"
 # Redis is good for caching, we're already using it for Sidekiq and Uniqush
 gem "redis"
 
+# Add error handling and monitoring
+gem "sentry-raven"
+
 group :development do
   # Access an IRB console on exception pages or by using <%= console %> in views
   gem "web-console"
@@ -120,6 +123,4 @@ group :development, :test do
   # Allow connections for the webpack-dev-server
   gem "rack-cors", require: "rack/cors"
 
-  # Add error handling and monitoring
-  gem "sentry-raven"
 end

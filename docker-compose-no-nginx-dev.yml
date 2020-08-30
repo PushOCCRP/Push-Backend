@@ -1,4 +1,4 @@
-version: '2'
+version: '3.8'
 
 services:
   # This configuration excludes NGINX for development purposes so you don't accidently run a full
@@ -8,9 +8,9 @@ services:
   # then use `docker-compose-no-ngix.yml`. Otherwise, you probably want `docker-compose-with-nginx.yml`
 
   db:
-    image: postgres:9.6
+    image: postgres:12-alpine
     volumes:
-      - "./.docker/postgres:/data/postgres"
+      - "postgres:/data/postgres"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -32,12 +32,12 @@ services:
       - db
       - uniqush
       - redis
-      - sidekiq
-      - scheduled_jobs
+      # - sidekiq
+      # - scheduled_jobs
     env_file:
       - ./secrets.env
     environment:
-      - RAILS_ENV=production
+      - RAILS_ENV=development
       - proxy_images=true
       - FORCE_SSL=false
       - REDIS_URL=redis://redis:6379/0
@@ -71,27 +71,27 @@ services:
       - default
 
   # Run ActiveJobs on a schedule using the Clockwork gem
-  scheduled_jobs:
-    build: .
-    command: bundle exec clockwork ./scheduler.rb
-    volumes:
-      - ".:/push:cached"
-    env_file:
-      - ./secrets.env
-    environment:
-      - RAILS_ENV=production
-      - proxy_images=true
-      - FORCE_SSL=false
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - db
-      - redis
-      - sidekiq
-    entrypoint: /push/entrypoint_scheduled_jobs.sh
-    tty: true
-    stdin_open: true
-    networks:
-      - default
+  # scheduled_jobs:
+  #   build: .
+  #   command: bundle exec clockwork ./scheduler.rb
+  #   volumes:
+  #     - ".:/push:cached"
+  #   env_file:
+  #     - ./secrets.env
+  #   environment:
+  #     - RAILS_ENV=production
+  #     - proxy_images=true
+  #     - FORCE_SSL=false
+  #     - REDIS_URL=redis://redis:6379
+  #   depends_on:
+  #     - db
+  #     - redis
+  #     - sidekiq
+  #   entrypoint: /push/entrypoint_scheduled_jobs.sh
+  #   tty: true
+  #   stdin_open: true
+  #   networks:
+  #     - default
 
   # Uniqush is used for managing push notifications ourselves
   uniqush:
@@ -121,28 +121,29 @@ services:
     command: ["redis-server", "--appendonly", "yes"]
 
   # Sidekiq is used for the ActiveJob backend
-  sidekiq:
-    build: .
-    command: bundle exec sidekiq -C config/sidekiq.yml
-    volumes:
-      - ".:/push:cached"
-    depends_on:
-      - db
-      - redis
-    env_file:
-      - ./secrets.env
-    environment:
-      - RAILS_ENV=production
-      - proxy_images=true
-      - FORCE_SSL=false
-      - REDIS_URL=redis://redis:6379/0
-    tty: true
-    stdin_open: true
-    entrypoint: /push/entrypoint_sidekiq.sh
-    networks:
-      - default
+  # sidekiq:
+  #   build: .
+  #   command: bundle exec sidekiq -C config/sidekiq.yml
+  #   volumes:
+  #     - ".:/push:cached"
+  #   depends_on:
+  #     - db
+  #     - redis
+  #   env_file:
+  #     - ./secrets.env
+  #   environment:
+  #     - RAILS_ENV=production
+  #     - proxy_images=true
+  #     - FORCE_SSL=false
+  #     - REDIS_URL=redis://redis:6379/0
+  #   tty: true
+  #   stdin_open: true
+  #   entrypoint: /push/entrypoint_sidekiq.sh
+  #   networks:
+  #     - default
 
 volumes:
   rails_cache:
   node_modules:
   packs:
+  postgres:
