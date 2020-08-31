@@ -15,3 +15,5 @@ require("turbolinks").start()
 require("@rails/activestorage").start()
 
 console.log('Hello World from Webpacker')
+
+import 'controllers'

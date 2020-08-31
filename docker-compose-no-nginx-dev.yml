@@ -51,7 +51,7 @@ services:
   # production configurations.
   webpack:
     build: .
-    command: ./bin/webpack-dev-server
+    command: bin/webpack-dev-server
     volumes:
       - ".:/push:cached"
     ports:

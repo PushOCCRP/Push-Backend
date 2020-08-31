@@ -31,6 +31,13 @@ class PreferencesController < ApplicationController
     end
 
     CMS.languages().each { |language| @category_names[language] = [] if @category_names[language].blank? }
+
+    if ENV["cms_mode"] == "snworks"
+      @language = "en"
+      render template: "preferences/index_snworks"
+    else
+      render template: "preferences/index"
+    end
   end
 
   def update
@@ -39,12 +46,17 @@ class PreferencesController < ApplicationController
       params[:category][language].delete_if { |category| category.blank? }
     end
 
+    # Some CMS's support multiple languages, some don't. This fills the gaps so the processing later on doesn't care
+    params[:category_name] = {} unless params.has_key?(:category_name)
+
     params[:category].keys.each do |language|
-      index = 0
-      params[:category][language].each do |category|
+      # Same note as above regarding multiple languages
+      params[:category_name][language] = [] unless params[:category_name].has_key?(language)
+      params[:category][language].each_with_index do |category, index|
         # if there's no category name for this one, add it the params
-        params[:category_name][language][index] = category if params[:category_name][language][index].blank?
-        index += 1
+        params[:category_name][language][index] = category if params[:category_name].blank? ||
+                                                              params[:category_name][language].blank? ||
+                                                              params[:category_name][language][index].blank?
       end
     end
 

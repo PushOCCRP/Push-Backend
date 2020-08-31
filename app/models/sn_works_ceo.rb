@@ -72,7 +72,7 @@ class SNWorksCEO < CMS
   # SNWorks uses tags to indicate categories. This pulls them all.
   # Note: we don't cache this since it can change pretty often and isn't used by the apps.
   def self.categories(params = {})
-    categories = Setting["snworks_categories"]
+    categories = YAML.load(Setting.categories)
     categories
   end
 
