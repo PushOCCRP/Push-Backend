@@ -13,6 +13,11 @@ class PreferencesController < ApplicationController
     @consolidated = Setting.consolidated_categories
     @show_most_recent = Setting.show_most_recent_articles
 
+    # If this is redirected to from an error in the `update` method these will be set and are used on the
+    # front end to display errors
+    @validation_errors = flash[:validation_errors] unless flash[:validation_errors].nil?
+    @categories = flash[:categories] unless flash[:categories].nil?
+
     @category_names = [] if @category_names.nil?
 
     @selected_categories = {}
@@ -60,7 +65,42 @@ class PreferencesController < ApplicationController
       end
     end
 
-    Setting.categories = params[:category].to_yaml
+    # Here we do some dancing around SNWorks
+    validated_categories = validate_categories(params[:category])
+
+    # This means there's a hash coming back, or something like a hash
+    if validated_categories.respond_to? "keys"
+      # Quick proc that checks every language and for a `invalid` hash, meaning something has to get fixed.
+      contains_invalid_categories = ->(categories) {
+        validated_categories.each do |key, value|
+          return true unless value[:invalid].nil?
+        end
+        false
+      }
+
+      if contains_invalid_categories.call(validated_categories)
+        # To make it the validation array on the front end make sense we need to dance around some stuff
+        # This extracts only the `invalid` categories from the inputted
+        validation_errors = validated_categories.map do |language, category_array|
+          [language, category_array[:invalid]]
+        end
+
+        validation_errors = { categories: validation_errors }
+
+        flash[:alert] = error_message_for_invalid_categories(validated_categories)
+
+        # For showing validation on the front end
+        flash[:validation_errors] = validation_errors
+        flash[:categories] = validated_categories.map do |language, categories|
+          { language.to_sym => categories[:categories] }
+        end.reduce({}, :merge)
+
+        redirect_to action: :index
+        return
+      end
+    end
+
+    Setting.categories = validated_categories.to_yaml
     Setting.category_names = params[:category_name].to_yaml
 
     Setting.consolidated_categories = params[:consolidated]
@@ -92,5 +132,35 @@ private
     end
 
     response
+  end
+
+  # Validate the categories are correct and valid and available.
+  # Returns a list of categories properly formatted, or an error if something goes south.
+  # Currently only available for SNWorks, all others return the same list.
+  def validate_categories(categories)
+    if ENV["cms_mode"] == "snworks"
+      validated = {}
+      categories.keys.each do |language|
+        validated_categories = SNWorksCEO.validate_categories(categories[language])
+        validated[language] = validated_categories[:invalid].empty? ? validated_categories[:categories] : validated_categories
+      end
+      return validated
+    end
+
+    # TODO: When adding support for other CMS's we'll refactor the caller of this to just expect the validation
+    # hash instead of an array. However, that'd break the current implementation.
+    categories
+  end
+
+  # Returns a string suitable for flash errors given a list of invalid categories
+  def error_message_for_invalid_categories(categories)
+    error = "Please fix the following problems:"
+    # Cycle through all the languages
+    # It may look like this: {"en"=>{:valid=>{"Sports"=>"Sports", "Arts"=>"arts"}, :invalid=>["something"]}}
+    categories.each do |language, categories_for_language|
+      # Go through each category in the languages
+      categories_for_language[:invalid].each { |category| error += "<br>• #{language}: #{category} is not a valid category/tag name" }
+    end
+    error
   end
 end

@@ -1,6 +1,11 @@
 <div class="form-row">
   <div class="form-group col-md-10">
-    <input name="category[<%= language %>][]" class="form-control" value="<%= name if defined?(name) %>">
+    <input name="category[<%= language %>][]" class="form-control <%= "is-invalid" if defined?(valid) && !valid %>" value="<%= name if defined?(name) %>">
+    <% if defined?(valid) && !valid %>
+    <div id="validationServer04Feedback" class="invalid-feedback">
+      Category not found, did you misspell it?
+    </div>
+    <% end %>
   </div>
   <div class="form-group col-md-2">
     <button type="button" onclick="removeCategory(this)" class="btn btn-light"><i class="fas fa-minus-circle"></i></button>

@@ -19,17 +19,18 @@
   </div>
 </div>
 <br>
+
 <div class="container">
   <%= form_with(url: "/preferences", method: "put") do %>
     <div class="col-md-6">
       <div class="card">
         <a data-target="#collapseCategories" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseCategories"><h5 class="card-header">Categories <i class="fas fa-caret-down"></i></h5></a>
-        <div class="card-body collapse" id="collapseCategories">
+        <div class="card-body collapse show" id="collapseCategories">
           <p>
             <div id="categories">
-              <%= render partial: "category", locals: {language: @language } if @categories.empty? || @categories[@language].empty? %>
+              <%= render partial: "category", locals: { language: @language } if @categories.empty? || @categories[@language].empty? %>
               <% @categories[@language].each do |category| %>
-                <%= render partial: "category", locals: {language: @language, name: category} %>
+                <%= render partial: "category", locals: { language: @language, name: category[0], valid: category[1] != "invalid" } %>
               <% end %>
             </div>
           </p>

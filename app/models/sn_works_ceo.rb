@@ -6,7 +6,7 @@ class SNWorksCEO < CMS
     def to_json(a = nil)
       hash = self.to_h
       hash[:publish_date] = self.publish_date.strftime("%Y%m%d")
-      hash[:description]  = CMS.format_description_text self.body[0..140]
+      hash[:description]  = CMS.format_description_text self.body
       hash.to_json
     end
   end
@@ -21,13 +21,48 @@ class SNWorksCEO < CMS
   def self.articles(params = {})
     url = get_url "/v3/content"
     Rails.cache.fetch(url, expires_in: 5.minutes) do
-      articles = get_articles url
+      # Check if there are categories set, if not just return straight articles
+      if self.categories_available?
+        # Get all categories, skipping over the language
+        # Go through each, making sure to call from the found tag name, not from the inputted name
+        # Then pull only the results, we don't care about the rest of the data
+        items = {}
+        self.categories.values.first.each do |category|
+          items[category[0]] = self.articles_for_category(category[1])[:results]
+        end
+        { start_date: 19700101,
+          end_date: Time.now.strftime("%Y%m%d"),
+          total_results: items.count,
+          total_pages: 1,
+          page: 0,
+          results: items,
+          categories: categories[CMS.languages.first].map { |category| category[0] }
+        }
+      else
+        items = get_articles url
 
-      # Insure that the top article always has an image.
-      articles = rearrange_articles_for_images articles
+        # Insure that the top article always has an image.
+        items = rearrange_articles_for_images items
+
+        { start_date: 19700101,
+          end_date: Time.now.strftime("%Y%m%d"),
+          total_results: items.count,
+          total_pages: 1,
+          page: 0,
+          results: items
+        }
+      end
+    end
+  end
+
+  def self.articles_for_category(category)
+    url = get_url "/v3/search", { type: "content", tag: category, per_page: "10" }
+
+    Rails.cache.fetch("/v3/search/#{category}", expires_in: 5.minutes) do
+      articles = get_articles url, { category: category }
 
       { start_date: 19700101,
-        end_date: 201901001,
+        end_date: Time.now.strftime("%Y%m%d"),
         total_results: articles.count,
         total_pages: 1,
         page: 0,
@@ -36,13 +71,14 @@ class SNWorksCEO < CMS
     end
   end
 
+
   def self.article(params = {})
     id = params["id"]
     Rails.cache.fetch("single_article/#{id}", expires_in: 5.minutes) do
       article_json = article_from_uuid id
 
       { start_date: 19700101,
-        end_date: 201901001,
+        end_date: Time.now.strftime("%Y%m%d"),
         total_results: 1,
         total_pages: 1,
         page: 0,
@@ -60,7 +96,7 @@ class SNWorksCEO < CMS
       articles = get_articles url, { query: query }
 
       { start_date: 19700101,
-        end_date: 201901001,
+        end_date: Time.now.strftime("%Y%m%d"),
         total_results: articles.count,
         total_pages: 1,
         page: 0,
@@ -72,8 +108,36 @@ class SNWorksCEO < CMS
   # SNWorks uses tags to indicate categories. This pulls them all.
   # Note: we don't cache this since it can change pretty often and isn't used by the apps.
   def self.categories(params = {})
-    categories = YAML.load(Setting.categories)
+    begin
+      categories = YAML.load(Setting.categories)
+    rescue TypeError
+      categories = {}
+      CMS.languages.each { |language| categories[language] = [] }
+    end
+
     categories
+  end
+
+  # This checks tags to insure that categories that are being saved have a tag in the CMS itself.
+  # Returns a hash with two keys: `categories` is a hash of the originally submitted name of the tag and
+  # the updated name or "invalid", `invalid` is an array of all values not found.
+  # It's only different if the case is different.
+  # This is used when saving new categories to display
+  def self.validate_categories(categories = [])
+    return_hash = { categories: {}, invalid: [] }
+    categories.each do |category|
+      # check_if_category_exists returns nil if the category isn't found,
+      # or the corrected name of the category if it is
+      valid_category_name = check_if_category_exists(category)
+      if valid_category_name.nil?
+        return_hash[:invalid] << category
+        valid_category_name = "invalid"
+      end
+
+      return_hash[:categories][category] = valid_category_name
+    end
+
+    return_hash
   end
 
 private
@@ -112,7 +176,7 @@ private
   end
 
   # Note that in SEO Works `url` should always be https://car.ceo.getsnworks.com
-  def self.make_request(url)
+  def self.make_request(url, extras = {})
     # logger.debug("Making request to #{url}")
     header = {
       'Content-Type': "application/json",
@@ -120,7 +184,7 @@ private
     }
 
     puts "Getting url: #{url}"
-    options = { headers: header }
+    options = { headers: header, body: extras }
     puts "Options: #{options}"
 
     response = HTTParty.get(url, options)
@@ -136,17 +200,20 @@ private
       raise e
     end
 
-    body
-  end
+    # If the request is for a list say, `/content` or `/search` then we returns the items,
+    # otherwise we return the whole response
+    begin
+      body["items"]
+    rescue TypeError
+      body
+    end
+ end
 
   def self.get_articles(url, extras = {},  version = 1)
-    body = make_request url
-    # byebug
-    body["items"] = Array.new if body["items"].nil?
-
+    items = make_request url, extras
     articles = []
 
-    body["items"].each do |item|
+    items.each do |item|
       # Let's ignore it if there's no publish date (since it hasn't been published)
       next if item["published_at"].blank?
 
@@ -220,7 +287,8 @@ private
   end
 
   def self.article_from_uuid(uuid)
-    article_json = self.get_content(uuid).first
+    response = self.get_content(uuid)
+    article_json = response.first
 
     article = Article.new
     article.id = article_json["uuid"]
@@ -311,5 +379,28 @@ private
     end
 
     { height: img.rows, width: img.columns }
+  end
+
+  # This checks tags to insure that a category that's been saved has a tag in the CMS itself.
+  # Returns the name of the tag as found in the database. It's only different if the case is different.
+  # This is used when saving new categories to display
+  def self.check_if_category_exists(name)
+    url = get_url "/v3/search", { type: "tag", keyword: name }
+    items = make_request url
+    # TODO: Make this a `batch` call instead of separate calls.
+
+    # Since this is a search, the results can be *slightly* off, mostly with capitalizations.
+    # We return one that matches all the lower cases.
+    items.each do |item|
+      item_name = item["name"]
+      return item_name if name.downcase == item_name.downcase
+    end
+
+    nil
+  end
+
+  # Checks if any categories are set
+  def self.categories_available?
+    self.categories.each { |_, categories| return true unless categories.empty? }
   end
 end
