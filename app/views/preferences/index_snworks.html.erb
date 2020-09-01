@@ -1,0 +1,44 @@
+<script>
+  let addCategory = () => {
+    let node = document.createElement('div')
+    node.classList.add('form-group')
+    node.innerHTML = `
+        <%= render partial: "category", locals: {language: @language} %>
+    `
+    document.getElementById('categories').appendChild(node)
+  }
+
+  let removeCategory = (e) => {
+    e.parentNode.parentNode.remove()
+  }
+</script>
+
+<div class="container">
+  <div class="page-header col-md-12">
+    <div class="col-md-10"><span class="h1">Preferences</span></div>
+  </div>
+</div>
+<br>
+
+<div class="container">
+  <%= form_with(url: "/preferences", method: "put") do %>
+    <div class="col-md-6">
+      <div class="card">
+        <a data-target="#collapseCategories" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseCategories"><h5 class="card-header">Categories <i class="fas fa-caret-down"></i></h5></a>
+        <div class="card-body collapse show" id="collapseCategories">
+          <p>
+            <div id="categories">
+              <%= render partial: "category", locals: { language: @language } if @categories.empty? || @categories[@language].empty? %>
+              <% @categories[@language].each do |category| %>
+                <%= render partial: "category", locals: { language: @language, name: category[0], valid: category[1] != "invalid" } %>
+              <% end %>
+            </div>
+          </p>
+          <button type="button" onclick="addCategory()" class="btn btn-primary"><i class="fas fa-plus-circle"></i> Add Category</button>
+        </div>
+      </div>
+      <br>
+      <%= submit_tag "Save", class: "btn btn-success" %>
+    </div>
+  <% end %>
+</div>

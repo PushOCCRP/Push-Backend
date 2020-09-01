@@ -116,8 +116,6 @@ class CMS < ActiveRecord::Base
 
     # Yes, i'm aware this is repetitive code.
 
-
-
     images.each do |image|
       raise "Image is nil when processing. Check your custom model, this should not happen." if image.nil?
       rewrite_image_url(image)
@@ -127,9 +125,6 @@ class CMS < ActiveRecord::Base
     elements.css("a").each do |link|
       rewrite_link_url(link)
     end
-
-
-
 
     elements.css("img").each do |image|
       begin
@@ -479,8 +474,14 @@ class CMS < ActiveRecord::Base
       if !text.nil?
         text.squish!
 
+        # We want to make sure the text is truncated at most at 140 characters, but we don't want it split
+        # in the middle of words. This should do that. Yes, it's possible to do this in a better big-O
+        # but... meh.
         if text.length > 140
-          text = text.slice(0, 140) + "..."
+          text = text.slice(0, 140)
+          split_text = text.split(" ")
+          split_text.delete_at(-1)
+          text = split_text.join(" ") + "..."
         end
       else
         text = "..."
