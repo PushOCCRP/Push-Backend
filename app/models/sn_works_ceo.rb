@@ -2,14 +2,14 @@ class SNWorksCEO < CMS
   # Trying something new and better here to use structs instead of weird
   # json hashes everywhere
   Article = Struct.new(:id, :headline, :body, :description, :publish_date, :header_image,
-   :images, :image_urls, :videos, :captions, :author, :url) do
-    def to_json(a = nil)
-      hash = self.to_h
-      hash[:publish_date] = self.publish_date.strftime("%Y%m%d")
-      hash[:description]  = CMS.format_description_text self.body
-      hash.to_json
+     :images, :image_urls, :videos, :captions, :author, :url) do
+      def to_json(a = nil)
+        hash = self.to_h
+        hash[:publish_date] = self.publish_date.strftime("%Y%m%d")
+        hash[:description]  = CMS.format_description_text self.body
+        hash.to_json
+      end
     end
-  end
 
   Image = Struct.new(:url, :caption, :byline, :width, :height, :length, :start) do
     def to_json(a = nil)
@@ -318,6 +318,7 @@ private
     # Now that we've pulled all the images out, we need to get more information for them. Yep, this
     # is awful, but it's only available via *another* request :-)
     article.images = article.images.map { |i| image_from_uuid(i[:uuid]) }
+    article.images.compact!
 
     article
   end
@@ -325,6 +326,8 @@ private
   def self.image_from_uuid(uuid)
     json = self.get_content(uuid).first
     image = Image.new
+
+    return nil unless json.has_key?("attachment") && json["attachment"].has_key?("public_url")
 
     image.url = json["attachment"]["public_url"]
     image.caption = ActionView::Base.full_sanitizer.sanitize(json["content"])
