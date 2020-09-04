@@ -327,7 +327,7 @@ private
     json = self.get_content(uuid).first
     image = Image.new
 
-    return nil unless validate_image_json(json)
+    return {} unless validate_image_json(json)
 
     image.url = json["attachment"]["public_url"]
     image.caption = ActionView::Base.full_sanitizer.sanitize(json["content"])
@@ -367,8 +367,8 @@ private
     return true if response.has_key?("attachment") &&
                    response["attachment"].has_key?("public_url") &&
                    !response["attachment"]["public_url"].blank? &&
-                   response["attachment"].has_key?("height") && # These are both fine if they're nil, we handle it later
-                   response["attachment"].has_key?("height") && # Same as above
+                   response["attachment"].has_key?("height") &&
+                   response["attachment"].has_key?("height") &&
                    response.has_key?("content") &&
                    !response["content"].nil? &&
                    response.has_key?("authors") &&
