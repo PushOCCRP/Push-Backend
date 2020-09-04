@@ -701,6 +701,17 @@ private
       @response = SNWorksCEO.articles(params)
     end
 
-    @response[:results].map { |article| [article.headline, article.id] }
+    if @response[:results].respond_to?(:keys)
+      articles = @response[:categories].map do |category|
+        @response[:results][category].map do |article|
+          [article.headline, article.id]
+        end
+      end
+      articles.flatten!(1)
+    else
+      articles = @response[:results].map { |article| [article.headline, article.id] }
+    end
+
+    articles
   end
 end
