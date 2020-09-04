@@ -327,7 +327,7 @@ private
     json = self.get_content(uuid).first
     image = Image.new
 
-    return nil unless json.has_key?("attachment") && json["attachment"].has_key?("public_url")
+    return nil unless validate_image_json(json)
 
     image.url = json["attachment"]["public_url"]
     image.caption = ActionView::Base.full_sanitizer.sanitize(json["content"])
@@ -360,6 +360,21 @@ private
     image.start = 0
 
     image
+  end
+
+  # Validate response json for an image. There's a lot of specific keys that we check for an nils
+  def self.validate_image_json(response)
+    return true if response.has_key?("attachment") &&
+                   response["attachment"].has_key?("public_url") &&
+                   !response["attachment"]["public_url"].blank? &&
+                   response["attachment"].has_key?("height") && # These are both fine if they're nil, we handle it later
+                   response["attachment"].has_key?("height") && # Same as above
+                   response.has_key?("content") &&
+                   !response["content"].nil? &&
+                   response.has_key?("authors") &&
+                   !response["authors"].nil? &&
+                   response["authors"].respond_to?(:map)
+    false
   end
 
   # Download the the image at `url`, returning nil if there's not a response or it's blank.
