@@ -30,6 +30,7 @@ class SNWorksCEO < CMS
         self.categories.values.first.each do |category|
           items[category[0]] = self.articles_for_category(category[1])[:results]
         end
+
         { start_date: 19700101,
           end_date: Time.now.strftime("%Y%m%d"),
           total_results: items.count,
@@ -420,5 +421,6 @@ private
   # Checks if any categories are set
   def self.categories_available?
     self.categories.each { |_, categories| return true unless categories.empty? }
+    false
   end
 end
