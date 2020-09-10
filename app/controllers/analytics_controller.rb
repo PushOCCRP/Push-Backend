@@ -15,5 +15,10 @@ class AnalyticsController < ApplicationController
     @earliest_consumer_event_date = ConsumerEvent.first.nil? ? Time.now : ConsumerEvent.first.created_at
 
     @most_recent_search_phrases = ConsumerEvent.where("event_type_id = #{ConsumerEvent::EventType::SEARCH} AND search_phrase <> ''").order(:created_at).limit(10)
+
+    @most_read_articles_last_day = ConsumerEvent.where(event_type_id: ConsumerEvent::EventType::ARTICLE_VIEW, created_at: 1.day.ago..Time.now).group(:article_id).count
+    puts "*******************"
+    puts @most_read_articles_last_day
+    puts "*******************"
   end
 end

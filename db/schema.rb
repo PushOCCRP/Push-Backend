@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_04_17_030553) do
+ActiveRecord::Schema.define(version: 2020_09_05_011307) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -18,13 +18,13 @@ ActiveRecord::Schema.define(version: 2020_04_17_030553) do
   create_table "consumer_events", id: :serial, force: :cascade do |t|
     t.integer "consumer_id", null: false
     t.integer "event_type_id", null: false
-    t.integer "article_id"
     t.integer "notification_id"
     t.string "language"
     t.string "search_phrase"
     t.integer "length"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "article_id"
     t.index ["article_id"], name: "index_consumer_events_on_article_id"
     t.index ["consumer_id"], name: "index_consumer_events_on_consumer_id"
     t.index ["event_type_id"], name: "index_consumer_events_on_event_type_id"

@@ -77,8 +77,8 @@ Please make sure there is a symlink named `docker-compose.yml` in the main proje
 
 - If you're having troubles connecting from your browser, make sure that you have port 443 open to incoming traffic on the server.
 
-# Setting Up Push Notifiations
-For our project we use a system called Uniqush. This is an open sourced push notification manager that lets us manage the system without paying or using a service such as Urban airship. Because iOS and Android use different systems we need to set them up seperately, but in the end this will let us send the same message to all devices.
+# Setting Up Push Notifications
+For our project we use a system called Uniqush. This is an open sourced push notification manager that lets us manage the system without paying or using a service such as Urban airship. Because iOS and Android use different systems we need to set them up separately, but in the end this will let us send the same message to all devices.
 
 ## Local Development
 If you're trying to set up this for local development the SSL keys get a bit off. There's two options
