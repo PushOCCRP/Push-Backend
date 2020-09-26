@@ -216,17 +216,22 @@ private
     # We retrieve 20 articles but only return the top ten. This is because of a quirk where
     # some may not be published, but we still want ten articles to be returned. No, there's
     # no better way to do
-    items = items[0..10]
-    
+    count = 0
+
     articles = items.map do |item|
+      # Break if we have ten articles that pass the rules already
+      break if count > 10
+
       # Let's ignore it if there's no publish date (since it hasn't been published)
-      next if item["published_at"].blank?
+      next unless should_be_published(item)
+      count += 1
 
       # There are a few different types from SNNews
       # 'article' and 'media' are what I'm aware of now
       # We really only want 'article' for the moment
-      next unless item["type"] == "article"
-      
+      next unless item["type"] == "article" || count > 10
+
+      # Get the article
       article_from_json_response(item)
     end.compact
 
@@ -333,9 +338,9 @@ private
   # SNWorks works in a two tier system (becuase, sure, why the fuck not?), which means that if an article
   # is scheduled to be published it still comes back in search results and it's up to the front end to decide what to do
   # in our case, we're the front end. So there's logic in her to check if the `published_at` date has been set, or if it's passed.
-  def self.should_be_published(article_json)
-    return false if article_json["published_at"].nil?
-    return false if DateTime.parse(article_json["published_at"]) >= DateTime.now
+  def self.should_be_published(item)
+    return false if item["published_at"].nil?
+    return false if DateTime.parse(item["published_at"]) >= DateTime.now
     true
   end
 
