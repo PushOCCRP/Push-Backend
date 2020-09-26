@@ -91,7 +91,7 @@ class SNWorksCEO < CMS
   def self.search(params = {})
     query = params["q"]
 
-    url = get_url "/v3/search", { type: "content", keywords: query }
+    url = get_url "/v3/search", { type: "content", keywords: query, per_page: 20 }
 
     Rails.cache.fetch("/v3/search/#{query}", expires_in: 5.minutes) do
       articles = get_articles url, { query: query }
@@ -212,20 +212,28 @@ private
 
   def self.get_articles(url, extras = {},  version = 1)
     items = make_request url, extras
-    articles = []
 
-    items.each do |item|
+    # We retrieve 20 articles but only return the top ten. This is because of a quirk where
+    # some may not be published, but we still want ten articles to be returned. No, there's
+    # no better way to do
+    count = 0
+
+    articles = items.map do |item|
+      # Break if we have ten articles that pass the rules already
+      break if count > 10
+
       # Let's ignore it if there's no publish date (since it hasn't been published)
-      next if item["published_at"].blank?
+      next unless should_be_published(item)
+      count += 1
 
       # There are a few different types from SNNews
       # 'article' and 'media' are what I'm aware of now
       # We really only want 'article' for the moment
-      if item["type"] == "article"
-        article = article_from_json_response(item)
-        articles << article
-      end
-    end
+      next unless item["type"] == "article" || count > 10
+
+      # Get the article
+      article_from_json_response(item)
+    end.compact
 
     # Make sure we have a real article at the top, not a paid advertisement
     articles = rearrange_articles_for_native_advertising articles
@@ -240,7 +248,7 @@ private
   def self.rearrange_articles_for_native_advertising(articles)
     paid_author_name = "Scholarship Media"
     # If the top article is not the designated author then just return
-    return articles unless articles.first.author == paid_author_name
+    return articles unless articles.first&.author == paid_author_name
 
     # Go through the array until we find an article not authored by the name. Just in case there
     # are two or more in a row.
@@ -291,6 +299,9 @@ private
     response = self.get_content(uuid)
     article_json = response.first
 
+    # Check if the article is good for publishing or if it should be held back (see comment on the method)
+    return nil unless should_be_published(article_json)
+
     article = Article.new
     article.id = article_json["uuid"]
     article.headline = article_json["title"]
@@ -322,6 +333,15 @@ private
     article.images.compact!
 
     article
+  end
+
+  # SNWorks works in a two tier system (becuase, sure, why the fuck not?), which means that if an article
+  # is scheduled to be published it still comes back in search results and it's up to the front end to decide what to do
+  # in our case, we're the front end. So there's logic in her to check if the `published_at` date has been set, or if it's passed.
+  def self.should_be_published(item)
+    return false if item["published_at"].nil?
+    return false if DateTime.parse(item["published_at"]) >= DateTime.now
+    true
   end
 
   def self.image_from_uuid(uuid)
