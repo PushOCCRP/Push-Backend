@@ -240,7 +240,7 @@ private
   def self.rearrange_articles_for_native_advertising(articles)
     paid_author_name = "Scholarship Media"
     # If the top article is not the designated author then just return
-    return articles unless articles.first.author == paid_author_name
+    return articles unless articles&.first&.author == paid_author_name
 
     # Go through the array until we find an article not authored by the name. Just in case there
     # are two or more in a row.
